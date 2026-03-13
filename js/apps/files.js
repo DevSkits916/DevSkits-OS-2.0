@@ -8,7 +8,7 @@
     const pathEl = container.querySelector(".files-path");
     const list = container.querySelector(".files-list");
 
-    tree.innerHTML = ["C:\\DEVSKITS", "C:\\DEVSKITS\\PROJECTS", "C:\\DEVSKITS\\CONTACT", "C:\\DEVSKITS\\LOKI", "C:\\DEVSKITS\\NOTES"].map((p) => `<button class="task-btn" data-path="${p}">${p}</button>`).join("");
+    tree.innerHTML = ["C:\\DEVSKITS", "C:\\DEVSKITS\\PROJECTS", "C:\\DEVSKITS\\CONTACT", "C:\\DEVSKITS\\LOKI", "C:\\DEVSKITS\\NOTES", "C:\\DEVSKITS\\ARCHIVE", "C:\\DEVSKITS\\SECRET"].map((p) => `<button class="task-btn" data-path="${p}">${p}</button>`).join("");
 
     function openItem(item) {
       const full = FS.normalize(item, cwd);

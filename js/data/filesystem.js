@@ -31,6 +31,19 @@
                 "welcome.txt": { type: "file", content: "Use Notes app to create and organize multiple notes." }
               }
             },
+            ARCHIVE: {
+              type: "dir",
+              children: {
+                "build-0001.log": { type: "file", content: "Early build note: shell was monochrome by design." },
+                "loki-companion.log": { type: "file", content: "Loki patrol report: found hidden route breadcrumb near NETWORK node." }
+              }
+            },
+            SECRET: {
+              type: "dir",
+              children: {
+                ".blackbox.txt": { type: "file", content: "If you can read this, open devskits://secrets and run terminal command secret." }
+              }
+            },
             "readme.txt": { type: "file", content: "Welcome to DevSkits virtual filesystem." }
           }
         }
