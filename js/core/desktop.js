@@ -1,8 +1,18 @@
 (() => {
   const { state, APPS, ui } = window.DevSkitsState;
   const W = () => window.DevSkitsWorld;
-  const GRID = { x: 96, y: 104, margin: 8 };
+  const BASE_GRID = { x: 98, y: 100, margin: 8 };
   let selectedIconId = null;
+
+  function currentGrid() {
+    if (window.innerWidth <= 760) return { x: 82, y: 92, margin: 6 };
+    if (window.innerWidth <= 1024) return { x: 90, y: 96, margin: 7 };
+    return BASE_GRID;
+  }
+
+  function isMobileLike() {
+    return window.innerWidth <= 760 || window.matchMedia("(pointer: coarse)").matches;
+  }
 
   function applyTheme(theme) {
     if (theme === "default") document.body.removeAttribute("data-theme");
@@ -47,7 +57,7 @@
 
   function getDesktopEntries() {
     const appEntries = Object.entries(APPS)
-      .filter(([, app]) => app.desktopVisible)
+      .filter(([id, app]) => app.desktopVisible && window.DevSkitsAppRegistry?.[id])
       .map(([id, app]) => ({ id, app, isShortcut: false }));
     const shortcuts = (W()?.getShortcuts?.() || [])
       .map((s) => ({ id: s.id, app: { title: s.label, iconSvg: s.iconSvg || APPS.browser.iconSvg }, isShortcut: true, shortcut: s }));
@@ -55,24 +65,64 @@
   }
 
   function snapToGrid(x, y) {
+    const grid = currentGrid();
     return {
-      x: Math.round((x - GRID.margin) / GRID.x) * GRID.x + GRID.margin,
-      y: Math.round((y - GRID.margin) / GRID.y) * GRID.y + GRID.margin
+      x: Math.round((x - grid.margin) / grid.x) * grid.x + grid.margin,
+      y: Math.round((y - grid.margin) / grid.y) * grid.y + grid.margin
     };
   }
 
   function clampIconPosition(x, y) {
-    const maxX = Math.max(GRID.margin, ui.iconContainer.clientWidth - 94);
-    const maxY = Math.max(GRID.margin, ui.iconContainer.clientHeight - 96);
+    const grid = currentGrid();
+    const maxX = Math.max(grid.margin, ui.iconContainer.clientWidth - 88);
+    const maxY = Math.max(grid.margin, ui.iconContainer.clientHeight - 92);
     return {
-      x: Math.min(maxX, Math.max(GRID.margin, x)),
-      y: Math.min(maxY, Math.max(GRID.margin, y))
+      x: Math.min(maxX, Math.max(grid.margin, x)),
+      y: Math.min(maxY, Math.max(grid.margin, y))
     };
   }
 
   function saveIconPosition(id, x, y) {
     state.iconPositions[id] = clampIconPosition(x, y);
     localStorage.setItem("devskits-icon-positions", JSON.stringify(state.iconPositions));
+  }
+
+  function iconSlots(entryCount) {
+    const grid = currentGrid();
+    const width = Math.max(180, ui.iconContainer.clientWidth);
+    const cols = Math.max(1, Math.floor((width - grid.margin * 2) / grid.x));
+    return { cols, grid, count: entryCount };
+  }
+
+  function fallbackPosition(index, cols, grid) {
+    return snapToGrid(
+      grid.margin + (index % cols) * grid.x,
+      grid.margin + Math.floor(index / cols) * grid.y
+    );
+  }
+
+  function resolveIconPositions(entries) {
+    const { cols, grid } = iconSlots(entries.length);
+    const occupied = new Set();
+    return entries.map((entry, index) => {
+      const saved = state.iconPositions[entry.id] || fallbackPosition(index, cols, grid);
+      let safe = clampIconPosition(saved.x, saved.y);
+      const keyFrom = (p) => `${Math.round((p.x - grid.margin) / grid.x)}:${Math.round((p.y - grid.margin) / grid.y)}`;
+      let key = keyFrom(safe);
+      if (occupied.has(key)) {
+        for (let slot = index; slot < index + 200; slot += 1) {
+          const next = fallbackPosition(slot, cols, grid);
+          const k = keyFrom(next);
+          if (!occupied.has(k)) {
+            safe = clampIconPosition(next.x, next.y);
+            key = k;
+            break;
+          }
+        }
+      }
+      occupied.add(key);
+      return safe;
+    });
   }
 
   function selectIcon(iconId, shouldFocus = false) {
@@ -98,20 +148,20 @@
     ui.iconContainer.innerHTML = "";
     clearIconSelection();
 
-    getDesktopEntries().forEach((entry, index) => {
+    const entries = getDesktopEntries();
+    const positions = resolveIconPositions(entries);
+
+    entries.forEach((entry, index) => {
       const node = tpl.content.firstElementChild.cloneNode(true);
       node.dataset.app = entry.id;
       node.querySelector(".icon-glyph").innerHTML = entry.app.iconSvg || APPS.about.iconSvg;
       node.querySelector(".icon-label").textContent = entry.app.title;
-      node.style.position = "absolute";
       node.setAttribute("role", "option");
       node.setAttribute("aria-label", entry.app.title);
       node.setAttribute("aria-selected", "false");
       node.setAttribute("tabindex", "-1");
 
-      const fallback = snapToGrid(GRID.margin + (index % 7) * GRID.x, GRID.margin + Math.floor(index / 7) * GRID.y);
-      const saved = state.iconPositions[entry.id] || fallback;
-      const safe = clampIconPosition(saved.x, saved.y);
+      const safe = positions[index];
       node.style.left = `${safe.x}px`;
       node.style.top = `${safe.y}px`;
       saveIconPosition(entry.id, safe.x, safe.y);
@@ -128,7 +178,10 @@
 
     node.addEventListener("click", () => {
       if (suppressClick) return;
-      selectIcon(entry.id);
+      if (selectedIconId === entry.id || isMobileLike()) {
+        launchDesktopEntry(entry);
+      }
+      selectIcon(entry.id, true);
     });
 
     node.addEventListener("dblclick", (e) => {
@@ -139,13 +192,14 @@
     });
 
     node.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") {
+      if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
         launchDesktopEntry(entry);
       }
     });
 
     node.addEventListener("pointerdown", (e) => {
+      if (isMobileLike()) return;
       if (e.button !== 0 && e.pointerType !== "touch") return;
       const rect = node.getBoundingClientRect();
       dragged = false;
@@ -155,8 +209,6 @@
         pointerId: e.pointerId,
         originX: e.clientX,
         originY: e.clientY,
-        left: parseInt(node.style.left, 10) || 0,
-        top: parseInt(node.style.top, 10) || 0,
         offsetX: e.clientX - rect.left,
         offsetY: e.clientY - rect.top
       };
@@ -166,16 +218,13 @@
     node.addEventListener("pointermove", (e) => {
       if (!drag || e.pointerId !== drag.pointerId) return;
       const shift = Math.hypot(e.clientX - drag.originX, e.clientY - drag.originY);
-      const threshold = e.pointerType === "touch" ? 8 : 4;
-      if (!dragged && shift > threshold) {
+      if (!dragged && shift > 4) {
         dragged = true;
         document.body.classList.add("dragging-icons");
         node.classList.add("dragging");
       }
       if (!dragged) return;
-      const rawX = e.clientX - drag.offsetX;
-      const rawY = e.clientY - drag.offsetY;
-      const safe = clampIconPosition(rawX, rawY);
+      const safe = clampIconPosition(e.clientX - drag.offsetX, e.clientY - drag.offsetY);
       node.style.left = `${safe.x}px`;
       node.style.top = `${safe.y}px`;
     });
@@ -190,7 +239,7 @@
         node.style.top = `${safe.y}px`;
         saveIconPosition(entry.id, safe.x, safe.y);
         suppressClick = true;
-        setTimeout(() => { suppressClick = false; }, 120);
+        setTimeout(() => { suppressClick = false; }, 140);
       }
       document.body.classList.remove("dragging-icons");
       node.classList.remove("dragging");
@@ -210,12 +259,8 @@
       if (!icons.length) return;
       const currentIndex = icons.findIndex((icon) => icon.dataset.app === selectedIconId);
 
-      if (e.key === "Enter" && selectedIconId) {
-        e.preventDefault();
-        icons[currentIndex]?.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter" }));
-      }
-
-      const keyMap = { ArrowDown: 7, ArrowUp: -7, ArrowRight: 1, ArrowLeft: -1 };
+      const { cols } = iconSlots(icons.length);
+      const keyMap = { ArrowDown: cols, ArrowUp: -cols, ArrowRight: 1, ArrowLeft: -1 };
       if (!(e.key in keyMap)) return;
       e.preventDefault();
       const nextIndex = Math.max(0, Math.min(icons.length - 1, (currentIndex === -1 ? 0 : currentIndex) + keyMap[e.key]));
@@ -230,8 +275,8 @@
     document.addEventListener("contextmenu", (e) => {
       if (!e.target.closest("#desktop")) return;
       e.preventDefault();
-      menu.style.left = `${e.clientX}px`;
-      menu.style.top = `${e.clientY}px`;
+      menu.style.left = `${Math.min(e.clientX, window.innerWidth - menu.offsetWidth - 8)}px`;
+      menu.style.top = `${Math.min(e.clientY, window.innerHeight - menu.offsetHeight - 8)}px`;
       menu.classList.remove("hidden");
     });
     document.addEventListener("click", () => menu.classList.add("hidden"));

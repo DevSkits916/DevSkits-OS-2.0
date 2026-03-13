@@ -6,6 +6,36 @@ A browser-based retro desktop experience built as a **fictional operating system
 
 ---
 
+## Windows 3.1 Restyle Update
+
+Recent UI/UX repairs focused on a stronger **Windows 3.1 Program Manager** look while keeping the same app/content structure:
+
+- Rebuilt shell styling into a consistent Windows 3.1 visual system: gray beveled controls, blue title bars, sharp corners, and retro font stack.
+- Reworked desktop icon rendering/layout so all icons are visible on load, aligned to a responsive desktop grid, and remain clickable on desktop + touch devices.
+- Added a unified inline SVG icon library (local inline SVG only, no CDN) and mapped core desktop apps/shortcuts to consistent retro icons.
+- Improved desktop behavior: single-tap icon launch on mobile, drag-to-reposition icons on non-touch desktop, and better keyboard navigation.
+- Improved window behavior: safer viewport clamping, responsive launch sizing, and mobile-friendly near-fullscreen windows that stay inside bounds.
+
+### Icon System
+
+Icon definitions now live in `js/core/state.js` as an inline SVG library (`ICON_LIBRARY`) and are assigned per app via `iconSvg`.
+
+### Desktop Icon Layout
+
+Desktop icons now use a responsive slot/grid placement strategy based on viewport width:
+
+- desktop: roomy columns + drag support
+- tablet: tighter grid spacing
+- phone: compact layout, no drag, tap-to-open
+
+Saved icon positions are clamped and deduplicated so icons do not overlap or render off-screen after resize.
+
+### Mobile Behavior
+
+For narrow viewports, windows open near-fullscreen with larger title controls and remain viewport-contained. Desktop icons retain touch-friendly hit targets and readable labels without horizontal overflow.
+
+---
+
 ## Live Demo
 
 [Launch DevSkits 3.1](https://devskits916.github.io/DevSkits-OS-2.0/)
