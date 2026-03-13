@@ -18,7 +18,7 @@
     }));
 
     container.querySelectorAll(".contact-url").forEach((btn) => btn.addEventListener("click", () => {
-      window.DevSkitsWindowManager.openApp("browser", { route: btn.dataset.url });
+      window.open(btn.dataset.url, "_blank", "noopener,noreferrer");
     }));
 
     container.querySelector("#vcard-download").addEventListener("click", () => {
