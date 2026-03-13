@@ -1,5 +1,5 @@
 (() => {
-  const { state, ui, APPS } = window.DevSkitsState;
+  const { state, ui, APPS, addActivity } = window.DevSkitsState;
 
   function persistSession() {
     const session = [];
@@ -186,6 +186,16 @@
     if (state.windows.has(appId)) {
       restoreWindow(appId);
       focusWindow(appId);
+      if (options?.url && appId === "browser" && window.DevSkitsBrowser) {
+        const rec = state.windows.get(appId);
+        const view = rec?.el.querySelector(".browser-view");
+        const addr = rec?.el.querySelector(".browser-address");
+        const result = window.DevSkitsBrowser.openUrl(options.url);
+        if (result && !result.external && view && addr) {
+          view.innerHTML = result.html;
+          addr.value = result.url;
+        }
+      }
       return;
     }
 
@@ -206,8 +216,9 @@
     render(win.querySelector(".window-content"), options);
     focusWindow(appId);
 
-    state.recentApps = [appId, ...state.recentApps.filter((id) => id !== appId)].slice(0, 5);
+    state.recentApps = [appId, ...state.recentApps.filter((id) => id !== appId)].slice(0, 8);
     localStorage.setItem("devskits-recent-apps", JSON.stringify(state.recentApps));
+    addActivity("open-app", APPS[appId].title);
     persistSession();
   }
 

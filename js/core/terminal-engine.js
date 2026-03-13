@@ -5,8 +5,18 @@
   function createTerminalEngine(print) {
     let cwd = "C:\\DEVSKITS";
 
+    const helpText = {
+      help: "help [command] - list commands or command help",
+      run: "run <app> - launch app by id/name",
+      open: "open <app|path|devskits://url> - open file, app, or internal browser url",
+      mail: "mail - open Inbox",
+      browser: "browser [url] - open Navigator",
+      changelog: "changelog - open Build Log",
+      recent: "recent - show tracked activity"
+    };
+
     const commands = {
-      help: () => "Commands: help clear cls about contact donate links projects loki github date whoami reboot theme ls dir cd pwd cat open echo ver hostname settings",
+      help: (_, cmd) => (cmd ? helpText[cmd] || `No extended help for ${cmd}` : `Commands: ${Object.keys(commands).join(" ")}`),
       clear: () => ({ clear: true }),
       cls: () => ({ clear: true }),
       about: () => "DevSkits OS 2.0 identity shell. Retro browser desktop.",
@@ -27,10 +37,37 @@
       cat: (_, arg) => catFile(arg),
       open: (_, arg) => openTarget(arg),
       echo: (_, ...args) => args.join(" "),
-      ver: () => "DevSkits OS 2.0 / Build 2026.02",
+      ver: () => "DevSkits OS 2.0 / Build 2026.03",
       hostname: () => "DEVSKITS-STATION",
-      settings: () => "Opening Settings app..."
+      settings: () => "Opening Settings app...",
+      run: (_, ...args) => runApp(args.join(" ")),
+      apps: () => Object.keys(window.DevSkitsState.APPS).join("\n"),
+      history: () => state.terminalHistory.join("\n") || "No terminal history.",
+      mail: () => "Opening Inbox...",
+      browser: (_, arg) => {
+        const target = arg || "devskits://home";
+        window.DevSkitsWindowManager.openApp("browser", { url: target });
+        return `Navigator -> ${target}`;
+      },
+      changelog: () => "Opening Build Log...",
+      pkg: () => state.packages.map((p) => `${p.installed ? "[x]" : "[ ]"} ${p.name}`).join("\n"),
+      recent: () => state.activity.slice(0, 12).map((a) => `${new Date(a.at).toLocaleTimeString()} ${a.type}: ${a.detail}`).join("\n") || "No activity yet.",
+      notify: (_, ...args) => {
+        const msg = args.join(" ") || "DevSkits ping";
+        window.DevSkitsDesktop.notify(msg);
+        return `Notified: ${msg}`;
+      }
     };
+
+    function runApp(name = "") {
+      if (!name) return "Usage: run <app>";
+      const normalized = name.toLowerCase();
+      const alias = { navigator: "browser", inbox: "inbox", buildlog: "buildlog" };
+      const appId = window.DevSkitsAppRegistry[normalized] ? normalized : alias[normalized];
+      if (!appId) return `Unknown app: ${name}`;
+      window.DevSkitsWindowManager.openApp(appId);
+      return `Launched ${appId}`;
+    }
 
     function listDir(arg = ".") {
       const path = FS.normalize(arg, cwd);
@@ -56,8 +93,12 @@
     }
 
     function openTarget(arg = "") {
-      if (!arg) return "Usage: open <app-or-file>";
+      if (!arg) return "Usage: open <app-or-file-or-url>";
       const lower = arg.toLowerCase();
+      if (lower.startsWith("devskits://")) {
+        window.DevSkitsWindowManager.openApp("browser", { url: lower });
+        return `Opened ${lower}`;
+      }
       if (window.DevSkitsAppRegistry[lower]) {
         window.DevSkitsWindowManager.openApp(lower);
         return `Opened ${lower}`;
@@ -85,7 +126,10 @@
       if (cmd === "github") window.open("https://github.com/DevSkits916", "_blank", "noopener");
       if (cmd === "theme") window.DevSkitsDesktop.cycleTheme();
       if (cmd === "reboot") setTimeout(window.DevSkitsDesktop.rebootSystem, 300);
-      if (["contact", "donate", "links", "projects", "loki", "settings"].includes(cmd)) window.DevSkitsWindowManager.openApp(cmd);
+      if (["contact", "donate", "links", "projects", "loki", "settings", "mail", "changelog"].includes(cmd)) {
+        const map = { mail: "inbox", changelog: "buildlog" };
+        window.DevSkitsWindowManager.openApp(map[cmd] || cmd);
+      }
       return result;
     }
 
