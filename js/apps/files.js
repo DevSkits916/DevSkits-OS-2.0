@@ -22,6 +22,11 @@
       } else if (node.type === "project") {
         window.DevSkitsWindowManager.openApp("projects", { focusProject: node.ref });
       } else {
+        if ((node.content || "").includes("devskits://")) {
+          const route = (node.content.match(/devskits:\/\/[\w/-]+/) || [])[0];
+          if (route) return window.DevSkitsWindowManager.openApp("browser", { route });
+        }
+        if (item.toLowerCase().includes("note")) return window.DevSkitsWindowManager.openApp("notes");
         alert(node.content || "Empty file");
       }
     }

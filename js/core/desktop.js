@@ -7,18 +7,20 @@
     else document.body.setAttribute("data-theme", theme);
     state.activeTheme = theme;
     localStorage.setItem("devskits-theme", theme);
+    W().trackActivity("theme", theme);
   }
 
   function cycleTheme() {
     const idx = state.themes.indexOf(state.activeTheme);
     applyTheme(state.themes[(idx + 1) % state.themes.length]);
-    notify(`Theme: ${state.activeTheme}`);
+    notify(`Theme changed: ${state.activeTheme}`);
   }
 
   function applyWallpaper(name) {
     ui.desktop.dataset.wallpaper = name;
     state.wallpaper = name;
     localStorage.setItem("devskits-wallpaper", name);
+    W().trackActivity("wallpaper", name);
   }
 
   function toggleCRT(force) {
@@ -94,10 +96,10 @@
     });
   }
 
-  function notify(message) {
+  function notify(message, level = "info") {
     const area = document.querySelector("#notification-area");
     const item = document.createElement("div");
-    item.className = "notification";
+    item.className = `notification ${level}`;
     item.textContent = message;
     area.appendChild(item);
     setTimeout(() => item.remove(), 2400);
@@ -114,6 +116,7 @@
     ui.taskButtons.innerHTML = "";
     ui.desktop.classList.add("hidden");
     document.querySelector("#boot-screen").classList.remove("hidden");
+    notify("Reboot complete", "ok");
     startBootSequence();
   }
 
@@ -145,15 +148,66 @@
     W().setSticky(rows);
   }
 
+  function runCommand(input) {
+    const cmd = input.trim().toLowerCase();
+    if (!cmd) return;
+    const appAlias = {
+      browser: "browser", navigator: "browser", terminal: "terminal", files: "files", notes: "notes", links: "links", inbox: "inbox", settings: "settings", projects: "projects", changelog: "buildlog", buildlog: "buildlog", mail: "inbox", media: "mediadeck"
+    };
+    if (cmd.startsWith("devskits://")) return window.DevSkitsWindowManager.openApp("browser", { route: cmd });
+    if (cmd.startsWith("open ")) return runCommand(cmd.replace(/^open\s+/, ""));
+    const target = appAlias[cmd];
+    if (target) return window.DevSkitsWindowManager.openApp(target);
+    notify("Run: command not found", "warn");
+  }
+
+  function openRunDialog() {
+    const dlg = document.querySelector("#run-dialog");
+    const input = document.querySelector("#run-input");
+    dlg.classList.remove("hidden");
+    input.value = "";
+    setTimeout(() => input.focus(), 20);
+  }
+
+  function closeRunDialog() {
+    document.querySelector("#run-dialog").classList.add("hidden");
+  }
+
+  function bindRunDialog() {
+    const dlg = document.querySelector("#run-dialog");
+    const input = document.querySelector("#run-input");
+    document.querySelector("#run-go").addEventListener("click", () => {
+      runCommand(input.value);
+      W().trackActivity("run", input.value);
+      closeRunDialog();
+    });
+    document.querySelector("#run-cancel").addEventListener("click", closeRunDialog);
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") document.querySelector("#run-go").click();
+      if (e.key === "Escape") closeRunDialog();
+    });
+    dlg.addEventListener("click", (e) => e.target === dlg && closeRunDialog());
+    document.addEventListener("keydown", (e) => {
+      if ((e.ctrlKey && e.key.toLowerCase() === "r") || (e.metaKey && e.key.toLowerCase() === "r")) {
+        e.preventDefault();
+        openRunDialog();
+      }
+    });
+  }
+
   function renderWidgets() {
     const bar = document.createElement("aside");
     bar.className = "desktop-widgets";
     ui.desktop.appendChild(bar);
     setInterval(() => {
       const packages = Object.values(W().getPackages()).filter(Boolean).length;
-      const quote = (W().getQuotes()[0]?.text || "No status quote").slice(0, 52);
-      bar.innerHTML = `<div class="widget">Clock ${new Date().toLocaleTimeString()}</div><div class="widget">Recent ${(state.recentApps[0] || "none")}</div><div class="widget">Packages ${packages}/6</div><div class="widget">QOTD ${quote}</div>`;
+      const recent = W().getRecentActivity().slice(0, 3).map((r) => `${r.type}: ${r.detail}`).join(" | ") || "none";
+      bar.innerHTML = `<div class="widget">Time ${new Date().toLocaleTimeString()}</div><div class="widget">Build 0.3.0 / DSK-315</div><div class="widget">Packages ${packages}/5</div><div class="widget">Recent ${recent.slice(0, 64)}</div><div class="widget"><button class="link-btn" data-quick="browser">Navigator</button> <button class="link-btn" data-quick="inbox">Inbox</button> <button class="link-btn" data-quick="buildlog">Build Log</button></div>`;
     }, 1000);
+    bar.addEventListener("click", (e) => {
+      const q = e.target.dataset.quick;
+      if (q) window.DevSkitsWindowManager.openApp(q);
+    });
   }
 
   function initScreensaver() {
@@ -194,6 +248,7 @@
     toggleCRT(state.crt);
     buildDesktopIcons();
     bindDesktopContextMenu();
+    bindRunDialog();
     W().getSticky().forEach((s) => createSticky(s));
     renderWidgets();
     initScreensaver();
@@ -202,5 +257,5 @@
     startBootSequence();
   }
 
-  window.DevSkitsDesktop = { initDesktop, cycleTheme, applyTheme, applyWallpaper, toggleCRT, notify, rebootSystem, buildDesktopIcons, createSticky };
+  window.DevSkitsDesktop = { initDesktop, cycleTheme, applyTheme, applyWallpaper, toggleCRT, notify, rebootSystem, buildDesktopIcons, createSticky, openRunDialog, runCommand };
 })();

@@ -5,23 +5,14 @@
 
   function createTerminalEngine(print) {
     let cwd = "C:\\DEVSKITS";
-    let gameState = null;
 
     const commands = {
       help: (_, topic) => helpText(topic),
       clear: () => ({ clear: true }),
       cls: () => ({ clear: true }),
       about: () => "DevSkits 3.1 identity shell. Retro browser desktop.",
-      contact: () => "Opening Contact app...",
-      donate: () => "Opening Donate app...",
-      links: () => "Opening Links app...",
-      projects: () => "Opening Projects app...",
-      loki: () => "Opening Loki app...",
-      github: () => "Opening github.com/DevSkits916",
       date: () => new Date().toString(),
       whoami: () => "travis.ramsey@devskits",
-      reboot: () => "Reboot queued...",
-      theme: () => "Theme cycled.",
       ls: (_, arg) => listDir(arg),
       dir: (_, arg) => listDir(arg),
       cd: (_, arg) => changeDir(arg),
@@ -29,30 +20,30 @@
       cat: (_, arg) => catFile(arg),
       open: (_, arg) => openTarget(arg),
       run: (_, arg) => runApp(arg),
-      echo: (_, ...args) => args.join(" "),
-      ver: () => "DevSkits 3.1 / Build 2026.04-P4",
-      hostname: () => "DEVSKITS-STATION",
-      settings: () => "Opening Settings app...",
+      history: () => state.terminalHistory.slice(-20).join("\n") || "No command history.",
+      apps: () => Object.keys(window.DevSkitsState.APPS).join(", "),
+      mail: () => runApp("inbox"),
+      browser: (_, arg) => openTarget(arg || "browser"),
+      changelog: () => runApp("buildlog"),
+      recent: () => W().getRecentActivity().slice(0, 10).map((r) => `${new Date(r.at).toLocaleTimeString()} ${r.type} ${r.detail}`).join("\n") || "No recent activity.",
+      notify: (_, ...msg) => (window.DevSkitsDesktop.notify(msg.join(" ") || "Terminal ping"), "Notification sent."),
       pkg: (_, action, name) => pkgCommand(action, name),
-      achievements: () => achievementList(),
-      find: (_, ...args) => searchIndex(args.join(" ")),
       search: (_, ...args) => searchIndex(args.join(" ")),
-      recent: () => `Recent apps: ${state.recentApps.join(", ") || "none"}`,
-      archive: () => "Tip: open devskits://archive after installing archive_recovery",
-      unlock: (_, route) => unlockRoute(route),
+      find: (_, ...args) => searchIndex(args.join(" ")),
       secret: () => secretCommand(),
-      game: (_, arg) => terminalGame(arg)
+      theme: () => "Theme cycled.",
+      reboot: () => "Reboot queued..."
     };
 
     function helpText(topic) {
-      const base = "Commands: help clear about open run pkg find search ls cd cat secret game unlock achievements recent";
+      const base = "Commands: help clear ls cd cat open run history apps mail browser changelog pkg recent notify search theme reboot";
       if (!topic) return base;
       const map = {
-        pkg: "pkg list | pkg install <name>",
+        run: "run <app> launches an app alias (terminal, files, notes, inbox, browser...)",
         open: "open <app|file|devskits://route>",
-        find: "find <term> searches apps/pages/files/notes",
-        secret: "secret reveals hidden route hints",
-        game: "game start launches terminal scavenger"
+        pkg: "pkg list | pkg install <name>",
+        browser: "browser [devskits://route|https://url]",
+        recent: "recent prints tracked shared activity"
       };
       return map[topic] || `No extended help for ${topic}`;
     }
@@ -81,28 +72,30 @@
     }
 
     function runApp(arg = "") {
-      if (!window.DevSkitsAppRegistry[arg]) return "App not found.";
-      window.DevSkitsWindowManager.openApp(arg);
-      return `Opened ${arg}`;
+      const alias = { changelog: "buildlog", browser: "browser", mail: "inbox" };
+      const target = alias[arg] || arg;
+      if (!window.DevSkitsAppRegistry[target]) return "App not found.";
+      window.DevSkitsWindowManager.openApp(target);
+      W().trackActivity("app", `opened ${target}`);
+      return `Opened ${target}`;
     }
 
     function openTarget(arg = "") {
       if (!arg) return "Usage: open <app-or-file-or-route>";
       const lower = arg.toLowerCase();
-      if (window.DevSkitsAppRegistry[lower]) {
-        window.DevSkitsWindowManager.openApp(lower);
-        return `Opened ${lower}`;
-      }
+      if (window.DevSkitsAppRegistry[lower]) return runApp(lower);
       if (arg.startsWith("devskits://")) {
         window.DevSkitsWindowManager.openApp("browser", { route: arg });
+        W().trackActivity("browse", arg);
         return `Opened ${arg}`;
+      }
+      if (/^https?:\/\//i.test(arg)) {
+        window.open(arg, "_blank", "noopener");
+        return `Opened external ${arg}`;
       }
       const node = FS.getNode(FS.normalize(arg, cwd));
       if (!node) return "Target not found.";
-      if (node.type === "app") {
-        window.DevSkitsWindowManager.openApp(node.app);
-        return `Opened app: ${node.app}`;
-      }
+      if (node.type === "app") return runApp(node.app);
       if (node.type === "project") {
         window.DevSkitsWindowManager.openApp("projects", { focusProject: node.ref });
         return `Opened project: ${node.ref}`;
@@ -116,14 +109,10 @@
         if (!W().packageDefs[name]) return "Unknown package";
         if (W().isInstalled(name)) return "Package already installed";
         W().installPackage(name);
+        window.DevSkitsDesktop.notify(`Package installed: ${name}`, "ok");
         return `Installed ${name}`;
       }
       return "Usage: pkg list | pkg install <name>";
-    }
-
-    function achievementList() {
-      const rows = W().getAchievements();
-      return Object.keys(W().achievementDefs).map((id) => `${rows[id] ? "[x]" : "[ ]"} ${W().achievementDefs[id]}`).join("\n");
     }
 
     function searchIndex(query) {
@@ -131,42 +120,12 @@
       const pages = Object.keys(W().pages).filter((p) => p.includes(query));
       const apps = Object.keys(window.DevSkitsState.APPS).filter((id) => id.includes(query.toLowerCase()));
       const notes = JSON.parse(localStorage.getItem("devskits-notes-v2") || "[]").filter((n) => `${n.name} ${n.content}`.toLowerCase().includes(query.toLowerCase())).map((n) => n.name);
-      return [
-        `Apps: ${apps.join(", ") || "none"}`,
-        `Pages: ${pages.join(", ") || "none"}`,
-        `Notes: ${notes.join(", ") || "none"}`
-      ].join("\n");
-    }
-
-    function unlockRoute(route = "") {
-      if (!route) return "Usage: unlock <package-id>";
-      if (!W().packageDefs[route]) return "Unknown unlock id.";
-      W().installPackage(route);
-      return `Unlocked package ${route}`;
+      return [`Apps: ${apps.join(", ") || "none"}`, `Pages: ${pages.join(", ") || "none"}`, `Notes: ${notes.join(", ") || "none"}`].join("\n");
     }
 
     function secretCommand() {
       W().award("terminal_diver");
-      return "Hidden relay discovered: install hidden_routes then open devskits://secrets";
-    }
-
-    function terminalGame(arg = "") {
-      if (arg === "start" || !gameState) {
-        gameState = { step: 0 };
-        return "SCAVENGER> find token in route. Type: game home|labs|archive";
-      }
-      if (!gameState) return "Type game start";
-      const answers = ["home", "labs", "archive"];
-      if (arg === answers[gameState.step]) {
-        gameState.step += 1;
-        if (gameState.step >= answers.length) {
-          gameState = null;
-          W().award("first_secret");
-          return "Mission complete. Reward: route clue devskits://secrets";
-        }
-        return `Good. Next node: ${answers[gameState.step]}`;
-      }
-      return "Wrong node. Try sequence home -> labs -> archive";
+      return "Hidden relay discovered: try open devskits://hidden/loki-note after installing devskits_labs";
     }
 
     function execute(raw) {
@@ -176,10 +135,9 @@
       const handler = commands[cmd];
       if (!handler) return `Unknown command: ${name}`;
       const result = handler(raw, ...args);
-      if (cmd === "github") window.open("https://github.com/DevSkits916", "_blank", "noopener");
       if (cmd === "theme") window.DevSkitsDesktop.cycleTheme();
       if (cmd === "reboot") setTimeout(window.DevSkitsDesktop.rebootSystem, 300);
-      if (["contact", "donate", "links", "projects", "loki", "settings"].includes(cmd)) window.DevSkitsWindowManager.openApp(cmd);
+      W().trackActivity("cmd", raw);
       return result;
     }
 

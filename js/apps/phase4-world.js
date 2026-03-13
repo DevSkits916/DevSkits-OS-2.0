@@ -1,45 +1,194 @@
 (() => {
   const W = window.DevSkitsWorld;
+  const APPS = window.DevSkitsState.APPS;
 
   function addShortcut(label, type, target, icon = "◫") {
     const rows = W.getShortcuts();
     rows.push({ id: `sc-${Date.now()}`, label, type, target, icon });
     W.setShortcuts(rows);
     window.DevSkitsDesktop.buildDesktopIcons();
+    window.DevSkitsDesktop.notify(`Shortcut created: ${label}`);
+  }
+
+  function routePage(route) {
+    const node = W.pages[route];
+    if (!node) return "<h3>404 // route not found</h3>";
+    if (!W.canAccessRoute(route)) return `<h3>LOCKED NODE</h3><p>Install package: ${node.lock}</p>`;
+    const links = (node.links || []).map((l) => `<a href="#" data-route="${l}">${l}</a>`).join("<br>");
+    return `<div class="retro-web"><h3>${node.title}</h3><p>${node.body}</p>${node.appLink ? `<p><button class="link-btn" data-open-app="${node.appLink}">Open ${APPS[node.appLink]?.title || node.appLink}</button></p>` : ""}${links ? `<div class="retro-links"><strong>Local links</strong><br>${links}</div>` : ""}</div>`;
   }
 
   function renderBrowser(container, options = {}) {
-    const routes = Object.keys(W.pages);
+    let history = [];
+    let pointer = -1;
     const initial = options.route || "devskits://home";
-    container.innerHTML = `<div class="badges"><input id="browser-url" value="${initial}"/><button class="link-btn" id="browser-go">Go</button><button class="link-btn" id="browser-shortcut">Create Shortcut</button></div><div class="files-list" id="browser-nav">${routes.map((r) => `<button class="task-btn" data-route="${r}">${r}</button>`).join("")}</div><article class="browser-page" id="browser-page"></article>`;
-    const url = container.querySelector("#browser-url");
-    const page = container.querySelector("#browser-page");
-    function openRoute(route) {
-      const node = W.pages[route];
-      if (!node) { page.innerHTML = "<h3>404 node missing</h3>"; return; }
-      if (!W.canAccessRoute(route)) { page.innerHTML = `<h3>LOCKED</h3><p>Install ${node.lock}</p>`; return; }
-      if (route.includes("secrets")) W.award("first_secret");
-      if (route.includes("loki")) W.award("loki_hunter");
-      page.innerHTML = `<h3>${node.title}</h3><p>${node.body}</p>`;
+
+    container.innerHTML = `<div class="navigator-shell"><div class="navigator-bar"><button id="nav-back">◀</button><button id="nav-forward">▶</button><button id="nav-reload">↺</button><input id="nav-url" value="${initial}" aria-label="Navigator URL"/><button id="nav-go">Go</button></div><article id="nav-page" class="browser-page"></article></div>`;
+    const page = container.querySelector("#nav-page");
+    const url = container.querySelector("#nav-url");
+
+    function openRoute(route, push = true) {
+      if (/^https?:\/\//i.test(route)) {
+        window.open(route, "_blank", "noopener");
+        return;
+      }
+      page.innerHTML = routePage(route);
       url.value = route;
+      if (push) {
+        history = history.slice(0, pointer + 1);
+        history.push(route);
+        pointer = history.length - 1;
+      }
+      W.pushBrowserHistory(route);
     }
-    container.querySelector("#browser-go").addEventListener("click", () => openRoute(url.value.trim()));
-    container.querySelector("#browser-nav").addEventListener("click", (e) => e.target.dataset.route && openRoute(e.target.dataset.route));
-    container.querySelector("#browser-shortcut").addEventListener("click", () => addShortcut(url.value, "route", url.value, "⌂"));
+
+    container.addEventListener("click", (e) => {
+      const route = e.target.dataset.route;
+      const openApp = e.target.dataset.openApp;
+      if (route) openRoute(route);
+      if (openApp) window.DevSkitsWindowManager.openApp(openApp);
+    });
+
+    container.querySelector("#nav-go").addEventListener("click", () => openRoute(url.value.trim()));
+    container.querySelector("#nav-back").addEventListener("click", () => {
+      if (pointer <= 0) return;
+      pointer -= 1;
+      openRoute(history[pointer], false);
+    });
+    container.querySelector("#nav-forward").addEventListener("click", () => {
+      if (pointer >= history.length - 1) return;
+      pointer += 1;
+      openRoute(history[pointer], false);
+    });
+    container.querySelector("#nav-reload").addEventListener("click", () => openRoute(url.value.trim(), false));
+    url.addEventListener("keydown", (e) => e.key === "Enter" && openRoute(url.value.trim()));
     openRoute(initial);
   }
 
-  function renderPackages(container) {
-    const defs = W.packageDefs;
-    container.innerHTML = `<h3>Install Center</h3><div id="pkg-list"></div>`;
+  function renderInbox(container) {
+    const folders = ["Inbox", "Sent", "Drafts", "Archive", "System"];
+    let activeFolder = "Inbox";
+    let messages = W.getInbox();
+    let selected = messages.find((m) => m.folder === activeFolder)?.id;
+
+    container.innerHTML = `<div class="inbox-shell"><aside class="inbox-folders"></aside><section><div class="badges"><button class="link-btn" id="compose-msg">Compose</button><button class="link-btn" id="save-draft">Save Draft</button></div><div class="inbox-main"><div class="inbox-list"></div><article class="inbox-detail"></article></div></section></div>`;
+    const fWrap = container.querySelector(".inbox-folders");
+    const list = container.querySelector(".inbox-list");
+    const detail = container.querySelector(".inbox-detail");
+
+    function drawFolders() {
+      fWrap.innerHTML = folders.map((f) => `<button class="task-btn ${f === activeFolder ? "active" : ""}" data-folder="${f}">${f}</button>`).join("");
+    }
+
+    function drawList() {
+      const rows = messages.filter((m) => m.folder === activeFolder);
+      if (!rows.length) list.innerHTML = "<em>No messages.</em>";
+      else list.innerHTML = rows.map((m) => `<button class="task-btn ${m.id === selected ? "active" : ""}" data-id="${m.id}"><strong>${m.subject}</strong><small>${m.from}</small></button>`).join("");
+      drawDetail();
+    }
+
+    function drawDetail() {
+      const msg = messages.find((m) => m.id === selected);
+      if (!msg) {
+        detail.innerHTML = "<h4>Select a message</h4>";
+        return;
+      }
+      detail.innerHTML = `<h4>${msg.subject}</h4><p><strong>From:</strong> ${msg.from}</p><pre>${msg.body || ""}</pre>${msg.link ? `<button class="link-btn" data-link="${msg.link}">Open linked route</button>` : ""}`;
+    }
+
+    fWrap.addEventListener("click", (e) => {
+      const folder = e.target.dataset.folder;
+      if (!folder) return;
+      activeFolder = folder;
+      selected = messages.find((m) => m.folder === activeFolder)?.id;
+      drawFolders();
+      drawList();
+    });
+
+    list.addEventListener("click", (e) => {
+      const id = e.target.closest("button")?.dataset.id;
+      if (!id) return;
+      selected = id;
+      drawList();
+    });
+
+    detail.addEventListener("click", (e) => {
+      if (!e.target.dataset.link) return;
+      window.DevSkitsWindowManager.openApp("browser", { route: e.target.dataset.link });
+    });
+
+    container.querySelector("#compose-msg").addEventListener("click", () => {
+      detail.innerHTML = `<h4>Compose Draft</h4><input id="draft-subject" placeholder="Subject"/><textarea id="draft-body" class="notes-editor" style="height:180px"></textarea>`;
+      activeFolder = "Drafts";
+      drawFolders();
+    });
+
+    container.querySelector("#save-draft").addEventListener("click", () => {
+      const subject = detail.querySelector("#draft-subject")?.value?.trim() || "Untitled draft";
+      const body = detail.querySelector("#draft-body")?.value?.trim() || "";
+      if (!detail.querySelector("#draft-subject")) return window.DevSkitsDesktop.notify("Open Compose first");
+      const msg = { id: `msg-${Date.now()}`, folder: "Drafts", from: "me@devskits.os", subject, body, createdAt: Date.now() };
+      messages.unshift(msg);
+      W.setInbox(messages);
+      W.trackActivity("draft", `saved ${subject}`);
+      window.DevSkitsDesktop.notify("Draft saved to Inbox");
+      selected = msg.id;
+      drawList();
+    });
+
+    drawFolders();
+    drawList();
+  }
+
+  function renderBuildLog(container) {
+    let mode = "timeline";
+    const entries = W.getChangelog();
+    container.innerHTML = `<div class="badges"><button class="link-btn" data-mode="timeline">Timeline</button><button class="link-btn" data-mode="list">List</button></div><div id="buildlog-body"></div>`;
+    const body = container.querySelector("#buildlog-body");
     function draw() {
-      const installed = W.getPackages();
-      container.querySelector("#pkg-list").innerHTML = Object.entries(defs).map(([id, pkg]) => `<div class="note-row"><strong>${pkg.title}</strong> <small>${pkg.unlocks.join(", ")}</small> <button class="link-btn" data-id="${id}">${installed[id] ? "Installed" : "Install"}</button></div>`).join("");
+      body.innerHTML = entries.map((e) => `<article class="project-card ${mode === "timeline" ? "timeline-card" : ""}"><h4>${e.version} :: ${e.title}</h4><p>${e.build} | ${e.timestamp}</p><div class="badges">${e.tags.map((tag) => `<span class="tag">${tag}</span>`).join("")}</div><p>${e.body}</p></article>`).join("");
     }
     container.addEventListener("click", (e) => {
-      const id = e.target.dataset.id; if (!id || W.isInstalled(id)) return;
+      if (!e.target.dataset.mode) return;
+      mode = e.target.dataset.mode;
+      draw();
+    });
+    draw();
+  }
+
+  function renderPackages(container) {
+    container.innerHTML = `<h3>Install Center / DevPkg</h3><div id="pkg-list"></div>`;
+    const list = container.querySelector("#pkg-list");
+    function draw() {
+      const installed = W.getPackages();
+      list.innerHTML = Object.entries(W.packageDefs).map(([id, pkg]) => `<div class="note-row"><strong>${pkg.title}</strong><small>${pkg.unlocks.join(", ")}</small><button class="link-btn" data-id="${id}">${installed[id] ? "Installed" : "Install"}</button></div>`).join("");
+    }
+    list.addEventListener("click", (e) => {
+      const id = e.target.dataset.id;
+      if (!id || W.isInstalled(id)) return;
       W.installPackage(id);
-      window.DevSkitsDesktop.notify(`Installed ${defs[id].title}`);
+      window.DevSkitsDesktop.notify(`Package installed: ${W.packageDefs[id].title}`);
+      draw();
+    });
+    draw();
+  }
+
+  function renderMediaDeck(container) {
+    const rows = W.getMediaLibrary();
+    let selected = rows[0]?.id;
+    container.innerHTML = `<div class="media-shell"><div class="files-list" id="media-list"></div><section class="project-card" id="media-preview"></section></div>`;
+    const list = container.querySelector("#media-list");
+    const preview = container.querySelector("#media-preview");
+    function draw() {
+      list.innerHTML = rows.map((r) => `<button class="task-btn ${r.id === selected ? "active" : ""}" data-id="${r.id}">${r.type} :: ${r.title}</button>`).join("");
+      const item = rows.find((r) => r.id === selected);
+      if (!item) return;
+      preview.innerHTML = `<h4>${item.title}</h4><p>${item.details}</p><div class="media-canvas">PREVIEW</div><p>${item.preview}</p><div class="badges"><button class="link-btn">⏮</button><button class="link-btn">▶</button><button class="link-btn">⏭</button></div>`;
+    }
+    list.addEventListener("click", (e) => {
+      const id = e.target.dataset.id;
+      if (!id) return;
+      selected = id;
       draw();
     });
     draw();
@@ -79,22 +228,16 @@
     container.addEventListener("click", (e) => { if (e.target.dataset.open) window.DevSkitsWindowManager.openApp("browser", { route: e.target.dataset.open }); });
   }
 
-
   function getSearchIndex() {
-    const apps = Object.entries(window.DevSkitsState.APPS).map(([id, app]) => ({ type: "app", label: app.title, target: id }));
+    const apps = Object.entries(APPS).map(([id, app]) => ({ type: "app", label: app.title, target: id }));
     const pages = Object.keys(W.pages).map((route) => ({ type: "page", label: route, target: route }));
-    const files = ["C:\\DEVSKITS", "C:\\DEVSKITS\\PROJECTS", "C:\\DEVSKITS\\LOKI", "C:\\DEVSKITS\\NOTES"].flatMap((path) => {
-      const rows = window.DevSkitsFS.list(path) || [];
-      return rows.map((r) => ({ type: "file", label: `${path}\\${r.name}`, target: `${path}\\${r.name}` }));
-    });
     const notes = JSON.parse(localStorage.getItem("devskits-notes-v2") || "[]").map((n) => ({ type: "note", label: n.name, target: n.id }));
     const projects = (window.DevSkitsProjects || []).map((p) => ({ type: "project", label: p.name, target: p.name }));
-    const inbox = [{ type: "inbox", label: "Inbox: Phase 4 help thread", target: "devskits://inbox-help" }];
-    return [...apps, ...pages, ...files, ...notes, ...projects, ...inbox];
+    return [...apps, ...pages, ...notes, ...projects];
   }
 
   function renderSearch(container) {
-    container.innerHTML = `<div class="badges"><input id="search-everywhere" placeholder="Search apps, pages, files, notes..."/></div><div class="files-list" id="search-results"></div>`;
+    container.innerHTML = `<div class="badges"><input id="search-everywhere" placeholder="Search apps, pages, notes, projects..."/></div><div class="files-list" id="search-results"></div>`;
     const input = container.querySelector("#search-everywhere");
     const list = container.querySelector("#search-results");
     const index = getSearchIndex();
@@ -107,10 +250,9 @@
       const b = e.target.closest("button[data-type]"); if (!b) return;
       const t = b.dataset.type; const target = b.dataset.target;
       if (t === "app") window.DevSkitsWindowManager.openApp(target);
-      else if (t === "page" || t === "inbox") window.DevSkitsWindowManager.openApp("browser", { route: target });
+      else if (t === "page") window.DevSkitsWindowManager.openApp("browser", { route: target });
       else if (t === "project") window.DevSkitsWindowManager.openApp("projects", { focusProject: target });
       else if (t === "note") window.DevSkitsWindowManager.openApp("notes");
-      else if (t === "file") alert(window.DevSkitsFS.getNode(target)?.content || target);
     });
     draw();
   }
@@ -135,6 +277,9 @@
   window.DevSkitsAppRegistry = window.DevSkitsAppRegistry || {};
   Object.assign(window.DevSkitsAppRegistry, {
     browser: renderBrowser,
+    inbox: renderInbox,
+    buildlog: renderBuildLog,
+    mediadeck: renderMediaDeck,
     packages: renderPackages,
     achievements: renderAchievements,
     recycle: renderRecycle,

@@ -37,6 +37,7 @@
       const action = e.target.closest("button[data-action]")?.dataset.action;
       if (app) window.DevSkitsWindowManager.openApp(app);
       if (action === "show-desktop") window.DevSkitsWindowManager.showDesktop();
+      if (action === "run") window.DevSkitsDesktop.openRunDialog();
       if (action === "settings") window.DevSkitsWindowManager.openApp("settings");
       if (action === "about") window.DevSkitsWindowManager.openApp("about");
       if (action === "reboot") window.DevSkitsDesktop.rebootSystem();
