@@ -33,7 +33,6 @@ body {
 .taskbar,
 .start-menu,
 .context-menu,
-.boot-panel,
 .run-panel,
 .desktop-icon .icon-glyph,
 .system-tray,
@@ -73,12 +72,6 @@ fieldset,
   border-bottom-color: var(--border-light);
 }
 
-.boot-screen { position: fixed; inset: 0; background: #000; color: #ddd; display: grid; place-items: center; padding: 1rem; }
-.boot-panel { width: min(760px, 100%); background: #101010; padding: .9rem; box-shadow: none; }
-.boot-logo { margin: 0 auto .55rem; width: min(440px, 92vw); }
-.boot-logo svg { width: 100%; height: auto; display: block; }
-.boot-progress { height: 18px; background: #111; margin-top: .65rem; }
-.boot-progress span { display: block; height: 100%; width: 0; background: repeating-linear-gradient(90deg, #fff 0 8px, #a8a8a8 8px 16px); }
 
 .desktop {
   position: fixed;
