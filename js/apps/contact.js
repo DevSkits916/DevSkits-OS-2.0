@@ -4,7 +4,7 @@
   function toLink(value, type) {
     if (type === "email") return `<a href="mailto:${value}">${value}</a>`;
     if (type === "phone") return `<a href="tel:${value}">${value}</a>`;
-    if (type === "url") return `<a href="${value}" target="_blank" rel="noopener">${value}</a>`;
+    if (type === "url") return `<button type="button" class="link-btn contact-url" data-url="${value}">${value}</button>`;
     return value;
   }
 
@@ -15,6 +15,10 @@
     container.querySelectorAll(".copy-btn").forEach((btn) => btn.addEventListener("click", async () => {
       await navigator.clipboard.writeText(btn.dataset.copy).catch(() => {});
       window.DevSkitsDesktop.notify("Copied", "ok");
+    }));
+
+    container.querySelectorAll(".contact-url").forEach((btn) => btn.addEventListener("click", () => {
+      window.DevSkitsWindowManager.openApp("browser", { route: btn.dataset.url });
     }));
 
     container.querySelector("#vcard-download").addEventListener("click", () => {
