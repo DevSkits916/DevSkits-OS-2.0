@@ -131,7 +131,7 @@
     let drag = null;
     bar.addEventListener("pointerdown", (e) => {
       const rec = state.windows.get(appId);
-      if (!rec || rec.maximized || e.target.closest("button") || window.innerWidth <= 760) return;
+      if (!rec || rec.maximized || e.target.closest("button")) return;
       const rect = win.getBoundingClientRect();
       drag = { x: e.clientX - rect.left, y: e.clientY - rect.top };
       bar.setPointerCapture(e.pointerId);
@@ -155,7 +155,7 @@
     let resize = null;
     handle.addEventListener("pointerdown", (e) => {
       const rec = state.windows.get(appId);
-      if (!rec || rec.maximized || window.innerWidth <= 760) return;
+      if (!rec || rec.maximized) return;
       const rect = win.getBoundingClientRect();
       resize = { w: rect.width, h: rect.height, x: e.clientX, y: e.clientY };
       handle.setPointerCapture(e.pointerId);
@@ -163,8 +163,10 @@
     handle.addEventListener("pointermove", (e) => {
       if (!resize) return;
       const bounds = viewportBounds();
-      const w = Math.max(280, resize.w + (e.clientX - resize.x));
-      const h = Math.max(190, resize.h + (e.clientY - resize.y));
+      const minWidth = window.innerWidth <= 760 ? 220 : 280;
+      const minHeight = window.innerWidth <= 760 ? 160 : 190;
+      const w = Math.max(minWidth, resize.w + (e.clientX - resize.x));
+      const h = Math.max(minHeight, resize.h + (e.clientY - resize.y));
       win.style.width = `${Math.min(w, bounds.width)}px`;
       win.style.height = `${Math.min(h, bounds.height)}px`;
     });
@@ -259,6 +261,13 @@
     if (!items.length) {
       launchApp("about");
       launchApp("contact");
+    }
+
+    const hasTerminal = [...state.windows.values()].some((rec) => rec.appId === "terminal");
+    if (!hasTerminal) {
+      launchApp("terminal");
+      const terminalWindowId = [...state.windows.entries()].find(([, rec]) => rec.appId === "terminal")?.[0];
+      if (terminalWindowId) minimizeWindow(terminalWindowId);
     }
   }
 
