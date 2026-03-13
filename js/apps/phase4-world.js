@@ -20,7 +20,8 @@
 
     function openRoute(route, push = true) {
       if (/^https?:\/\//i.test(route)) {
-        page.innerHTML = `<div class="browser-iframe-wrap"><iframe class="browser-iframe" src="${route}" title="External page" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div>`;
+        window.open(route, "_blank", "noopener,noreferrer");
+        page.innerHTML = `<div class="retro-web"><h3>External link opened</h3><p>${route}</p></div>`;
       } else {
         page.innerHTML = routePage(route);
       }
