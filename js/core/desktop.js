@@ -29,6 +29,16 @@
     localStorage.setItem("devskits-crt", state.crt ? "on" : "off");
   }
 
+
+
+  function applyBranding() {
+    const logo = window.DevSkitsBranding?.logos?.devskits31 || "";
+    const bootLogo = document.querySelector("#boot-logo");
+    const desktopLogo = document.querySelector("#desktop-brandmark");
+    if (bootLogo) bootLogo.innerHTML = logo;
+    if (desktopLogo) desktopLogo.innerHTML = logo;
+  }
+
   function buildDesktopIcons() {
     const tpl = document.querySelector("#desktop-icon-template");
     ui.iconContainer.innerHTML = "";
@@ -50,27 +60,49 @@
 
   function wireIcon(node, entry) {
     let drag = null;
-    node.addEventListener("dblclick", () => {
+    let moved = false;
+    let clickTimer = null;
+
+    function openEntry() {
       if (!entry.isShortcut) window.DevSkitsWindowManager.openApp(entry.id);
       else if (entry.shortcut.type === "route") window.DevSkitsWindowManager.openApp("browser", { route: entry.shortcut.target });
       else window.DevSkitsWindowManager.openApp(entry.shortcut.target);
+    }
+
+    node.addEventListener("dblclick", (e) => {
+      e.preventDefault();
+      clearTimeout(clickTimer);
+      if (!moved) openEntry();
     });
+
+    node.addEventListener("click", () => {
+      clearTimeout(clickTimer);
+      if (moved) return;
+      clickTimer = setTimeout(() => openEntry(), 180);
+    });
+
     node.addEventListener("pointerdown", (e) => {
-      drag = { dx: e.offsetX, dy: e.offsetY };
+      moved = false;
+      drag = { dx: e.offsetX, dy: e.offsetY, startX: e.clientX, startY: e.clientY };
       node.setPointerCapture(e.pointerId);
     });
+
     node.addEventListener("pointermove", (e) => {
       if (!drag) return;
+      const shift = Math.abs(e.clientX - drag.startX) + Math.abs(e.clientY - drag.startY);
+      moved = moved || shift > 4;
       const x = Math.max(0, Math.min(e.clientX - drag.dx, window.innerWidth - 94));
       const y = Math.max(0, Math.min(e.clientY - drag.dy, window.innerHeight - 130));
       node.style.left = `${x}px`;
       node.style.top = `${y}px`;
     });
+
     node.addEventListener("pointerup", () => {
       if (!drag) return;
       state.iconPositions[entry.id] = { x: parseInt(node.style.left, 10), y: parseInt(node.style.top, 10) };
       localStorage.setItem("devskits-icon-positions", JSON.stringify(state.iconPositions));
       drag = null;
+      setTimeout(() => { moved = false; }, 0);
     });
   }
 
@@ -201,30 +233,6 @@
     });
   }
 
-  function renderWidgets() {
-    const bar = document.createElement("aside");
-    bar.className = "desktop-widgets";
-    ui.desktop.appendChild(bar);
-    setInterval(() => {
-      const settings = W().getAppSettings();
-      const packages = Object.values(W().getPackages()).filter(Boolean).length;
-      const recent = W().getRecentActivity().slice(0, 2).map((r) => `${r.type}: ${r.detail}`).join(" | ") || "none";
-      const proc = W().getProcessSnapshot();
-      const upd = W().getUpdates();
-      const rows = [];
-      if (settings.widgets.clock) rows.push(`<div class="widget">${new Date().toLocaleTimeString()} / Uptime ${(proc.uptimeMs / 60000) | 0}m</div>`);
-      if (settings.widgets.health) rows.push(`<div class="widget">CPU ${proc.cpu}% MEM ${proc.memory}%</div>`);
-      if (settings.widgets.updates) rows.push(`<div class="widget">Build ${upd.currentVersion} / ${upd.currentBuild}${upd.available.length ? ` · ${upd.available.length} update` : ""}</div>`);
-      if (settings.widgets.activity) rows.push(`<div class="widget">Recent ${recent.slice(0, 74)}</div>`);
-      rows.push(`<div class="widget">Packages ${packages}/5 · <button class="link-btn" data-quick="activity">Activity</button> <button class="link-btn" data-quick="updater">Updater</button></div>`);
-      bar.innerHTML = rows.join("");
-    }, 1200);
-    bar.addEventListener("click", (e) => {
-      const q = e.target.dataset.quick;
-      if (q) window.DevSkitsWindowManager.openApp(q);
-    });
-  }
-
   function initScreensaver() {
     const enabled = localStorage.getItem("devskits-screensaver") === "on";
     if (!enabled) return;
@@ -262,11 +270,11 @@
     applyTheme(state.activeTheme);
     applyWallpaper(state.wallpaper);
     toggleCRT(state.crt);
+    applyBranding();
     buildDesktopIcons();
     bindDesktopContextMenu();
     bindRunDialog();
     W().getSticky().forEach((s) => createSticky(s));
-    renderWidgets();
     initScreensaver();
     updateClock();
     setInterval(updateClock, 1000);
