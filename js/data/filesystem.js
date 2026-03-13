@@ -9,42 +9,24 @@
             PROJECTS: {
               type: "dir",
               children: {
-                "roadmap.txt": { type: "file", content: "DevSkits OS Roadmap\n- Shell polish\n- Deep app ecosystem\n- Better file integration" },
-                "devskits-os.project": { type: "project", ref: "DevSkits 3.1" }
+                "projects.txt": { type: "file", content: "Projects:\n- DevSkits OS\n- Landing Pages\n- Terminal Projects\n- Automation / Userscripts\n- Loki Creative" },
+                "devskits-os.project": { type: "project", ref: "DevSkits OS" }
               }
             },
-            CONTACT: {
+            CONTACT: { type: "dir", children: { "contact.txt": { type: "file", content: "Email: DevSkits@icloud.com\nGitHub: https://github.com/DevSkits916" } } },
+            LOKI: { type: "dir", children: { "loki.txt": { type: "file", content: "Loki // German Shepherd\nStatus: Loyal\nRole: Companion + Mascot" } } },
+            DOCS: {
               type: "dir",
               children: {
-                "contact.card": { type: "app", app: "contact", content: "Open Contact app profile." }
+                "about.txt": { type: "file", content: "DevSkits OS is a retro browser shell + portfolio." },
+                "changelog.txt": { type: "file", content: "3.2.0: Shell polish, new boot, improved core apps." }
               }
             },
-            LOKI: {
-              type: "dir",
-              children: {
-                "profile.txt": { type: "file", content: "Loki // German Shepherd\nStatus: Loyal\nRole: Companion + Mascot" }
-              }
-            },
-            NOTES: {
-              type: "dir",
-              children: {
-                "welcome.txt": { type: "file", content: "Use Notes app to create and organize multiple notes." }
-              }
-            },
-            ARCHIVE: {
-              type: "dir",
-              children: {
-                "build-0001.log": { type: "file", content: "Early build note: shell was monochrome by design." },
-                "loki-companion.log": { type: "file", content: "Loki patrol report: found hidden route breadcrumb near NETWORK node." }
-              }
-            },
-            SECRET: {
-              type: "dir",
-              children: {
-                ".blackbox.txt": { type: "file", content: "If you can read this, open devskits://secrets and run terminal command secret." }
-              }
-            },
-            "readme.txt": { type: "file", content: "Welcome to DevSkits virtual filesystem." }
+            "about.txt": { type: "file", content: "DevSkits OS identity hub." },
+            "projects.txt": { type: "file", content: "Open Projects app for full details." },
+            "loki.txt": { type: "file", content: "Loki says hi." },
+            "contact.txt": { type: "file", content: "Open Contact app for complete profile." },
+            "changelog.txt": { type: "file", content: "Boot, start menu, apps and settings were upgraded." }
           }
         }
       }

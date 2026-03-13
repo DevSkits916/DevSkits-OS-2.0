@@ -1,7 +1,12 @@
 (() => {
   const projects = window.DevSkitsProjects;
-  function card(p) {
+
+  function renderCard(p) {
     return `<article class="project-card" data-name="${p.name}"><h4>${p.name}</h4><p>${p.desc}</p><div class="badges"><span class="tag status-${p.status}">${p.status}</span>${p.tags.map((t) => `<span class="tag">${t}</span>`).join("")}</div></article>`;
+  }
+
+  function renderDetail(proj) {
+    return `<h4>${proj.name}</h4><p>${proj.desc}</p><p>Tags: ${proj.tags.join(", ")}</p><div class="badges"><button class="link-btn" data-open-route="devskits://projects">Open</button><button class="link-btn" data-copy="${proj.url || 'devskits://projects'}">Copy Link</button><button class="link-btn" data-shortcut="${proj.name}">Shortcut</button></div>`;
   }
 
   function render(container, options = {}) {
@@ -15,21 +20,25 @@
       const rows = projects
         .filter((p) => status === "all" || p.status === status)
         .sort((a, b) => String(a[sortBy]).localeCompare(String(b[sortBy])));
-      list.innerHTML = rows.map(card).join("");
+      list.innerHTML = rows.map(renderCard).join("");
       list.querySelectorAll(".project-card").forEach((el) => {
         el.addEventListener("click", () => {
           const proj = projects.find((p) => p.name === el.dataset.name);
-          detail.innerHTML = `<h4>${proj.name}</h4><p>${proj.desc}</p><p>Tags: ${proj.tags.join(", ")}</p><div class="badges"><button class="link-btn" data-open-route="devskits://projects">Open in Browser</button><button class="link-btn" data-shortcut="${proj.name}">Create Desktop Shortcut</button></div>`;
+          detail.innerHTML = renderDetail(proj);
         });
       });
       if (options.focusProject) {
         const proj = projects.find((p) => p.name === options.focusProject);
-        if (proj) detail.innerHTML = `<h4>${proj.name}</h4><p>${proj.desc}</p><p>Tags: ${proj.tags.join(", ")}</p>`;
+        if (proj) detail.innerHTML = renderDetail(proj);
       }
     };
 
-    detail.addEventListener("click", (e) => {
+    detail.addEventListener("click", async (e) => {
       if (e.target.dataset.openRoute) window.DevSkitsWindowManager.openApp("browser", { route: e.target.dataset.openRoute });
+      if (e.target.dataset.copy) {
+        await navigator.clipboard.writeText(e.target.dataset.copy).catch(() => {});
+        window.DevSkitsDesktop.notify("Project link copied", "ok");
+      }
       if (e.target.dataset.shortcut) {
         const rows = window.DevSkitsWorld.getShortcuts();
         rows.push({ id: `sc-${Date.now()}`, label: `${e.target.dataset.shortcut}`, type: "app", target: "projects", icon: "⌘" });

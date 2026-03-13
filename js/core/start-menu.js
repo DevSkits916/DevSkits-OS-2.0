@@ -1,11 +1,30 @@
 (() => {
   const { APPS, state } = window.DevSkitsState;
 
+  const CATEGORY_ORDER = ["System", "Identity", "Tools", "Projects", "Network", "Support", "Companion", "Creator", "Dev", "Media"];
+
+  function groupApps(filter = "") {
+    const q = filter.trim().toLowerCase();
+    const grouped = {};
+    Object.entries(APPS)
+      .filter(([, app]) => `${app.title} ${app.category}`.toLowerCase().includes(q))
+      .forEach(([id, app]) => {
+        const category = app.category || "Other";
+        grouped[category] = grouped[category] || [];
+        grouped[category].push({ id, app });
+      });
+    return grouped;
+  }
+
   function renderStartApps(filter = "") {
     const wrap = document.querySelector("#start-apps");
-    const q = filter.trim().toLowerCase();
-    const items = Object.entries(APPS).filter(([id, app]) => `${app.title} ${app.category}`.toLowerCase().includes(q));
-    wrap.innerHTML = items.map(([id, app]) => `<button data-open="${id}"><span>${app.title}</span><small>${app.category}</small></button>`).join("");
+    const grouped = groupApps(filter);
+    const ordered = [...CATEGORY_ORDER.filter((c) => grouped[c]), ...Object.keys(grouped).filter((c) => !CATEGORY_ORDER.includes(c)).sort()];
+    wrap.innerHTML = ordered.map((category) => `
+      <section class="start-category">
+        <div class="start-section-label">${category}</div>
+        ${grouped[category].map(({ id, app }) => `<button data-open="${id}"><span>${app.icon} ${app.title}</span><small>${category}</small></button>`).join("")}
+      </section>`).join("") || '<small>No matching apps.</small>';
   }
 
   function renderRecent() {
@@ -26,11 +45,14 @@
   function bindStartMenu() {
     const menu = document.querySelector("#start-menu");
     const btn = document.querySelector("#start-btn");
+    const search = document.querySelector("#start-search");
+
     btn.addEventListener("click", () => {
-      const open = menu.classList.toggle("hidden");
-      btn.setAttribute("aria-expanded", String(!open));
+      const hidden = menu.classList.toggle("hidden");
+      btn.setAttribute("aria-expanded", String(!hidden));
       renderRecent();
-      renderStartApps(document.querySelector("#start-search").value);
+      renderStartApps(search.value);
+      if (!hidden) setTimeout(() => search.focus(), 10);
     });
 
     menu.addEventListener("click", (e) => {
@@ -42,12 +64,16 @@
       if (action === "settings") window.DevSkitsWindowManager.openApp("settings");
       if (action === "about") window.DevSkitsWindowManager.openApp("about");
       if (action === "reboot") window.DevSkitsDesktop.rebootSystem();
+      if (action === "shutdown") location.reload();
       if (app || action) hideMenu();
     });
 
-    document.querySelector("#start-search").addEventListener("input", (e) => renderStartApps(e.target.value));
+    search.addEventListener("input", (e) => renderStartApps(e.target.value));
     document.addEventListener("click", (e) => {
       if (!menu.contains(e.target) && e.target !== btn) hideMenu();
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") hideMenu();
     });
   }
 

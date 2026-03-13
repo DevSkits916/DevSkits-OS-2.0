@@ -13,6 +13,9 @@
       <h1>DevSkits 3.1</h1>
       <p id="boot-status">Initializing identity shell...</p>
       <div class="boot-progress"><span id="boot-bar"></span></div>
+      <div class="badges">
+        <button id="boot-skip" class="link-btn" type="button">Skip Boot</button>
+      </div>
     </div>
   </div>
 
@@ -30,6 +33,7 @@
       <button data-action="terminal">Terminal</button>
       <button data-action="settings">Settings</button>
       <button data-action="reboot">Reboot</button>
+        <button data-action="shutdown">Shut Down</button>
     </div>
 
     <div id="start-menu" class="start-menu hidden" aria-hidden="true">
@@ -45,6 +49,7 @@
         <button data-action="settings">Settings</button>
         <button data-action="about">About System</button>
         <button data-action="reboot">Reboot</button>
+        <button data-action="shutdown">Shut Down</button>
       </div>
     </div>
 
@@ -95,6 +100,7 @@
 
   <script src="js/data/projects.js"></script>
   <script src="js/data/filesystem.js"></script>
+  <script src="js/data/system-data.js"></script>
   <script src="js/core/branding.js"></script>
   <script src="js/core/state.js"></script>
   <script src="js/core/world.js"></script>
