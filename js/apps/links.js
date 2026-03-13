@@ -5,7 +5,9 @@
     const groups = window.DevSkitsSystemData.links;
     container.innerHTML = Object.entries(groups).map(([group, rows]) => `<h4>${group.toUpperCase()}</h4><div class="app-grid">${rows.map((row) => `<button class="link-btn icon-btn" data-url="${row.url}">${icon(row.icon, row.label)} ${row.label} ${icon("external", "external")}</button>`).join("")}</div>`).join("");
     container.querySelectorAll(".link-btn").forEach((b) => b.addEventListener("click", () => {
-      window.DevSkitsWindowManager.openApp("browser", { route: b.dataset.url });
+      const { url } = b.dataset;
+      if (/^https?:\/\//i.test(url)) return window.open(url, "_blank", "noopener");
+      window.DevSkitsWindowManager.openApp("browser", { route: url });
     }));
   }
 
