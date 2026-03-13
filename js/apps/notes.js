@@ -58,10 +58,13 @@
 
     container.querySelector("#delete-note").addEventListener("click", () => {
       if (notes.length === 1) return;
+      const removed = notes.find((n) => n.id === active);
+      if (removed) window.DevSkitsWorld.pushRecycle({ name: removed.name, source: "notes", payload: removed });
       notes = notes.filter((n) => n.id !== active);
       active = notes[0].id;
       saveNotes(notes);
       drawList();
+      window.DevSkitsDesktop.notify("Note moved to Recycle Bin");
     });
 
     window.addEventListener("devskits:new-note", () => container.querySelector("#new-note").click());
