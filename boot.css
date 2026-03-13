@@ -89,6 +89,13 @@
   font-size: clamp(11px, 2.8vw, 14px);
 }
 
+.boot-credit {
+  margin: -4px 0 10px;
+  font-size: clamp(10px, 2.2vw, 12px);
+  font-style: italic;
+  opacity: 0.82;
+}
+
 .loading-dots::after {
   content: "";
   display: inline-block;
@@ -112,6 +119,12 @@
   height: 100%;
   width: 0;
   background: repeating-linear-gradient(90deg, #00008b 0 10px, #1c4ad8 10px 20px);
+}
+
+.splash-percent {
+  margin: -6px 0 8px;
+  font-size: 12px;
+  font-family: "Courier New", monospace;
 }
 
 .system-messages {
