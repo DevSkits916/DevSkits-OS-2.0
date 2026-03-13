@@ -1,101 +1,168 @@
-https://devskits916.github.io/DevSkits-OS-2.0/
-# DevSkits 3.1
+https://devskits916.github.io/DevSkits-OS-2.0/# DevSkits 3.1
 
-A browser-based retro desktop experience built as a personal digital identity hub for **Travis Ramsey / DevSkits**.
+A browser-based retro desktop experience built as a **fictional operating system**, personal identity hub, and interactive portfolio for **Travis Ramsey / DevSkits**.
 
-**DevSkits 3.1** mixes a vintage Windows-style shell with monochrome terminal aesthetics, draggable windows, a working command-line app, and built-in panels for projects, contact info, links, notes, donations, and Loki.
+**DevSkits 3.1** is the next evolution of the DevSkits OS project: a monochrome, Windows-inspired desktop environment with draggable windows, terminal tooling, internal apps, browser-style pages, simulated system behavior, and a growing in-OS world.
+
+---
 
 ## Live Demo
 
-[View DevSkits 3.1](https://devskits916.github.io/DevSkits-OS-2.0/)
+[Launch DevSkits 3.1](https://devskits916.github.io/DevSkits-OS-2.0/)
+
+> Update this URL if the repo or deployment path changes. GitHub Pages, in its infinite elegance, will not do that for you.
 
 ---
 
 ## Overview
 
-This project is a static front-end "fake operating system" designed to feel like an old-school desktop environment while acting as a creative portfolio and identity hub.
+DevSkits 3.1 is a static front-end “fake operating system” built to feel like a usable retro desktop instead of a normal personal website.
 
-It is built with:
+It is designed to function as:
+
+- a **digital identity hub**
+- an **interactive portfolio**
+- a **retro desktop / OS concept**
+- a **creative world with internal apps and routes**
+- a **platform for ongoing phased expansion**
+
+Rather than flattening everything into one page, DevSkits 3.1 presents content through a desktop shell with windows, apps, commands, routes, icons, system panels, and persistent state.
+
+---
+
+## Stack
 
 - **HTML**
 - **CSS**
 - **Vanilla JavaScript**
-- **No frameworks**
-- **No build tools**
-- **No backend**
+- **SVG / base64 embedded assets**
+- **localStorage**
+- **GitHub Pages**
 
-The goal is to make the site feel like a usable retro OS, not just another portfolio page with a dark theme pretending to have a personality.
+No frameworks.  
+No build tools.  
+No backend.  
+No dependency pile masquerading as ambition.
 
 ---
 
-## Features
+## Core Experience
 
-### Core Shell
-- Boot sequence / startup screen
-- Desktop layout with retro OS styling
-- Draggable windows
-- Window focus, minimize, restore, and close behavior
-- Taskbar with app state
-- Start menu / launcher
-- Live clock
-- Local persistence with `localStorage`
+DevSkits 3.1 is built to feel like a small fictional computer system.
 
-### Built-In Apps
+### Shell Features
+- boot animation / startup screen
+- custom **DevSkits 3.1** boot branding
+- retro monochrome desktop
+- draggable windows
+- taskbar with active app states
+- start menu / launcher
+- live clock
+- local persistence via `localStorage`
+- desktop app icons
+- internal routing between apps and pages
+
+### Design Language
+- Windows 3.x / 95 inspired shell
+- monochrome black / white / gray palette
+- terminal / CRT influenced styling
+- old-school interface chrome
+- static-site friendly architecture
+- mobile-aware layout
+
+---
+
+## Built-In Apps
+
+Depending on the current phase of the project, DevSkits 3.1 may include:
+
 - **Terminal**
-  - command parser
-  - command history
-  - multiple built-in commands
+- **Files**
+- **Settings**
 - **Contact**
-  - copyable contact and social info
 - **Donate**
-  - support links and donation methods
 - **Projects**
-  - project list with descriptions
 - **Loki**
-  - companion / mascot panel
 - **Notes**
-  - editable notepad with autosave
 - **Links**
-  - quick launch to external profiles
 - **About**
-  - system-style project summary
+- **Browser / Navigator**
+- **Inbox**
+- **Build Log**
+- **Run dialog**
+- **Install Center / package system**
+- **Quote Forge**
+- **ASCII Maker**
+- **Post Draft Pad**
+- **Recycle Bin**
+- **Calculator**
+- **Calendar / Planner**
+- **Sticky Notes**
+- **Activity / Logs**
+- **Process Monitor**
+- **System Update**
+- **Profile / Stats**
+- **utility apps and hidden experimental modules**
 
-### Styling / UX
-- Monochrome black / white / gray aesthetic
-- Retro window chrome and taskbar feel
-- Mobile-friendly layout
-- Lightweight static hosting
-- Expandable architecture for future phases
-
----
-
-## Terminal Commands
-
-Current terminal commands include:
-
-- `help`
-- `about`
-- `contact`
-- `donate`
-- `links`
-- `projects`
-- `loki`
-- `github`
-- `clear`
-- `date`
-- `whoami`
-- `theme`
-- `reboot`
-
-Depending on the current repo version, additional commands may be added over time.
+The exact app list depends on how far the current branch or deployed build has progressed.
 
 ---
 
-## Tech Stack
+## Terminal
+
+The terminal is a primary interface layer inside DevSkits 3.1.
+
+### Common Commands
 
 ```txt
-HTML
-CSS
-JavaScript (Vanilla)
-GitHub Pages
-localStorage
+help
+clear
+cls
+about
+contact
+donate
+links
+projects
+loki
+github
+date
+whoami
+theme
+reboot
+ls
+dir
+cd
+pwd
+cat
+open
+echo
+ver
+hostname
+settings
+run
+history
+apps
+mail
+browser
+changelog
+pkg
+recent
+search
+find
+achievements
+updates
+install
+restart
+services
+ps
+logs
+notify
+inbox
+remind
+tasks
+stats
+profile
+reindex
+events
+uptime
+status
