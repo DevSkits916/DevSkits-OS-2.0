@@ -46,6 +46,7 @@
       <hr />
       <div class="start-quick-actions">
         <button data-action="show-desktop">Show Desktop</button>
+        <button data-action="run">Run...</button>
         <button data-action="settings">Settings</button>
         <button data-action="about">About System</button>
         <button data-action="reboot">Reboot</button>
@@ -53,6 +54,18 @@
     </div>
 
     <div id="notification-area" class="notification-area"></div>
+
+    <div id="run-dialog" class="run-dialog hidden" role="dialog" aria-modal="true">
+      <div class="run-panel">
+        <h3>Run</h3>
+        <p>Type an app name or internal URL.</p>
+        <input id="run-input" class="start-search" placeholder="browser | inbox | devskits://projects"/>
+        <div class="badges">
+          <button id="run-go" class="link-btn">Run</button>
+          <button id="run-cancel" class="link-btn">Cancel</button>
+        </div>
+      </div>
+    </div>
 
     <footer class="taskbar">
       <button id="start-btn" class="start-btn" aria-expanded="false">DevSkits</button>

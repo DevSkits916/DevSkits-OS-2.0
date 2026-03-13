@@ -207,6 +207,7 @@
     focusWindow(appId);
 
     state.recentApps = [appId, ...state.recentApps.filter((id) => id !== appId)].slice(0, 5);
+    window.DevSkitsWorld?.trackActivity?.("app", `opened ${appId}`);
     localStorage.setItem("devskits-recent-apps", JSON.stringify(state.recentApps));
     persistSession();
   }
