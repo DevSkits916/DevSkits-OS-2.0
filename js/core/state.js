@@ -60,8 +60,8 @@
   };
 
   const START_MENU_SECTIONS = [
-    { id: "system", label: "SYSTEM", items: ["terminal", "settings", "run"] },
-    { id: "identity", label: "IDENTITY", items: ["about", "contact", "links", "donate"] },
+    { id: "identity", label: "IDENTITY", items: ["about", "contact", "donate"] },
+    { id: "system", label: "SYSTEM", items: ["terminal", "settings"] },
     { id: "projects", label: "PROJECTS", items: ["notes"] },
     { id: "power", label: "POWER", items: ["reboot", "shutdown"] }
   ];
