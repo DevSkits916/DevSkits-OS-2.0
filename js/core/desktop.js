@@ -29,8 +29,6 @@
     localStorage.setItem("devskits-crt", state.crt ? "on" : "off");
   }
 
-
-
   function applyBranding() {
     const logo = window.DevSkitsBranding?.logos?.devskits31 || "";
     const bootLogo = document.querySelector("#boot-logo");
@@ -138,7 +136,9 @@
   }
 
   function updateClock() {
-    document.querySelector("#clock").textContent = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    const settings = W().getAppSettings();
+    const use24 = settings.clock24h !== false;
+    document.querySelector("#clock").textContent = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: !use24 });
   }
 
   function rebootSystem() {
@@ -146,12 +146,6 @@
     state.windows.forEach((rec) => rec.el.remove());
     state.windows.clear();
     ui.taskButtons.innerHTML = "";
-    const updates = W().getUpdates?.();
-    if (updates?.pendingRestart) {
-      updates.pendingRestart = false;
-      W().setUpdates(updates);
-      W().pushInbox({ folder: "System", threadId: "th-updates", from: "updater@devskits.os", subject: `Restart complete on ${updates.currentVersion}`, body: `Core services restarted for build ${updates.currentBuild}.` });
-    }
     ui.desktop.classList.add("hidden");
     document.querySelector("#boot-screen").classList.remove("hidden");
     notify("Reboot complete", "ok");
@@ -190,7 +184,7 @@
     const cmd = input.trim().toLowerCase();
     if (!cmd) return;
     const appAlias = {
-      browser: "browser", navigator: "browser", terminal: "terminal", files: "files", notes: "notes", links: "links", inbox: "inbox", settings: "settings", projects: "projects", changelog: "buildlog", buildlog: "buildlog", mail: "inbox", media: "mediadeck"
+      browser: "browser", navigator: "browser", terminal: "terminal", files: "files", notes: "notes", links: "links", settings: "settings", projects: "projects", contact: "contact", donate: "donate", about: "about"
     };
     if (cmd.startsWith("devskits://")) return window.DevSkitsWindowManager.openApp("browser", { route: cmd });
     if (cmd.startsWith("open ")) return runCommand(cmd.replace(/^open\s+/, ""));
@@ -207,9 +201,7 @@
     setTimeout(() => input.focus(), 20);
   }
 
-  function closeRunDialog() {
-    document.querySelector("#run-dialog").classList.add("hidden");
-  }
+  function closeRunDialog() { document.querySelector("#run-dialog").classList.add("hidden"); }
 
   function bindRunDialog() {
     const dlg = document.querySelector("#run-dialog");
@@ -230,39 +222,41 @@
         e.preventDefault();
         openRunDialog();
       }
+      if (e.key === "Escape") closeRunDialog();
     });
   }
 
-  function initScreensaver() {
-    const enabled = localStorage.getItem("devskits-screensaver") === "on";
-    if (!enabled) return;
-    const saver = document.createElement("div");
-    saver.id = "screensaver";
-    saver.innerHTML = "<span>DEVSKITS</span>";
-    document.body.appendChild(saver);
-    let idleTimer;
-    function wake() { saver.classList.remove("active"); clearTimeout(idleTimer); idleTimer = setTimeout(() => saver.classList.add("active"), 20000); }
-    ["mousemove", "keydown", "touchstart", "click"].forEach((ev) => document.addEventListener(ev, wake));
-    wake();
+  function finishBoot() {
+    document.querySelector("#boot-screen").classList.add("hidden");
+    ui.desktop.classList.remove("hidden");
+    window.DevSkitsWindowManager.restoreSession();
   }
 
   function startBootSequence() {
+    const fastBoot = localStorage.getItem("devskits-fast-boot") === "on";
+    if (fastBoot) return finishBoot();
+
     const bar = document.querySelector("#boot-bar");
     const status = document.querySelector("#boot-status");
     const lines = W().getBootLines?.() || ["Initializing identity shell...", "Ready."];
+    const skipBtn = document.querySelector("#boot-skip");
     let i = 0;
     bar.style.width = "0%";
+
     const timer = setInterval(() => {
       i += 1;
       bar.style.width = `${Math.min(100, (i / lines.length) * 100)}%`;
       status.textContent = lines[Math.min(i - 1, lines.length - 1)];
       if (i >= lines.length) {
         clearInterval(timer);
-        document.querySelector("#boot-screen").classList.add("hidden");
-        ui.desktop.classList.remove("hidden");
-        window.DevSkitsWindowManager.restoreSession();
+        finishBoot();
       }
     }, 420);
+
+    skipBtn.onclick = () => {
+      clearInterval(timer);
+      finishBoot();
+    };
   }
 
   function initDesktop() {
@@ -275,7 +269,6 @@
     bindDesktopContextMenu();
     bindRunDialog();
     W().getSticky().forEach((s) => createSticky(s));
-    initScreensaver();
     updateClock();
     setInterval(updateClock, 1000);
     startBootSequence();
