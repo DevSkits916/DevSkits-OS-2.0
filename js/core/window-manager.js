@@ -238,7 +238,10 @@
       if (item.maximized) toggleMaximize(item.appId);
       if (item.minimized) minimizeWindow(item.appId);
     });
-    if (!items.length) launchApp("about");
+    if (!items.length) {
+      launchApp("about");
+      launchApp("contact");
+    }
   }
 
   function showDesktop() {
