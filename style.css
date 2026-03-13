@@ -273,14 +273,16 @@ body.reduce-motion .window { transition: none; }
   .desktop-icons { overflow-y: auto; overflow-x: hidden; padding-right: 2px; }
   .window-layer { inset: 0 0 var(--taskbar-h) 0; }
   .window {
-    min-width: 0;
-    min-height: 0;
+    min-width: 220px;
+    min-height: 160px;
     width: calc(100vw - 10px);
     height: calc(100vh - var(--taskbar-h) - 10px);
-    left: 5px !important;
-    top: 5px !important;
   }
-  .resize-handle { display: none; }
+  .resize-handle {
+    display: block;
+    width: 22px;
+    height: 22px;
+  }
   .window-titlebar { min-height: 30px; }
   .window-controls button { width: 28px; height: 24px; }
   .icon-label { font-size: 11px; }

@@ -243,6 +243,11 @@
         saveIconPosition(entry.id, safe.x, safe.y);
         suppressClick = true;
         setTimeout(() => { suppressClick = false; }, 140);
+      } else if (e.pointerType === "touch") {
+        suppressClick = true;
+        setTimeout(() => { suppressClick = false; }, 220);
+        selectIcon(entry.id, true);
+        launchDesktopEntry(entry);
       }
       document.body.classList.remove("dragging-icons");
       node.classList.remove("dragging");

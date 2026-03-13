@@ -80,11 +80,9 @@
   };
 
   const START_MENU_SECTIONS = [
-    { id: "identity", label: "IDENTITY", items: ["about", "contact", "links", "donate", "loki"] },
-    { id: "workspace", label: "WORKSPACE", items: ["files", "notes", "projects", "browser", "search", "reminders", "draftpad"] },
-    { id: "tools", label: "TOOLS", items: ["settings", "terminal", "calculator", "calendar", "clock", "asciimaker", "quoteforge"] },
-    { id: "system", label: "SYSTEM", items: ["activity", "processmon", "profile", "presence", "syslogs", "updater", "recycle"] },
-    { id: "extras", label: "EXTRAS", items: ["networkmap", "lokigame", "inbox", "mediadeck", "buildlog", "packages", "achievements"] },
+    { id: "favorites", label: "FAVORITES", items: ["about", "contact", "projects", "notes", "terminal"] },
+    { id: "workspace", label: "WORKSPACE", items: ["files", "browser", "settings", "recycle"] },
+    { id: "links", label: "WEB + LINKS", items: ["links", "donate", "loki"] },
     { id: "power", label: "POWER", items: ["run", "reboot", "shutdown"] }
   ];
 
