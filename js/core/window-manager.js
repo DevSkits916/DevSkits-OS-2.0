@@ -1,10 +1,16 @@
 (() => {
   const { state, ui, APPS } = window.DevSkitsState;
 
+  function viewportBounds() {
+    const taskbarHeight = parseInt(getComputedStyle(document.documentElement).getPropertyValue("--taskbar-h"), 10) || 42;
+    return { width: window.innerWidth, height: window.innerHeight - taskbarHeight };
+  }
+
   function persistSession() {
     const session = [];
-    state.windows.forEach((rec) => {
+    state.windows.forEach((rec, id) => {
       session.push({
+        windowId: id,
         appId: rec.appId,
         minimized: rec.minimized,
         maximized: rec.maximized,
@@ -20,17 +26,21 @@
   }
 
   function clampToViewport(el) {
+    const bounds = viewportBounds();
     const rect = el.getBoundingClientRect();
-    const maxLeft = Math.max(0, window.innerWidth - 120);
-    const maxTop = Math.max(0, window.innerHeight - 130);
+    const width = Math.min(rect.width, bounds.width - 8);
+    const height = Math.min(rect.height, bounds.height - 8);
+    el.style.width = `${width}px`;
+    el.style.height = `${height}px`;
+    const maxLeft = Math.max(0, bounds.width - width);
+    const maxTop = Math.max(0, bounds.height - height);
     const left = Math.min(maxLeft, Math.max(0, parseInt(el.style.left || rect.left, 10)));
     const top = Math.min(maxTop, Math.max(0, parseInt(el.style.top || rect.top, 10)));
     el.style.left = `${left}px`;
     el.style.top = `${top}px`;
   }
 
-
-  function getWindowKey(appId, options = {}) {
+  function getWindowKey(appId) {
     const meta = APPS[appId] || {};
     if (!meta.multiInstance) return appId;
     return `${appId}:${Date.now()}:${Math.random().toString(16).slice(2, 7)}`;
@@ -71,6 +81,7 @@
   function toggleMaximize(appId) {
     const rec = state.windows.get(appId);
     if (!rec || rec.minimized) return;
+    const bounds = viewportBounds();
     if (!rec.maximized) {
       rec.prev = {
         left: rec.el.style.left,
@@ -80,8 +91,8 @@
       };
       rec.el.style.left = "0px";
       rec.el.style.top = "0px";
-      rec.el.style.width = "100%";
-      rec.el.style.height = "calc(100% - 2.35rem)";
+      rec.el.style.width = `${bounds.width}px`;
+      rec.el.style.height = `${bounds.height}px`;
       rec.maximized = true;
     } else {
       Object.assign(rec.el.style, rec.prev || {});
@@ -120,7 +131,7 @@
     let drag = null;
     bar.addEventListener("pointerdown", (e) => {
       const rec = state.windows.get(appId);
-      if (!rec || rec.maximized || e.target.closest("button")) return;
+      if (!rec || rec.maximized || e.target.closest("button") || window.innerWidth <= 760) return;
       const rect = win.getBoundingClientRect();
       drag = { x: e.clientX - rect.left, y: e.clientY - rect.top };
       bar.setPointerCapture(e.pointerId);
@@ -131,11 +142,9 @@
       win.style.left = `${Math.max(0, e.clientX - drag.x)}px`;
       win.style.top = `${Math.max(0, e.clientY - drag.y)}px`;
     });
-    bar.addEventListener("pointerup", (e) => {
+    bar.addEventListener("pointerup", () => {
       if (!drag) return;
-      if (e.clientX < 25) snapWindow(appId, "left");
-      else if (e.clientX > window.innerWidth - 25) snapWindow(appId, "right");
-      else clampToViewport(win);
+      clampToViewport(win);
       drag = null;
       persistSession();
     });
@@ -146,17 +155,18 @@
     let resize = null;
     handle.addEventListener("pointerdown", (e) => {
       const rec = state.windows.get(appId);
-      if (!rec || rec.maximized) return;
+      if (!rec || rec.maximized || window.innerWidth <= 760) return;
       const rect = win.getBoundingClientRect();
       resize = { w: rect.width, h: rect.height, x: e.clientX, y: e.clientY };
       handle.setPointerCapture(e.pointerId);
     });
     handle.addEventListener("pointermove", (e) => {
       if (!resize) return;
+      const bounds = viewportBounds();
       const w = Math.max(280, resize.w + (e.clientX - resize.x));
-      const h = Math.max(180, resize.h + (e.clientY - resize.y));
-      win.style.width = `${Math.min(w, window.innerWidth)}px`;
-      win.style.height = `${Math.min(h, window.innerHeight - 36)}px`;
+      const h = Math.max(190, resize.h + (e.clientY - resize.y));
+      win.style.width = `${Math.min(w, bounds.width)}px`;
+      win.style.height = `${Math.min(h, bounds.height)}px`;
     });
     handle.addEventListener("pointerup", () => {
       if (!resize) return;
@@ -164,17 +174,6 @@
       resize = null;
       persistSession();
     });
-  }
-
-  function snapWindow(appId, side) {
-    const rec = state.windows.get(appId);
-    if (!rec) return;
-    rec.maximized = false;
-    rec.el.style.top = "0px";
-    rec.el.style.width = "50%";
-    rec.el.style.height = "calc(100% - 2.35rem)";
-    rec.el.style.left = side === "left" ? "0px" : "50%";
-    persistSession();
   }
 
   function wireWindow(win, appId) {
@@ -187,10 +186,28 @@
     enableResize(win, appId);
   }
 
+  function initialWindowStyle(win) {
+    const bounds = viewportBounds();
+    const mobile = window.innerWidth <= 760;
+    if (mobile) {
+      win.style.left = "5px";
+      win.style.top = "5px";
+      win.style.width = `${bounds.width - 10}px`;
+      win.style.height = `${bounds.height - 10}px`;
+      return;
+    }
+    const width = Math.min(620, bounds.width - 16);
+    const height = Math.min(420, bounds.height - 16);
+    win.style.width = `${width}px`;
+    win.style.height = `${height}px`;
+    win.style.left = `${Math.max(0, Math.min(70 + state.windows.size * 20, bounds.width - width))}px`;
+    win.style.top = `${Math.max(0, Math.min(60 + state.windows.size * 18, bounds.height - height))}px`;
+  }
+
   function launchApp(appId, options = {}) {
     const render = window.DevSkitsAppRegistry?.[appId];
     if (!APPS[appId] || !render) return;
-    const windowKey = getWindowKey(appId, options);
+    const windowKey = getWindowKey(appId);
     if (!APPS[appId].multiInstance && state.windows.has(windowKey)) {
       restoreWindow(windowKey);
       focusWindow(windowKey);
@@ -201,9 +218,8 @@
     const meta = APPS[appId];
     win.dataset.app = windowKey;
     win.querySelector(".window-title").textContent = `${meta.title} - DevSkits 3.1`;
-    win.style.left = `${Math.min(80 + state.windows.size * 22, window.innerWidth - 360)}px`;
-    win.style.top = `${Math.min(70 + state.windows.size * 18, window.innerHeight - 260)}px`;
     win.style.zIndex = ++state.z;
+    initialWindowStyle(win);
 
     wireWindow(win, windowKey);
     ui.windowLayer.appendChild(win);
@@ -213,6 +229,7 @@
     createTaskButton(windowKey, meta.title);
     render(win.querySelector(".window-content"), options);
     focusWindow(windowKey);
+    clampToViewport(win);
 
     state.recentApps = [appId, ...state.recentApps.filter((id) => id !== appId)].slice(0, 5);
     window.DevSkitsWorld?.trackActivity?.("app", `opened ${appId}`);
@@ -231,12 +248,13 @@
     }
     items.forEach((item) => {
       launchApp(item.appId);
-      const rec = state.windows.get(item.appId);
+      const targetId = item.windowId || item.appId;
+      const rec = state.windows.get(targetId) || state.windows.get(item.appId);
       if (!rec) return;
       Object.assign(rec.el.style, item.style || {});
       clampToViewport(rec.el);
-      if (item.maximized) toggleMaximize(item.appId);
-      if (item.minimized) minimizeWindow(item.appId);
+      if (item.maximized) toggleMaximize(targetId);
+      if (item.minimized) minimizeWindow(targetId);
     });
     if (!items.length) {
       launchApp("about");
@@ -248,7 +266,15 @@
     state.windows.forEach((_, id) => minimizeWindow(id));
   }
 
-  window.addEventListener("resize", () => state.windows.forEach((rec) => clampToViewport(rec.el)));
+  window.addEventListener("resize", () => {
+    state.windows.forEach((rec) => {
+      if (window.innerWidth <= 760 && !rec.maximized) {
+        rec.el.style.left = "5px";
+        rec.el.style.top = "5px";
+      }
+      clampToViewport(rec.el);
+    });
+  });
 
   window.DevSkitsWindowManager = {
     launchApp,
@@ -257,7 +283,6 @@
     focusWindow,
     showDesktop,
     persistSession,
-    snapWindow,
     openApp: launchApp
   };
 })();
