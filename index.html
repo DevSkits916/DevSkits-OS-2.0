@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DevSkits OS 2.0</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="boot-screen" class="boot-screen" aria-live="polite">
+    <div class="boot-panel">
+      <pre class="boot-logo">██████╗ ███████╗██╗   ██╗███████╗██╗  ██╗██╗████████╗███████╗
+██╔══██╗██╔════╝██║   ██║██╔════╝██║ ██╔╝██║╚══██╔══╝██╔════╝
+██║  ██║█████╗  ██║   ██║███████╗█████╔╝ ██║   ██║   ███████╗
+██║  ██║██╔══╝  ╚██╗ ██╔╝╚════██║██╔═██╗ ██║   ██║   ╚════██║
+██████╔╝███████╗ ╚████╔╝ ███████║██║  ██╗██║   ██║   ███████║
+╚═════╝ ╚══════╝  ╚═══╝  ╚══════╝╚═╝  ╚═╝╚═╝   ╚═╝   ╚══════╝
+      </pre>
+      <h1>DevSkits OS 2.0</h1>
+      <p id="boot-status">Initializing identity shell...</p>
+      <div class="boot-progress"><span id="boot-bar"></span></div>
+    </div>
+  </div>
+
+  <div id="desktop" class="desktop hidden" role="application" aria-label="DevSkits Desktop">
+    <div class="scanlines"></div>
+    <div id="desktop-icons" class="desktop-icons"></div>
+    <div id="window-layer" class="window-layer"></div>
+
+    <div id="start-menu" class="start-menu hidden" aria-hidden="true">
+      <div class="start-header">DevSkits Menu</div>
+      <button data-open="terminal">Terminal</button>
+      <button data-open="projects">Projects</button>
+      <button data-open="notes">Notes</button>
+      <button data-open="links">Links</button>
+      <button data-open="about">About</button>
+      <button data-open="contact">Contact</button>
+      <hr />
+      <button id="menu-reboot">Reboot</button>
+      <button id="menu-shutdown">Shut Down</button>
+    </div>
+
+    <footer class="taskbar">
+      <button id="start-btn" class="start-btn" aria-expanded="false">DevSkits</button>
+      <div id="task-buttons" class="task-buttons" aria-label="Open windows"></div>
+      <div class="system-tray">
+        <span class="tray-label">SYS</span>
+        <time id="clock"></time>
+      </div>
+    </footer>
+  </div>
+
+  <template id="desktop-icon-template">
+    <button class="desktop-icon" type="button">
+      <span class="icon-glyph">◼</span>
+      <span class="icon-label"></span>
+    </button>
+  </template>
+
+  <template id="window-template">
+    <section class="window" role="dialog" aria-modal="false">
+      <header class="window-titlebar">
+        <span class="window-title"></span>
+        <div class="window-controls">
+          <button class="win-min" aria-label="Minimize">_</button>
+          <button class="win-max" aria-label="Maximize">□</button>
+          <button class="win-close" aria-label="Close">✕</button>
+        </div>
+      </header>
+      <div class="window-content"></div>
+    </section>
+  </template>
+
+  <script src="app.js"></script>
+</body>
+</html>
