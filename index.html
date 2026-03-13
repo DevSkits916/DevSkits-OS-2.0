@@ -26,19 +26,32 @@
     <div class="scanlines"></div>
     <div id="desktop-icons" class="desktop-icons"></div>
     <div id="window-layer" class="window-layer"></div>
+    <div id="selection-box" class="selection-box hidden"></div>
+
+    <div id="desktop-context-menu" class="context-menu hidden">
+      <button data-action="refresh">Refresh</button>
+      <button data-action="new-note">New Note</button>
+      <button data-action="terminal">Terminal</button>
+      <button data-action="settings">Settings</button>
+      <button data-action="reboot">Reboot</button>
+    </div>
 
     <div id="start-menu" class="start-menu hidden" aria-hidden="true">
       <div class="start-header">DevSkits Menu</div>
-      <button data-open="terminal">Terminal</button>
-      <button data-open="projects">Projects</button>
-      <button data-open="notes">Notes</button>
-      <button data-open="links">Links</button>
-      <button data-open="about">About</button>
-      <button data-open="contact">Contact</button>
+      <input id="start-search" class="start-search" placeholder="Search apps..." aria-label="Search apps" />
+      <div id="start-recent" class="start-section"></div>
+      <div class="start-section-label">Apps</div>
+      <div id="start-apps" class="start-section"></div>
       <hr />
-      <button id="menu-reboot">Reboot</button>
-      <button id="menu-shutdown">Shut Down</button>
+      <div class="start-quick-actions">
+        <button data-action="show-desktop">Show Desktop</button>
+        <button data-action="settings">Settings</button>
+        <button data-action="about">About System</button>
+        <button data-action="reboot">Reboot</button>
+      </div>
     </div>
+
+    <div id="notification-area" class="notification-area"></div>
 
     <footer class="taskbar">
       <button id="start-btn" class="start-btn" aria-expanded="false">DevSkits</button>
@@ -68,9 +81,27 @@
         </div>
       </header>
       <div class="window-content"></div>
+      <span class="resize-handle"></span>
     </section>
   </template>
 
+  <script src="js/data/projects.js"></script>
+  <script src="js/data/filesystem.js"></script>
+  <script src="js/core/state.js"></script>
+  <script src="js/core/terminal-engine.js"></script>
+  <script src="js/core/window-manager.js"></script>
+  <script src="js/core/desktop.js"></script>
+  <script src="js/core/start-menu.js"></script>
+  <script src="js/apps/contact.js"></script>
+  <script src="js/apps/donate.js"></script>
+  <script src="js/apps/projects.js"></script>
+  <script src="js/apps/loki.js"></script>
+  <script src="js/apps/notes.js"></script>
+  <script src="js/apps/links.js"></script>
+  <script src="js/apps/about.js"></script>
+  <script src="js/apps/settings.js"></script>
+  <script src="js/apps/files.js"></script>
+  <script src="js/apps/terminal.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
