@@ -83,12 +83,16 @@ fieldset,
 .desktop {
   position: fixed;
   inset: 0;
-  background: var(--desktop-bg);
+  background-color: var(--desktop-bg);
+  background-image: var(--desktop-logo, none);
+  background-repeat: no-repeat;
+  background-position: center 42%;
+  background-size: min(980px, 86vw) auto;
 }
-.desktop[data-wallpaper="grid"] { background-image: linear-gradient(rgba(255,255,255,.12) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.12) 1px, transparent 1px); background-size: 16px 16px; }
-.desktop[data-wallpaper="noise"] { background-image: repeating-radial-gradient(rgba(255,255,255,.16) 0 1px, transparent 1px 2px); background-size: 3px 3px; }
-.desktop[data-wallpaper="fade"] { background: linear-gradient(180deg, #10a4a4, var(--desktop-bg)); }
-.desktop-brandmark { position: absolute; inset: 6% 8% auto 8%; display: grid; place-items: center; opacity: .12; pointer-events: none; z-index: 0; }
+.desktop[data-wallpaper="grid"] { background-image: linear-gradient(rgba(255,255,255,.12) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.12) 1px, transparent 1px), var(--desktop-logo, none); background-size: 16px 16px, 16px 16px, min(980px, 86vw) auto; }
+.desktop[data-wallpaper="noise"] { background-image: repeating-radial-gradient(rgba(255,255,255,.16) 0 1px, transparent 1px 2px), var(--desktop-logo, none); background-size: 3px 3px, min(980px, 86vw) auto; }
+.desktop[data-wallpaper="fade"] { background-image: var(--desktop-logo, none), linear-gradient(180deg, #10a4a4, var(--desktop-bg)); background-size: min(980px, 86vw) auto, cover; }
+.desktop-brandmark { position: absolute; inset: 6% 8% auto 8%; display: none; place-items: center; opacity: .12; pointer-events: none; z-index: 0; }
 .desktop-brandmark svg { width: min(920px, 88vw); }
 .scanlines { position: absolute; inset: 0; pointer-events: none; z-index: 1; background: repeating-linear-gradient(to bottom, rgba(255,255,255,.03) 0 1px, rgba(0,0,0,.02) 2px 3px); }
 

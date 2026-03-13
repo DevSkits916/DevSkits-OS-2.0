@@ -47,6 +47,11 @@
     const desktopLogo = document.querySelector("#desktop-brandmark");
     if (bootLogo) bootLogo.innerHTML = logo;
     if (desktopLogo) desktopLogo.innerHTML = logo;
+
+    if (ui.desktop && logo) {
+      const encodedLogo = window.btoa(unescape(encodeURIComponent(logo)));
+      ui.desktop.style.setProperty("--desktop-logo", `url("data:image/svg+xml;base64,${encodedLogo}")`);
+    }
   }
 
   function launchDesktopEntry(entry) {
