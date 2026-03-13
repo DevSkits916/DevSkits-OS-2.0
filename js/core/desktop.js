@@ -403,6 +403,7 @@
   function finishBoot() {
     document.querySelector("#boot-screen").classList.add("hidden");
     ui.desktop.classList.remove("hidden");
+    window.DevSkitsBootSound?.playBootSound();
     window.DevSkitsWindowManager.restoreSession();
   }
 
