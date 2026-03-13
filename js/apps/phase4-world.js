@@ -19,8 +19,11 @@
     const url = container.querySelector("#nav-url");
 
     function openRoute(route, push = true) {
-      if (/^https?:\/\//i.test(route)) return window.open(route, "_blank", "noopener");
-      page.innerHTML = routePage(route);
+      if (/^https?:\/\//i.test(route)) {
+        page.innerHTML = `<div class="browser-iframe-wrap"><iframe class="browser-iframe" src="${route}" title="External page" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div>`;
+      } else {
+        page.innerHTML = routePage(route);
+      }
       url.value = route;
       if (push) {
         history = history.slice(0, pointer + 1);
