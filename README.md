@@ -1,13 +1,13 @@
 https://devskits916.github.io/DevSkits-OS-2.0/
-# DevSkits OS 2.0
+# DevSkits 3.1
 
 A browser-based retro desktop experience built as a personal digital identity hub for **Travis Ramsey / DevSkits**.
 
-**DevSkits OS 2.0** mixes a vintage Windows-style shell with monochrome terminal aesthetics, draggable windows, a working command-line app, and built-in panels for projects, contact info, links, notes, donations, and Loki.
+**DevSkits 3.1** mixes a vintage Windows-style shell with monochrome terminal aesthetics, draggable windows, a working command-line app, and built-in panels for projects, contact info, links, notes, donations, and Loki.
 
 ## Live Demo
 
-[View DevSkits OS 2.0](https://devskits916.github.io/DevSkits-OS-2.0/)
+[View DevSkits 3.1](https://devskits916.github.io/DevSkits-OS-2.0/)
 
 ---
 

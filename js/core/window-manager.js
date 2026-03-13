@@ -192,7 +192,7 @@
     const win = document.querySelector("#window-template").content.firstElementChild.cloneNode(true);
     const meta = APPS[appId];
     win.dataset.app = appId;
-    win.querySelector(".window-title").textContent = `${meta.title} - DevSkits OS 2.0`;
+    win.querySelector(".window-title").textContent = `${meta.title} - DevSkits 3.1`;
     win.style.left = `${Math.min(80 + state.windows.size * 22, window.innerWidth - 360)}px`;
     win.style.top = `${Math.min(70 + state.windows.size * 18, window.innerHeight - 260)}px`;
     win.style.zIndex = ++state.z;

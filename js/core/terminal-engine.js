@@ -9,7 +9,7 @@
       help: () => "Commands: help clear cls about contact donate links projects loki github date whoami reboot theme ls dir cd pwd cat open echo ver hostname settings",
       clear: () => ({ clear: true }),
       cls: () => ({ clear: true }),
-      about: () => "DevSkits OS 2.0 identity shell. Retro browser desktop.",
+      about: () => "DevSkits 3.1 identity shell. Retro browser desktop.",
       contact: () => "Opening Contact app...",
       donate: () => "Opening Donate app...",
       links: () => "Opening Links app...",
@@ -27,7 +27,7 @@
       cat: (_, arg) => catFile(arg),
       open: (_, arg) => openTarget(arg),
       echo: (_, ...args) => args.join(" "),
-      ver: () => "DevSkits OS 2.0 / Build 2026.02",
+      ver: () => "DevSkits 3.1 / Build 2026.02",
       hostname: () => "DEVSKITS-STATION",
       settings: () => "Opening Settings app..."
     };

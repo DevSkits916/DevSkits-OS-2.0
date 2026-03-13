@@ -10,7 +10,7 @@
               type: "dir",
               children: {
                 "roadmap.txt": { type: "file", content: "DevSkits OS Roadmap\n- Shell polish\n- Deep app ecosystem\n- Better file integration" },
-                "devskits-os.project": { type: "project", ref: "DevSkits OS 2.0" }
+                "devskits-os.project": { type: "project", ref: "DevSkits 3.1" }
               }
             },
             CONTACT: {
