@@ -3,9 +3,9 @@
 
   function persistSession() {
     const session = [];
-    state.windows.forEach((rec, appId) => {
+    state.windows.forEach((rec) => {
       session.push({
-        appId,
+        appId: rec.appId,
         minimized: rec.minimized,
         maximized: rec.maximized,
         style: {
@@ -27,6 +27,13 @@
     const top = Math.min(maxTop, Math.max(0, parseInt(el.style.top || rect.top, 10)));
     el.style.left = `${left}px`;
     el.style.top = `${top}px`;
+  }
+
+
+  function getWindowKey(appId, options = {}) {
+    const meta = APPS[appId] || {};
+    if (!meta.multiInstance) return appId;
+    return `${appId}:${Date.now()}:${Math.random().toString(16).slice(2, 7)}`;
   }
 
   function focusWindow(appId) {
@@ -180,37 +187,39 @@
     enableResize(win, appId);
   }
 
-  function openApp(appId, options = {}) {
+  function launchApp(appId, options = {}) {
     const render = window.DevSkitsAppRegistry?.[appId];
     if (!APPS[appId] || !render) return;
-    if (state.windows.has(appId)) {
-      restoreWindow(appId);
-      focusWindow(appId);
+    const windowKey = getWindowKey(appId, options);
+    if (!APPS[appId].multiInstance && state.windows.has(windowKey)) {
+      restoreWindow(windowKey);
+      focusWindow(windowKey);
       return;
     }
 
     const win = document.querySelector("#window-template").content.firstElementChild.cloneNode(true);
     const meta = APPS[appId];
-    win.dataset.app = appId;
+    win.dataset.app = windowKey;
     win.querySelector(".window-title").textContent = `${meta.title} - DevSkits 3.1`;
     win.style.left = `${Math.min(80 + state.windows.size * 22, window.innerWidth - 360)}px`;
     win.style.top = `${Math.min(70 + state.windows.size * 18, window.innerHeight - 260)}px`;
     win.style.zIndex = ++state.z;
 
-    wireWindow(win, appId);
+    wireWindow(win, windowKey);
     ui.windowLayer.appendChild(win);
 
-    const record = { el: win, minimized: false, maximized: false };
-    state.windows.set(appId, record);
-    createTaskButton(appId, meta.title);
+    const record = { el: win, minimized: false, maximized: false, appId };
+    state.windows.set(windowKey, record);
+    createTaskButton(windowKey, meta.title);
     render(win.querySelector(".window-content"), options);
-    focusWindow(appId);
+    focusWindow(windowKey);
 
     state.recentApps = [appId, ...state.recentApps.filter((id) => id !== appId)].slice(0, 5);
     window.DevSkitsWorld?.trackActivity?.("app", `opened ${appId}`);
     window.DevSkitsWorld?.registerAppOpen?.(appId);
     localStorage.setItem("devskits-recent-apps", JSON.stringify(state.recentApps));
     persistSession();
+    window.dispatchEvent(new CustomEvent("devskits:app-launched", { detail: { appId } }));
   }
 
   function restoreSession() {
@@ -221,7 +230,7 @@
       items = [];
     }
     items.forEach((item) => {
-      openApp(item.appId);
+      launchApp(item.appId);
       const rec = state.windows.get(item.appId);
       if (!rec) return;
       Object.assign(rec.el.style, item.style || {});
@@ -229,7 +238,7 @@
       if (item.maximized) toggleMaximize(item.appId);
       if (item.minimized) minimizeWindow(item.appId);
     });
-    if (!items.length) openApp("about");
+    if (!items.length) launchApp("about");
   }
 
   function showDesktop() {
@@ -239,12 +248,13 @@
   window.addEventListener("resize", () => state.windows.forEach((rec) => clampToViewport(rec.el)));
 
   window.DevSkitsWindowManager = {
-    openApp,
+    launchApp,
     closeWindow,
     restoreSession,
     focusWindow,
     showDesktop,
     persistSession,
-    snapWindow
+    snapWindow,
+    openApp: launchApp
   };
 })();
