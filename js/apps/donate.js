@@ -5,9 +5,7 @@
     const items = [
       ["GoFundMe", "https://gofund.me/6bbc0274e", "Community support campaign", "gofundme"],
       ["Venmo", "https://venmo.com/u/DevSkits", "Fast direct support", "venmo"],
-      ["Cash App", "https://cash.app", "Simple peer-to-peer support", "cashapp"],
-      ["Chime", "https://chime.com", "Quick utility donations", "chime"],
-      ["PayPal", "https://paypal.com", "Card and account support", "paypal"]
+      ["Chime", "https://chime.com", "Quick utility donations", "chime"]
     ];
     container.innerHTML = `<h3>${icon("document", "Support DevSkits")}</h3><div class="app-grid">${items.map(([name, url, description, iconName]) => `<article class="project-card"><strong>${icon(iconName, name)}</strong><p>${description}</p><div class="badges"><button class="link-btn icon-btn" data-url="${url}">${icon("external", "Open")}</button></div></article>`).join("")}</div>`;
     container.querySelectorAll(".link-btn").forEach((btn) => btn.addEventListener("click", () => window.open(btn.dataset.url, "_blank", "noopener")));
