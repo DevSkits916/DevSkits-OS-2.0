@@ -43,9 +43,7 @@
 
   function applyBranding() {
     const logo = window.DevSkitsBranding?.logos?.devskits31 || "";
-    const bootLogo = document.querySelector("#boot-logo");
     const desktopLogo = document.querySelector("#desktop-brandmark");
-    if (bootLogo) bootLogo.innerHTML = logo;
     if (desktopLogo) desktopLogo.innerHTML = logo;
 
     if (ui.desktop && logo) {
@@ -405,29 +403,31 @@
 
   function startBootSequence() {
     const fastBoot = localStorage.getItem("devskits-fast-boot") === "on";
-    if (fastBoot) return finishBoot();
+    if (fastBoot || !window.DevSkitsBoot?.runSequence) return finishBoot();
 
-    const bar = document.querySelector("#boot-bar");
-    const status = document.querySelector("#boot-status");
-    const lines = W().getBootLines?.() || ["Initializing identity shell...", "Ready."];
-    const skipBtn = document.querySelector("#boot-skip");
-    let i = 0;
-    bar.style.width = "0%";
+    const profile = W().getProfile?.() || { bootCount: 1 };
+    const build = W().getUpdates?.().currentBuild || "DSK-200";
+    const biosLines = [
+      `Initializing DevSkits BIOS / ${build}...`,
+      "Detecting memory...",
+      `Checking storage devices... (${profile.bootCount} boots logged)`,
+      "Loading system modules...",
+      "Mounting DevSkits kernel..."
+    ];
 
-    const timer = setInterval(() => {
-      i += 1;
-      bar.style.width = `${Math.min(100, (i / lines.length) * 100)}%`;
-      status.textContent = lines[Math.min(i - 1, lines.length - 1)];
-      if (i >= lines.length) {
-        clearInterval(timer);
-        finishBoot();
-      }
-    }, 420);
+    const systemMessages = [
+      "Loading desktop environment...",
+      "Loading applications...",
+      "Initializing icon system...",
+      "Starting DevSkits services...",
+      "Preparing user interface..."
+    ];
 
-    skipBtn.onclick = () => {
-      clearInterval(timer);
-      finishBoot();
-    };
+    window.DevSkitsBoot.runSequence({
+      biosLines,
+      systemMessages,
+      onComplete: finishBoot
+    });
   }
 
   function initDesktop() {

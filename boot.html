@@ -1,0 +1,28 @@
+<div id="boot-screen" class="boot-screen" aria-live="polite">
+  <div class="boot-overlay" aria-hidden="true"></div>
+
+  <section id="boot-stage-bios" class="boot-stage boot-stage-bios">
+    <div id="bios-lines" class="bios-lines"></div>
+    <p class="bios-cursor" aria-hidden="true">█</p>
+  </section>
+
+  <section id="boot-stage-splash" class="boot-stage boot-stage-splash hidden">
+    <div class="splash-shell">
+      <div class="splash-logo" aria-hidden="true">
+        <svg viewBox="0 0 128 96" role="img" aria-label="Retro window logo">
+          <polygon points="12,8 56,0 56,40 12,48" fill="#f72b2b" />
+          <polygon points="60,0 116,8 116,48 60,40" fill="#2fb34f" />
+          <polygon points="12,52 56,44 56,84 12,92" fill="#2367d1" />
+          <polygon points="60,44 116,52 116,92 60,84" fill="#f0c420" />
+        </svg>
+      </div>
+      <h1>Microsoft Windows</h1>
+      <h2>DevSkits Edition 2.0</h2>
+      <p class="splash-subtitle">Starting DevSkits OS<span class="loading-dots"></span></p>
+      <div class="retro-progress" aria-hidden="true"><span id="splash-progress"></span></div>
+      <div id="system-messages" class="system-messages"></div>
+      <p id="final-ready" class="final-ready hidden">DevSkits OS ready.</p>
+      <button id="boot-skip" class="boot-skip" type="button">Press ESC to skip</button>
+    </div>
+  </section>
+</div>
