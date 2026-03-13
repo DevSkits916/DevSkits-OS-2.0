@@ -22,7 +22,7 @@
   <div id="desktop" class="desktop hidden" role="application" aria-label="DevSkits Desktop">
     <div id="desktop-brandmark" class="desktop-brandmark" aria-hidden="true"></div>
     <div class="scanlines"></div>
-    <div id="desktop-icons" class="desktop-icons"></div>
+    <div id="desktop-icons" class="desktop-icons" tabindex="0" aria-label="Desktop icons"></div>
     <div id="window-layer" class="window-layer"></div>
     <div id="selection-box" class="selection-box hidden"></div>
 
@@ -33,24 +33,13 @@
       <button data-action="terminal">Terminal</button>
       <button data-action="settings">Settings</button>
       <button data-action="reboot">Reboot</button>
-        <button data-action="shutdown">Shut Down</button>
+      <button data-action="shutdown">Shut Down</button>
     </div>
 
-    <div id="start-menu" class="start-menu hidden" aria-hidden="true">
-      <div class="start-header">DevSkits Menu</div>
-      <input id="start-search" class="start-search" placeholder="Search apps..." aria-label="Search apps" />
-      <div id="start-recent" class="start-section"></div>
-      <div class="start-section-label">Apps</div>
-      <div id="start-apps" class="start-section"></div>
-      <hr />
-      <div class="start-quick-actions">
-        <button data-action="show-desktop">Show Desktop</button>
-        <button data-action="run">Run...</button>
-        <button data-action="settings">Settings</button>
-        <button data-action="about">About System</button>
-        <button data-action="reboot">Reboot</button>
-        <button data-action="shutdown">Shut Down</button>
-      </div>
+    <div id="start-menu" class="start-menu hidden" aria-hidden="true" role="menu" aria-label="Start Menu">
+      <div class="start-header">DevSkits Launcher</div>
+      <input id="start-search" class="start-search" placeholder="Search launcher..." aria-label="Search apps" />
+      <div id="start-sections" class="start-sections"></div>
     </div>
 
     <div id="notification-area" class="notification-area"></div>
@@ -68,7 +57,7 @@
     </div>
 
     <footer class="taskbar">
-      <button id="start-btn" class="start-btn" aria-expanded="false">DevSkits</button>
+      <button id="start-btn" class="start-btn" aria-expanded="false" aria-controls="start-menu">Start</button>
       <div id="task-buttons" class="task-buttons" aria-label="Open windows"></div>
       <div class="system-tray">
         <time id="clock"></time>
@@ -78,7 +67,7 @@
 
   <template id="desktop-icon-template">
     <button class="desktop-icon" type="button">
-      <span class="icon-glyph">◼</span>
+      <span class="icon-glyph" aria-hidden="true"></span>
       <span class="icon-label"></span>
     </button>
   </template>
