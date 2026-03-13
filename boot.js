@@ -1,6 +1,15 @@
 (() => {
   const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+  async function updateProgress(progressBar, progressLabel, targetPercent) {
+    const current = parseInt(progressBar.style.width, 10) || 0;
+    for (let step = current; step <= targetPercent; step += 1) {
+      progressBar.style.width = `${step}%`;
+      if (progressLabel) progressLabel.textContent = `${step}%`;
+      await wait(8);
+    }
+  }
+
   function printLine(container, text) {
     const line = document.createElement("p");
     line.className = "bios-line";
@@ -47,6 +56,7 @@
     const progressBar = document.querySelector("#splash-progress");
     const readyMessage = document.querySelector("#final-ready");
     const skipButton = document.querySelector("#boot-skip");
+    const progressLabel = document.querySelector("#splash-percent");
 
     if (!bootScreen || !biosStage || !splashStage) {
       onComplete();
@@ -88,16 +98,24 @@
     splashStage.classList.remove("hidden");
     systemContainer.innerHTML = "";
     progressBar.style.width = "0%";
+    if (progressLabel) progressLabel.textContent = "0%";
     readyMessage.classList.add("hidden");
 
     for (let i = 0; i < systemMessages.length; i += 1) {
       if (cancelled) return;
       const row = document.createElement("p");
       row.className = "system-message";
-      row.textContent = systemMessages[i];
       systemContainer.appendChild(row);
-      progressBar.style.width = `${Math.round(((i + 1) / systemMessages.length) * 100)}%`;
-      await wait(380);
+
+      const message = systemMessages[i];
+      for (let charIndex = 0; charIndex <= message.length; charIndex += 1) {
+        if (cancelled) return;
+        row.textContent = message.slice(0, charIndex);
+        await wait(9);
+      }
+
+      await updateProgress(progressBar, progressLabel, Math.round(((i + 1) / systemMessages.length) * 100));
+      await wait(180);
     }
 
     if (cancelled) return;
