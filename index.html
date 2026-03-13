@@ -9,13 +9,7 @@
 <body>
   <div id="boot-screen" class="boot-screen" aria-live="polite">
     <div class="boot-panel">
-      <pre class="boot-logo">██████╗ ███████╗██╗   ██╗███████╗██╗  ██╗██╗████████╗███████╗
-██╔══██╗██╔════╝██║   ██║██╔════╝██║ ██╔╝██║╚══██╔══╝██╔════╝
-██║  ██║█████╗  ██║   ██║███████╗█████╔╝ ██║   ██║   ███████╗
-██║  ██║██╔══╝  ╚██╗ ██╔╝╚════██║██╔═██╗ ██║   ██║   ╚════██║
-██████╔╝███████╗ ╚████╔╝ ███████║██║  ██╗██║   ██║   ███████║
-╚═════╝ ╚══════╝  ╚═══╝  ╚══════╝╚═╝  ╚═╝╚═╝   ╚═╝   ╚══════╝
-      </pre>
+      <div id="boot-logo" class="boot-logo" aria-label="DevSkits 3.1 boot logo"></div>
       <h1>DevSkits 3.1</h1>
       <p id="boot-status">Initializing identity shell...</p>
       <div class="boot-progress"><span id="boot-bar"></span></div>
@@ -23,6 +17,7 @@
   </div>
 
   <div id="desktop" class="desktop hidden" role="application" aria-label="DevSkits Desktop">
+    <div id="desktop-brandmark" class="desktop-brandmark" aria-hidden="true"></div>
     <div class="scanlines"></div>
     <div id="desktop-icons" class="desktop-icons"></div>
     <div id="window-layer" class="window-layer"></div>
@@ -71,7 +66,6 @@
       <button id="start-btn" class="start-btn" aria-expanded="false">DevSkits</button>
       <div id="task-buttons" class="task-buttons" aria-label="Open windows"></div>
       <div class="system-tray">
-        <span class="tray-label">SYS</span>
         <time id="clock"></time>
       </div>
     </footer>
@@ -101,6 +95,7 @@
 
   <script src="js/data/projects.js"></script>
   <script src="js/data/filesystem.js"></script>
+  <script src="js/core/branding.js"></script>
   <script src="js/core/state.js"></script>
   <script src="js/core/world.js"></script>
   <script src="js/core/terminal-engine.js"></script>
