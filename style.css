@@ -118,3 +118,11 @@ body { margin:0; height:100vh; font-family:"Lucida Console","Courier New",monosp
 @media (max-width: 780px) {
   .inbox-shell, .media-shell, .inbox-main { grid-template-columns:1fr; }
 }
+
+fieldset { border:2px groove #999; padding:.35rem; }
+fieldset label { display:block; margin:.15rem 0; }
+#proc-body .note-row span:last-child { font-size:.72rem; opacity:.8; }
+#proc-stats { margin-bottom:.35rem; }
+@media (max-width: 780px) {
+  .desktop-widgets { position:static; width:auto; margin:.35rem; }
+}

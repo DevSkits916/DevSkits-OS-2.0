@@ -14,7 +14,8 @@
       wrap.innerHTML = '<div class="start-section-label">Recent: none</div>';
       return;
     }
-    wrap.innerHTML = `<div class="start-section-label">Recent</div>${state.recentApps.map((id) => `<button data-open="${id}">${APPS[id]?.title || id}</button>`).join("")}`;
+    const recentActivity = (window.DevSkitsWorld?.getRecentActivity?.() || []).slice(0, 3);
+    wrap.innerHTML = `<div class="start-section-label">Recent</div>${state.recentApps.map((id) => `<button data-open="${id}">${APPS[id]?.title || id}</button>`).join("")}<div class="start-section-label">Activity</div>${recentActivity.map((r) => `<small>${r.type}: ${r.detail}</small>`).join("")}`;
   }
 
   function hideMenu() {

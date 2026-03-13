@@ -19,13 +19,24 @@
         </select>
       </label>
       <label><input type="checkbox" id="hidden-toggle" ${appSettings.hiddenContent ? "checked" : ""}/> Enable hidden content/easter eggs</label>
+      <label><input type="checkbox" id="notifications-toggle" ${appSettings.notificationsEnabled ? "checked" : ""}/> Notifications enabled</label>
+      <label><input type="checkbox" id="events-toggle" ${appSettings.eventEngine ? "checked" : ""}/> Event engine enabled</label>
+      <fieldset><legend>Desktop widgets</legend>
+        <label><input type="checkbox" id="widget-clock" ${appSettings.widgets.clock ? "checked" : ""}/> Clock/Uptime</label>
+        <label><input type="checkbox" id="widget-activity" ${appSettings.widgets.activity ? "checked" : ""}/> Recent activity</label>
+        <label><input type="checkbox" id="widget-health" ${appSettings.widgets.health ? "checked" : ""}/> System health</label>
+        <label><input type="checkbox" id="widget-updates" ${appSettings.widgets.updates ? "checked" : ""}/> Update status</label>
+      </fieldset>
       <button class="link-btn" id="cycle-theme">Cycle Theme</button>
       <button class="link-btn" id="toggle-crt">Toggle CRT Overlay</button>
       <button class="link-btn" id="reset-layout">Reset Desktop Layout</button>
       <button class="link-btn" id="toggle-saver">Toggle Screensaver</button>
       <button class="link-btn" id="save-session">Save Session Snapshot</button>
       <button class="link-btn" id="load-session">Load Session Snapshot</button>
-      <button class="link-btn" id="reset-app-data">Reset App Data</button>
+      <button class="link-btn" id="reset-logs">Reset Logs</button>
+      <button class="link-btn" id="reset-messages">Reset Messages</button>
+      <button class="link-btn" id="reset-profile">Reset Profile Stats</button>
+      <button class="link-btn" id="reset-updates">Reset Update History</button>
       <button class="link-btn" id="reset-all">Reset Full OS State</button>
     </div>`;
 
@@ -34,10 +45,25 @@
     wp.value = state.wallpaper;
     container.querySelector("#icon-density").value = appSettings.iconDensity || "normal";
 
+    function saveSettings() {
+      const next = window.DevSkitsWorld.getAppSettings();
+      next.hiddenContent = container.querySelector("#hidden-toggle").checked;
+      next.notificationsEnabled = container.querySelector("#notifications-toggle").checked;
+      next.eventEngine = container.querySelector("#events-toggle").checked;
+      next.widgets = {
+        clock: container.querySelector("#widget-clock").checked,
+        activity: container.querySelector("#widget-activity").checked,
+        health: container.querySelector("#widget-health").checked,
+        updates: container.querySelector("#widget-updates").checked
+      };
+      window.DevSkitsWorld.setAppSettings(next);
+    }
+
     wp.addEventListener("change", () => {
       window.DevSkitsDesktop.applyWallpaper(wp.value);
-      window.DevSkitsDesktop.notify("Theme changed", "ok");
+      window.DevSkitsDesktop.notify("Wallpaper changed", "ok");
     });
+    container.querySelectorAll("input[type='checkbox']").forEach((el) => el.addEventListener("change", saveSettings));
     container.querySelector("#cycle-theme").addEventListener("click", window.DevSkitsDesktop.cycleTheme);
     container.querySelector("#toggle-crt").addEventListener("click", () => window.DevSkitsDesktop.toggleCRT());
     container.querySelector("#reset-layout").addEventListener("click", () => {
@@ -64,21 +90,16 @@
       localStorage.setItem("devskits-session", JSON.stringify(snap));
       window.DevSkitsDesktop.rebootSystem();
     });
-    container.querySelector("#hidden-toggle").addEventListener("change", (e) => {
-      const next = window.DevSkitsWorld.getAppSettings();
-      next.hiddenContent = e.target.checked;
-      window.DevSkitsWorld.setAppSettings(next);
-    });
     container.querySelector("#icon-density").addEventListener("change", (e) => {
       const next = window.DevSkitsWorld.getAppSettings();
       next.iconDensity = e.target.value;
       window.DevSkitsWorld.setAppSettings(next);
       document.body.dataset.iconDensity = e.target.value;
     });
-    container.querySelector("#reset-app-data").addEventListener("click", () => {
-      ["devskits-notes-v2", "devskits-inbox-v1", "devskits-activity-v1", "devskits-browser-history-v1"].forEach((k) => localStorage.removeItem(k));
-      window.DevSkitsDesktop.notify("App data reset complete", "ok");
-    });
+    container.querySelector("#reset-logs").addEventListener("click", () => window.DevSkitsWorld.clearLogs());
+    container.querySelector("#reset-messages").addEventListener("click", () => localStorage.removeItem("devskits-inbox-v2"));
+    container.querySelector("#reset-profile").addEventListener("click", () => localStorage.removeItem("devskits-profile-v1"));
+    container.querySelector("#reset-updates").addEventListener("click", () => localStorage.removeItem("devskits-updates-v1"));
     container.querySelector("#reset-all").addEventListener("click", () => {
       Object.keys(localStorage).filter((k) => k.startsWith("devskits-")).forEach((k) => localStorage.removeItem(k));
       location.reload();

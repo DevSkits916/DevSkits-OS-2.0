@@ -12,7 +12,7 @@
       cls: () => ({ clear: true }),
       about: () => "DevSkits 3.1 identity shell. Retro browser desktop.",
       date: () => new Date().toString(),
-      whoami: () => "travis.ramsey@devskits",
+      whoami: () => "operator@devskits.local",
       ls: (_, arg) => listDir(arg),
       dir: (_, arg) => listDir(arg),
       cd: (_, arg) => changeDir(arg),
@@ -22,28 +22,41 @@
       run: (_, arg) => runApp(arg),
       history: () => state.terminalHistory.slice(-20).join("\n") || "No command history.",
       apps: () => Object.keys(window.DevSkitsState.APPS).join(", "),
-      mail: () => runApp("inbox"),
-      browser: (_, arg) => openTarget(arg || "browser"),
-      changelog: () => runApp("buildlog"),
       recent: () => W().getRecentActivity().slice(0, 10).map((r) => `${new Date(r.at).toLocaleTimeString()} ${r.type} ${r.detail}`).join("\n") || "No recent activity.",
-      notify: (_, ...msg) => (window.DevSkitsDesktop.notify(msg.join(" ") || "Terminal ping"), "Notification sent."),
+      notify: (_, ...msg) => (W().pushNotification(msg.join(" ") || "Terminal ping", "info"), "Notification sent."),
       pkg: (_, action, name) => pkgCommand(action, name),
       search: (_, ...args) => searchIndex(args.join(" ")),
       find: (_, ...args) => searchIndex(args.join(" ")),
       secret: () => secretCommand(),
       theme: () => "Theme cycled.",
-      reboot: () => "Reboot queued..."
+      reboot: () => "Reboot queued...",
+      restart: () => "Reboot queued...",
+      updates: () => updatesCommand(),
+      install: (_, target) => installCommand(target),
+      services: () => servicesCommand(),
+      ps: () => servicesCommand(true),
+      logs: () => logsCommand(),
+      inbox: () => runApp("inbox"),
+      remind: (_, ...args) => remindCommand(args.join(" ")),
+      tasks: () => remindCommand("list"),
+      stats: () => statsCommand(),
+      profile: () => statsCommand(),
+      reindex: () => JSON.stringify(W().reindex()),
+      events: () => W().getNotifications().slice(0, 12).map((n) => `${new Date(n.at).toLocaleTimeString()} [${n.level}] ${n.message}`).join("\n") || "No events.",
+      uptime: () => `${(W().getProcessSnapshot().uptimeMs / 1000 | 0)}s`,
+      status: () => statusCommand()
     };
 
     function helpText(topic) {
-      const base = "Commands: help clear ls cd cat open run history apps mail browser changelog pkg recent notify search theme reboot";
+      const base = "Commands: help clear ls cd cat open run history apps recent notify pkg search updates install services ps logs inbox remind tasks stats profile reindex events uptime status theme reboot";
       if (!topic) return base;
       const map = {
-        run: "run <app> launches an app alias (terminal, files, notes, inbox, browser...)",
-        open: "open <app|file|devskits://route>",
-        pkg: "pkg list | pkg install <name>",
-        browser: "browser [devskits://route|https://url]",
-        recent: "recent prints tracked shared activity"
+        updates: "updates -> list current + available updates",
+        install: "install update -> install first available update",
+        services: "services -> show service states",
+        logs: "logs -> open logs app and print recent lines",
+        remind: "remind <text> | remind list",
+        status: "status -> quick system health summary"
       };
       return map[topic] || `No extended help for ${topic}`;
     }
@@ -72,11 +85,10 @@
     }
 
     function runApp(arg = "") {
-      const alias = { changelog: "buildlog", browser: "browser", mail: "inbox" };
+      const alias = { changelog: "buildlog", browser: "browser", mail: "inbox", logs: "syslogs", updates: "updater" };
       const target = alias[arg] || arg;
       if (!window.DevSkitsAppRegistry[target]) return "App not found.";
       window.DevSkitsWindowManager.openApp(target);
-      W().trackActivity("app", `opened ${target}`);
       return `Opened ${target}`;
     }
 
@@ -86,7 +98,6 @@
       if (window.DevSkitsAppRegistry[lower]) return runApp(lower);
       if (arg.startsWith("devskits://")) {
         window.DevSkitsWindowManager.openApp("browser", { route: arg });
-        W().trackActivity("browse", arg);
         return `Opened ${arg}`;
       }
       if (/^https?:\/\//i.test(arg)) {
@@ -109,7 +120,6 @@
         if (!W().packageDefs[name]) return "Unknown package";
         if (W().isInstalled(name)) return "Package already installed";
         W().installPackage(name);
-        window.DevSkitsDesktop.notify(`Package installed: ${name}`, "ok");
         return `Installed ${name}`;
       }
       return "Usage: pkg list | pkg install <name>";
@@ -117,15 +127,57 @@
 
     function searchIndex(query) {
       if (!query) return "Usage: search <query>";
-      const pages = Object.keys(W().pages).filter((p) => p.includes(query));
-      const apps = Object.keys(window.DevSkitsState.APPS).filter((id) => id.includes(query.toLowerCase()));
-      const notes = JSON.parse(localStorage.getItem("devskits-notes-v2") || "[]").filter((n) => `${n.name} ${n.content}`.toLowerCase().includes(query.toLowerCase())).map((n) => n.name);
-      return [`Apps: ${apps.join(", ") || "none"}`, `Pages: ${pages.join(", ") || "none"}`, `Notes: ${notes.join(", ") || "none"}`].join("\n");
+      const hits = W().searchEverything(query);
+      return hits.slice(0, 12).map((h) => `[${h.type}] ${h.label}`).join("\n") || "No matches.";
     }
 
     function secretCommand() {
       W().award("terminal_diver");
       return "Hidden relay discovered: try open devskits://hidden/loki-note after installing devskits_labs";
+    }
+
+    function updatesCommand() {
+      const u = W().getUpdates();
+      const next = u.available.map((x) => `${x.id} ${x.version} ${x.build}`).join(" | ") || "none";
+      return `Current ${u.currentVersion} ${u.currentBuild}\nAvailable ${next}\nPending restart ${u.pendingRestart ? "yes" : "no"}`;
+    }
+
+    function installCommand(target = "") {
+      if (target !== "update") return "Usage: install update";
+      const u = W().getUpdates();
+      if (!u.available.length) return "No updates available.";
+      W().downloadUpdate(u.available[0].id);
+      W().installUpdate(u.available[0].id);
+      return `Installed ${u.available[0].id}. Run restart.`;
+    }
+
+    function servicesCommand(withPid = false) {
+      const s = W().getServices();
+      return Object.keys(s).map((id, i) => withPid ? `${s[id] ? "RUN" : "STOP"} PID ${1200 + i} ${id}` : `${id}: ${s[id] ? "online" : "offline"}`).join("\n");
+    }
+
+    function logsCommand() {
+      window.DevSkitsWindowManager.openApp("syslogs");
+      return W().getLogs().slice(0, 8).map((r) => `[${r.channel}] ${r.message}`).join("\n") || "No logs";
+    }
+
+    function remindCommand(arg) {
+      if (!arg || arg === "list") return W().getReminders().map((r, i) => `${i + 1}. ${r.done ? "[x]" : "[ ]"} ${r.title}`).join("\n") || "No reminders.";
+      const rows = W().getReminders();
+      rows.unshift({ title: arg, dueAt: null, done: false });
+      W().setReminders(rows);
+      return `Reminder added: ${arg}`;
+    }
+
+    function statsCommand() {
+      const p = W().getProfile();
+      return `Boots: ${p.bootCount}\nCommands: ${p.commandsRun}\nPackages: ${p.packagesInstalled}\nHidden pages: ${p.hiddenPagesFound}`;
+    }
+
+    function statusCommand() {
+      const ps = W().getProcessSnapshot();
+      const u = W().getUpdates();
+      return `CPU ${ps.cpu}% MEM ${ps.memory}%\nServices ${ps.running}/${ps.total}\nBuild ${u.currentVersion} ${u.currentBuild}\nNotifications ${W().getNotifications().length}`;
     }
 
     function execute(raw) {
@@ -136,8 +188,9 @@
       if (!handler) return `Unknown command: ${name}`;
       const result = handler(raw, ...args);
       if (cmd === "theme") window.DevSkitsDesktop.cycleTheme();
-      if (cmd === "reboot") setTimeout(window.DevSkitsDesktop.rebootSystem, 300);
+      if (cmd === "reboot" || cmd === "restart") setTimeout(window.DevSkitsDesktop.rebootSystem, 300);
       W().trackActivity("cmd", raw);
+      W().registerCommand();
       return result;
     }
 
