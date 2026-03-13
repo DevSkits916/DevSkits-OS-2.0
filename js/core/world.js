@@ -9,12 +9,19 @@
     quotes: "devskits-quotes-v1",
     sessions: "devskits-snapshots-v1",
     shortcuts: "devskits-shortcuts-v1",
-    inbox: "devskits-inbox-v1",
+    inbox: "devskits-inbox-v2",
     browserHistory: "devskits-browser-history-v1",
-    activity: "devskits-activity-v1",
-    changelog: "devskits-changelog-v1",
+    activity: "devskits-activity-v2",
+    changelog: "devskits-changelog-v2",
     media: "devskits-media-v1",
-    appSettings: "devskits-app-settings-v1"
+    appSettings: "devskits-app-settings-v2",
+    updates: "devskits-updates-v1",
+    services: "devskits-services-v1",
+    notifications: "devskits-notifications-v1",
+    logs: "devskits-logs-v1",
+    reminders: "devskits-reminders-v1",
+    profile: "devskits-profile-v1",
+    searchIndex: "devskits-index-v1"
   };
 
   const PACKAGE_DEFS = {
@@ -25,135 +32,222 @@
     classic_icons: { title: "Classic Icons", unlocks: ["desktop shortcut theme", "icon density option"] }
   };
 
-  const ACHIEVEMENT_DEFS = {
-    first_secret: "Opened first hidden page",
-    pkg_collector: "Installed all package modules",
-    loki_hunter: "Found Loki archive",
-    terminal_diver: "Used terminal secret command",
-    restore_op: "Restored a deleted item"
-  };
-
-  const BASE_CHANGELOG = [
-    { id: "p1", version: "0.1.0", build: "DSK-101", timestamp: "2026-03-02 08:14", title: "Phase 1 foundation", tags: ["shell", "app"], body: "Boot sequence, desktop shell, taskbar, draggable windows, core apps online." },
-    { id: "p2", version: "0.2.0", build: "DSK-208", timestamp: "2026-03-07 21:22", title: "Phase 2 polish", tags: ["feature", "polish"], body: "Theme cycles, wallpaper choices, persistence upgrades, smarter files and projects." },
-    { id: "p3", version: "0.3.0", build: "DSK-315", timestamp: "2026-03-12 11:05", title: "Phase 3 pseudo-OS depth", tags: ["feature", "shell", "app"], body: "Navigator, Inbox, Build Log, Install Center unlock chains, Media Deck, Run dialog, deep linking." }
-  ];
-
-  const BASE_MEDIA = [
-    { id: "memo-1", title: "Voice Memo: Sprint Notes", type: "voice memos", details: "Synthetic placeholder clip", preview: "No audio bundled in static mode." },
-    { id: "sys-1", title: "System Log // Boot Warmup", type: "system logs", details: "Boot analyzer snapshot", preview: "Frame drops: 0 | Shell latency: nominal" },
-    { id: "loki-1", title: "Loki Moment #12", type: "Loki moments", details: "Gallery placeholder", preview: "Companion stole the cursor. Again." },
-    { id: "demo-1", title: "Project Demo Reel", type: "project demos", details: "Storyboard placeholders", preview: "Open Projects for linked detail cards." }
-  ];
-
   const INTERNAL_PAGES = {
-    "devskits://home": { title: "DevSkits Home", body: "Welcome to Navigator. Browse internal nodes, inspect build history, and jump into apps.", links: ["devskits://projects", "devskits://changelog", "devskits://system", "devskits://packages"] },
+    "devskits://home": { title: "DevSkits Home", body: "Welcome to Navigator. Browse internal nodes, inspect build history, and jump into apps.", links: ["devskits://projects", "devskits://changelog", "devskits://system", "devskits://updates"] },
+    "devskits://updates": { title: "Updater Node", body: "System Update service mirror.", appLink: "updater" },
+    "devskits://services": { title: "Service Registry", body: "Service state and process snapshots.", appLink: "processmon" },
+    "devskits://logs": { title: "System Console", body: "Timestamped runtime logs and alerts.", appLink: "syslogs" },
     "devskits://projects": { title: "Projects Wire", body: "Status board mirror for active, building, and concept tracks.", appLink: "projects", links: ["devskits://notes-index", "devskits://contact"] },
-    "devskits://contact": { title: "Contact Relay", body: "Internal relay for support and collaboration channels.", appLink: "contact", links: ["devskits://donate"] },
-    "devskits://donate": { title: "Support Relay", body: "Support powers longer build cycles and unlock drops.", appLink: "donate", links: ["devskits://packages"] },
-    "devskits://loki": { title: "Loki Companion Profile", body: "Profile, behavior tags, archive pointers, and patrol logs.", appLink: "loki", links: ["devskits://loki/archive"] },
-    "devskits://loki/archive": { title: "Loki Archive", lock: "loki_archive", body: "Unlocked dossier: stat blocks, toy routes, snack debt matrix.", links: ["devskits://home"] },
-    "devskits://about": { title: "System Identity", body: "DevSkits OS blends terminal discipline with desktop exploration.", appLink: "about" },
-    "devskits://changelog": { title: "Build Log Feed", body: "Chronological build history with tags for shell, app, and fixes.", appLink: "buildlog" },
-    "devskits://system": { title: "System Specs", body: "Core: static HTML/CSS/JS | Rendering: retro monochrome shell | Persistence: localStorage" },
-    "devskits://packages": { title: "Installed Packages", body: "Inspect package modules and unlock status.", appLink: "packages" },
-    "devskits://notes-index": { title: "Notes Index", body: "Quick launch into Notes, drafts, and linked project research.", appLink: "notes" },
+    "devskits://loki/archive": { title: "Loki Archive", lock: "loki_archive", body: "Unlocked dossier: stat blocks, toy routes, snack debt matrix." },
     "devskits://labs": { title: "DevSkits Labs", lock: "devskits_labs", body: "Experimental routes unlocked through Install Center.", links: ["devskits://hidden/loki-note"] },
     "devskits://hidden/loki-note": { title: "[hidden] Loki note", lock: "devskits_labs", body: "If you found this, Loki already found your keyboard." }
   };
 
-  function getJSON(key, fallback) {
-    try { return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback)); } catch (e) { return fallback; }
-  }
+  const BASE_CHANGELOG = [{ id: "p4", version: "0.4.0", build: "DSK-420", timestamp: "2026-05-21 09:15", title: "Phase 4 systems", tags: ["shell", "app"], body: "Install Center, inbox, browser routes, run dialog, media deck." }];
+  const AVAILABLE_UPDATES = [{ id: "upd-500", version: "0.5.0", build: "DSK-500", title: "Living OS rollout", notes: { shell: ["Dynamic boot report", "Service-aware restart", "Widget memory layer"], apps: ["System Update", "Process Monitor", "System Logs", "Activity", "Reminders", "Network Status", "System Identity"], fixes: ["Inbox threading", "Search index coverage expansion", "Mobile readability in system apps"], hidden: ["Loki guard relay tuned", "Archive watcher signal"], } }];
+
+  function getJSON(key, fallback) { try { return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback)); } catch { return fallback; } }
   function setJSON(key, value) { localStorage.setItem(key, JSON.stringify(value)); }
-
-  function trackActivity(type, detail) {
-    const rows = getJSON(STORE_KEYS.activity, []);
-    rows.unshift({ id: `act-${Date.now()}`, type, detail, at: Date.now() });
-    setJSON(STORE_KEYS.activity, rows.slice(0, 40));
-  }
-
-  function defaultInbox() {
-    return [
-      { id: "msg-1", folder: "Inbox", from: "system@devskits.os", subject: "Welcome to DevSkits OS", body: "Boot successful. Explore Navigator and run command launcher for quick actions.", createdAt: Date.now() - 86400000 },
-      { id: "msg-2", folder: "System", from: "loki@companion.node", subject: "Loki status report", body: "Mood: curious. Patrol count: 117. Toy stash location has changed.", createdAt: Date.now() - 72000000 },
-      { id: "msg-3", folder: "Inbox", from: "build@devskits.os", subject: "Build 0.3 patch notes", body: "Phase 3 modules integrated. Check Build Log for full timeline.", createdAt: Date.now() - 36000000, link: "devskits://changelog" },
-      { id: "msg-4", folder: "Archive", from: "ideas@devskits.os", subject: "Unfinished project ideas", body: "- CLI sketchpad\n- Loki gallery cards\n- Retro launcher macros", createdAt: Date.now() - 23000000 },
-      { id: "msg-5", folder: "System", from: "support@devskits.os", subject: "Support acknowledgement", body: "Thanks for keeping the shell alive. Donation routes are mapped.", createdAt: Date.now() - 12000000, link: "devskits://donate" }
-    ];
-  }
+  function uid(prefix) { return `${prefix}-${Date.now()}-${Math.floor(Math.random() * 1000)}`; }
 
   const world = {
-    packageDefs: PACKAGE_DEFS,
-    achievementDefs: ACHIEVEMENT_DEFS,
     pages: INTERNAL_PAGES,
+    packageDefs: PACKAGE_DEFS,
+    servicesDefault: {
+      "shell.host": true, "inbox.sync": true, "loki.guard": true, "notes.cache": true,
+      "browser.indexer": true, "pkg.manager": true, "desktop.widgets": true, "archive.scan": true,
+      "notifications.service": true, "session.restore": true
+    },
     getPackages: () => getJSON(STORE_KEYS.packages, {}),
     setPackages: (v) => setJSON(STORE_KEYS.packages, v),
     isInstalled: (id) => Boolean(getJSON(STORE_KEYS.packages, {})[id]),
-    installPackage(id) {
-      const next = getJSON(STORE_KEYS.packages, {});
-      next[id] = true;
-      setJSON(STORE_KEYS.packages, next);
-      trackActivity("package", `installed ${id}`);
-      if (id === "loki_archive") world.pushInbox({ folder: "System", from: "packages@devpkg", subject: "Loki Archive unlocked", body: "Navigator route devskits://loki/archive is now accessible.", link: "devskits://loki/archive" });
-      if (id === "devskits_labs") world.pushInbox({ folder: "System", from: "packages@devpkg", subject: "Labs unlocked", body: "New experimental internal page enabled.", link: "devskits://labs" });
-      if (Object.keys(PACKAGE_DEFS).every((pkg) => next[pkg])) world.award("pkg_collector");
-    },
     getAchievements: () => getJSON(STORE_KEYS.achievements, {}),
-    award(id) {
-      const rows = getJSON(STORE_KEYS.achievements, {});
-      if (rows[id]) return false;
-      rows[id] = { at: Date.now(), label: ACHIEVEMENT_DEFS[id] || id };
-      setJSON(STORE_KEYS.achievements, rows);
-      return true;
-    },
+    award(id) { const rows = world.getAchievements(); if (rows[id]) return false; rows[id] = { at: Date.now(), label: id }; setJSON(STORE_KEYS.achievements, rows); world.trackActivity("achievement", id); return true; },
+
     getRecycle: () => getJSON(STORE_KEYS.recycle, []),
-    pushRecycle(item) {
-      const rows = getJSON(STORE_KEYS.recycle, []);
-      rows.unshift({ ...item, id: `bin-${Date.now()}` });
-      setJSON(STORE_KEYS.recycle, rows.slice(0, 120));
-    },
     setRecycle: (rows) => setJSON(STORE_KEYS.recycle, rows),
-    getSticky: () => getJSON(STORE_KEYS.sticky, []),
-    setSticky: (rows) => setJSON(STORE_KEYS.sticky, rows),
-    getCalendar: () => getJSON(STORE_KEYS.calendar, {}),
-    setCalendar: (rows) => setJSON(STORE_KEYS.calendar, rows),
-    getDrafts: () => getJSON(STORE_KEYS.drafts, []),
-    setDrafts: (rows) => setJSON(STORE_KEYS.drafts, rows),
-    getQuotes: () => getJSON(STORE_KEYS.quotes, []),
-    setQuotes: (rows) => setJSON(STORE_KEYS.quotes, rows),
-    getSessions: () => getJSON(STORE_KEYS.sessions, {}),
-    setSessions: (rows) => setJSON(STORE_KEYS.sessions, rows),
-    getShortcuts: () => getJSON(STORE_KEYS.shortcuts, []),
-    setShortcuts: (rows) => setJSON(STORE_KEYS.shortcuts, rows),
-    getInbox: () => getJSON(STORE_KEYS.inbox, defaultInbox()),
+    pushRecycle(item) { const rows = world.getRecycle(); rows.unshift({ ...item, id: uid("bin") }); world.setRecycle(rows.slice(0, 120)); },
+    getSticky: () => getJSON(STORE_KEYS.sticky, []), setSticky: (rows) => setJSON(STORE_KEYS.sticky, rows),
+    getCalendar: () => getJSON(STORE_KEYS.calendar, {}), setCalendar: (rows) => setJSON(STORE_KEYS.calendar, rows),
+    getDrafts: () => getJSON(STORE_KEYS.drafts, []), setDrafts: (rows) => setJSON(STORE_KEYS.drafts, rows),
+    getQuotes: () => getJSON(STORE_KEYS.quotes, []), setQuotes: (rows) => setJSON(STORE_KEYS.quotes, rows),
+    getSessions: () => getJSON(STORE_KEYS.sessions, {}), setSessions: (rows) => setJSON(STORE_KEYS.sessions, rows),
+    getShortcuts: () => getJSON(STORE_KEYS.shortcuts, []), setShortcuts: (rows) => setJSON(STORE_KEYS.shortcuts, rows),
+    getMediaLibrary: () => getJSON(STORE_KEYS.media, []), setMediaLibrary: (rows) => setJSON(STORE_KEYS.media, rows),
+
+    getAppSettings: () => getJSON(STORE_KEYS.appSettings, { hiddenContent: true, iconDensity: "normal", notificationsEnabled: true, widgets: { clock: true, activity: true, health: true, updates: true }, eventEngine: true }),
+    setAppSettings: (rows) => setJSON(STORE_KEYS.appSettings, rows),
+
+    getInbox() {
+      return getJSON(STORE_KEYS.inbox, [
+        { id: uid("msg"), folder: "Inbox", threadId: "th-welcome", from: "system@devskits.os", to: "operator@local", subject: "Welcome to DevSkits OS", body: "Boot successful. Living services are online.", createdAt: Date.now() - 86400000, read: false },
+        { id: uid("msg"), folder: "System", threadId: "th-updates", from: "updater@devskits.os", to: "operator@local", subject: "Updater ready", body: "Phase 5 update channels initialized.", createdAt: Date.now() - 40000000, read: false },
+        { id: uid("msg"), folder: "Alerts", threadId: "th-loki", from: "loki.guard@daemon", to: "operator@local", subject: "Patrol report", body: "Archive watcher flagged hidden route traffic.", createdAt: Date.now() - 20000000, read: false }
+      ]);
+    },
     setInbox: (rows) => setJSON(STORE_KEYS.inbox, rows),
     pushInbox(msg) {
       const rows = world.getInbox();
-      rows.unshift({ id: `msg-${Date.now()}`, createdAt: Date.now(), ...msg });
-      world.setInbox(rows.slice(0, 120));
+      rows.unshift({ id: uid("msg"), createdAt: Date.now(), read: false, folder: "Inbox", threadId: uid("th"), to: "operator@local", ...msg });
+      world.setInbox(rows.slice(0, 220));
+      world.pushNotification(`New message: ${msg.subject || "(no subject)"}`, "system");
     },
+
     getBrowserHistory: () => getJSON(STORE_KEYS.browserHistory, []),
-    pushBrowserHistory(route) {
-      const rows = world.getBrowserHistory();
-      rows.unshift({ route, at: Date.now() });
-      setJSON(STORE_KEYS.browserHistory, rows.slice(0, 40));
-      trackActivity("browse", route);
-    },
+    pushBrowserHistory(route) { const rows = world.getBrowserHistory(); rows.unshift({ route, at: Date.now() }); setJSON(STORE_KEYS.browserHistory, rows.slice(0, 80)); world.trackActivity("browse", route); },
+
     getRecentActivity: () => getJSON(STORE_KEYS.activity, []),
-    trackActivity,
+    trackActivity(type, detail) {
+      const rows = world.getRecentActivity();
+      rows.unshift({ id: uid("act"), type, detail, at: Date.now() });
+      setJSON(STORE_KEYS.activity, rows.slice(0, 200));
+    },
+
+    getLogs: () => getJSON(STORE_KEYS.logs, []),
+    addLog(channel, message, level = "info") {
+      const rows = world.getLogs();
+      rows.unshift({ id: uid("log"), channel, message, level, at: Date.now() });
+      setJSON(STORE_KEYS.logs, rows.slice(0, 500));
+    },
+    clearLogs: () => setJSON(STORE_KEYS.logs, []),
+
+    getNotifications: () => getJSON(STORE_KEYS.notifications, []),
+    pushNotification(message, level = "info") {
+      const settings = world.getAppSettings();
+      const rows = world.getNotifications();
+      rows.unshift({ id: uid("ntf"), message, level, at: Date.now() });
+      setJSON(STORE_KEYS.notifications, rows.slice(0, 120));
+      world.addLog("notifications", message, level);
+      if (settings.notificationsEnabled) window.DevSkitsDesktop?.notify?.(message, level === "alert" ? "warn" : level === "system" ? "ok" : "info");
+    },
+    clearNotifications: () => setJSON(STORE_KEYS.notifications, []),
+
     getChangelog: () => getJSON(STORE_KEYS.changelog, BASE_CHANGELOG),
     setChangelog: (rows) => setJSON(STORE_KEYS.changelog, rows),
-    getMediaLibrary: () => getJSON(STORE_KEYS.media, BASE_MEDIA),
-    setMediaLibrary: (rows) => setJSON(STORE_KEYS.media, rows),
-    getAppSettings: () => getJSON(STORE_KEYS.appSettings, { hiddenContent: true, iconDensity: "normal" }),
-    setAppSettings: (rows) => setJSON(STORE_KEYS.appSettings, rows),
-    canAccessRoute(route) {
-      const page = INTERNAL_PAGES[route];
-      if (!page) return false;
-      if (!page.lock) return true;
-      return world.isInstalled(page.lock);
+
+    getUpdates: () => getJSON(STORE_KEYS.updates, { currentVersion: "0.4.0", currentBuild: "DSK-420", available: AVAILABLE_UPDATES, history: [], stage: "idle", pendingRestart: false }),
+    setUpdates: (rows) => setJSON(STORE_KEYS.updates, rows),
+    downloadUpdate(id) { const data = world.getUpdates(); data.stage = `downloaded:${id}`; world.setUpdates(data); world.trackActivity("update", `downloaded ${id}`); world.pushNotification(`Update package ready: ${id}`, "system"); },
+    installUpdate(id) {
+      const data = world.getUpdates();
+      const item = data.available.find((u) => u.id === id); if (!item) return false;
+      data.currentVersion = item.version; data.currentBuild = item.build; data.pendingRestart = true; data.stage = `installed:${id}`;
+      data.history.unshift({ id, at: Date.now(), version: item.version, build: item.build, title: item.title });
+      data.available = data.available.filter((u) => u.id !== id);
+      world.setUpdates(data);
+      const c = world.getChangelog(); c.unshift({ id, version: item.version, build: item.build, timestamp: new Date().toLocaleString(), title: item.title, tags: ["update", "system"], body: "Installed from local update channel." }); world.setChangelog(c);
+      world.pushInbox({ folder: "System", threadId: "th-updates", from: "updater@devskits.os", subject: `Update installed ${item.version}`, body: `Restart required to finalize build ${item.build}.` });
+      world.addLog("updates", `Installed ${item.version} (${item.build})`, "system");
+      return true;
+    },
+
+    getServices: () => getJSON(STORE_KEYS.services, world.servicesDefault),
+    setServices: (rows) => setJSON(STORE_KEYS.services, rows),
+    toggleService(id) {
+      const services = world.getServices(); services[id] = !services[id]; world.setServices(services);
+      world.pushNotification(`Service ${id} ${services[id] ? "started" : "stopped"}`, services[id] ? "system" : "alert");
+      world.trackActivity("service", `${id}:${services[id] ? "on" : "off"}`);
+    },
+    getProcessSnapshot() {
+      const services = world.getServices();
+      const running = Object.values(services).filter(Boolean).length;
+      const cpu = Math.min(98, 8 + running * 6 + Math.floor(Math.random() * 10));
+      const memory = Math.min(95, 20 + running * 5 + Math.floor(Math.random() * 12));
+      return { running, total: Object.keys(services).length, cpu, memory, uptimeMs: Date.now() - world.getProfile().lastBootAt };
+    },
+
+    getReminders: () => getJSON(STORE_KEYS.reminders, []),
+    setReminders: (rows) => setJSON(STORE_KEYS.reminders, rows),
+
+    getProfile() { return getJSON(STORE_KEYS.profile, { firstBootAt: Date.now(), bootCount: 0, lastBootAt: Date.now(), commandsRun: 0, appsOpened: {}, packagesInstalled: 0, hiddenPagesFound: 0, notesCreated: 0 }); },
+    setProfile: (rows) => setJSON(STORE_KEYS.profile, rows),
+    registerBoot() {
+      const p = world.getProfile(); p.bootCount += 1; p.lastBootAt = Date.now(); world.setProfile(p);
+      world.addLog("boot", `Boot #${p.bootCount} initiated`, "system");
+    },
+    registerCommand() { const p = world.getProfile(); p.commandsRun += 1; world.setProfile(p); },
+    registerAppOpen(appId) { const p = world.getProfile(); p.appsOpened[appId] = (p.appsOpened[appId] || 0) + 1; world.setProfile(p); },
+
+    getIndexStatus: () => getJSON(STORE_KEYS.searchIndex, { progress: 100, lastIndexedAt: Date.now(), counts: {} }),
+    reindex() {
+      const counts = {
+        apps: Object.keys(window.DevSkitsState?.APPS || {}).length,
+        notes: JSON.parse(localStorage.getItem("devskits-notes-v2") || "[]").length,
+        messages: world.getInbox().length,
+        pages: Object.keys(world.pages).length,
+        logs: world.getLogs().length,
+        updates: world.getUpdates().history.length + world.getUpdates().available.length,
+        achievements: Object.keys(world.getAchievements()).length,
+        projects: (window.DevSkitsProjects || []).length
+      };
+      setJSON(STORE_KEYS.searchIndex, { progress: 100, lastIndexedAt: Date.now(), counts });
+      world.pushNotification("Indexer scan complete", "info");
+      world.trackActivity("index", "reindex completed");
+      return counts;
+    },
+
+    searchEverything(query) {
+      const q = query.toLowerCase();
+      if (!q) return [];
+      const notes = JSON.parse(localStorage.getItem("devskits-notes-v2") || "[]");
+      const fromMessages = world.getInbox().map((m) => ({ type: "message", label: `${m.subject} :: ${m.from}`, target: m.id }));
+      const fromLogs = world.getLogs().map((l) => ({ type: "log", label: `${l.channel} ${l.message}`, target: l.id }));
+      const base = [
+        ...Object.entries(window.DevSkitsState.APPS).map(([id, a]) => ({ type: "app", label: a.title, target: id })),
+        ...Object.keys(world.pages).map((route) => ({ type: "page", label: route, target: route })),
+        ...notes.map((n) => ({ type: "note", label: `${n.name} ${n.content}`, target: n.id })),
+        ...fromMessages,
+        ...fromLogs
+      ];
+      return base.filter((x) => `${x.type} ${x.label}`.toLowerCase().includes(q)).slice(0, 70);
+    },
+
+    canAccessRoute(route) { const page = INTERNAL_PAGES[route]; if (!page) return false; if (!page.lock) return true; return world.isInstalled(page.lock); },
+    getBootLines() {
+      const u = world.getUpdates(); const profile = world.getProfile();
+      return [
+        `Initializing identity shell / build ${u.currentBuild}`,
+        profile.bootCount <= 1 ? "First boot handshake complete." : `Restoring session profile / boot ${profile.bootCount}`,
+        u.pendingRestart ? `Applying update ${u.currentVersion}... complete.` : "No pending core updates.",
+        `Services online: ${Object.values(world.getServices()).filter(Boolean).length}`,
+        `Notification buffer: ${world.getNotifications().length}`
+      ];
+    },
+
+    initLivingSystem() {
+      if (window.__devskitsLivingInit) return;
+      window.__devskitsLivingInit = true;
+      world.registerBoot();
+      world.reindex();
+      setInterval(() => {
+        const settings = world.getAppSettings();
+        if (!settings.eventEngine) return;
+        const reminders = world.getReminders();
+        const due = reminders.find((r) => !r.done && r.dueAt && r.dueAt <= Date.now() && !r.alerted);
+        if (due) {
+          due.alerted = true;
+          world.setReminders(reminders);
+          world.pushNotification(`Reminder due: ${due.title}`, "alert");
+          world.addLog("reminders", `Due reminder fired: ${due.title}`, "alert");
+        } else if (Math.random() < 0.22) {
+          const events = ["update channel ping", "archive scan complete", "notes autosaved", "inbox sync checkpoint", "widgets refresh cycle"];
+          const hit = events[Math.floor(Math.random() * events.length)];
+          world.addLog("system", hit, "info");
+          if (Math.random() < 0.25) world.pushNotification(hit, "info");
+        }
+      }, 15000);
     }
+  };
+
+  world.installPackage = function installPackage(id) {
+    const next = world.getPackages();
+    next[id] = true;
+    world.setPackages(next);
+    world.trackActivity("package", `installed ${id}`);
+    if (id === "loki_archive") world.pushInbox({ folder: "System", threadId: "th-loki", from: "packages@devpkg", subject: "Loki Archive unlocked", body: "Navigator route devskits://loki/archive is now accessible.", link: "devskits://loki/archive" });
+    if (id === "devskits_labs") world.pushInbox({ folder: "System", threadId: "th-labs", from: "packages@devpkg", subject: "Labs unlocked", body: "New experimental internal page enabled.", link: "devskits://labs" });
+    const p = world.getProfile(); p.packagesInstalled = Object.keys(next).filter((k) => next[k]).length; world.setProfile(p);
+    world.addLog("packages", `Installed package ${id}`, "system");
   };
 
   window.DevSkitsWorld = world;

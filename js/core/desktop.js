@@ -114,6 +114,12 @@
     state.windows.forEach((rec) => rec.el.remove());
     state.windows.clear();
     ui.taskButtons.innerHTML = "";
+    const updates = W().getUpdates?.();
+    if (updates?.pendingRestart) {
+      updates.pendingRestart = false;
+      W().setUpdates(updates);
+      W().pushInbox({ folder: "System", threadId: "th-updates", from: "updater@devskits.os", subject: `Restart complete on ${updates.currentVersion}`, body: `Core services restarted for build ${updates.currentBuild}.` });
+    }
     ui.desktop.classList.add("hidden");
     document.querySelector("#boot-screen").classList.remove("hidden");
     notify("Reboot complete", "ok");
@@ -200,10 +206,19 @@
     bar.className = "desktop-widgets";
     ui.desktop.appendChild(bar);
     setInterval(() => {
+      const settings = W().getAppSettings();
       const packages = Object.values(W().getPackages()).filter(Boolean).length;
-      const recent = W().getRecentActivity().slice(0, 3).map((r) => `${r.type}: ${r.detail}`).join(" | ") || "none";
-      bar.innerHTML = `<div class="widget">Time ${new Date().toLocaleTimeString()}</div><div class="widget">Build 0.3.0 / DSK-315</div><div class="widget">Packages ${packages}/5</div><div class="widget">Recent ${recent.slice(0, 64)}</div><div class="widget"><button class="link-btn" data-quick="browser">Navigator</button> <button class="link-btn" data-quick="inbox">Inbox</button> <button class="link-btn" data-quick="buildlog">Build Log</button></div>`;
-    }, 1000);
+      const recent = W().getRecentActivity().slice(0, 2).map((r) => `${r.type}: ${r.detail}`).join(" | ") || "none";
+      const proc = W().getProcessSnapshot();
+      const upd = W().getUpdates();
+      const rows = [];
+      if (settings.widgets.clock) rows.push(`<div class="widget">${new Date().toLocaleTimeString()} / Uptime ${(proc.uptimeMs / 60000) | 0}m</div>`);
+      if (settings.widgets.health) rows.push(`<div class="widget">CPU ${proc.cpu}% MEM ${proc.memory}%</div>`);
+      if (settings.widgets.updates) rows.push(`<div class="widget">Build ${upd.currentVersion} / ${upd.currentBuild}${upd.available.length ? ` · ${upd.available.length} update` : ""}</div>`);
+      if (settings.widgets.activity) rows.push(`<div class="widget">Recent ${recent.slice(0, 74)}</div>`);
+      rows.push(`<div class="widget">Packages ${packages}/5 · <button class="link-btn" data-quick="activity">Activity</button> <button class="link-btn" data-quick="updater">Updater</button></div>`);
+      bar.innerHTML = rows.join("");
+    }, 1200);
     bar.addEventListener("click", (e) => {
       const q = e.target.dataset.quick;
       if (q) window.DevSkitsWindowManager.openApp(q);
@@ -226,23 +241,24 @@
   function startBootSequence() {
     const bar = document.querySelector("#boot-bar");
     const status = document.querySelector("#boot-status");
-    const lines = ["Initializing identity shell...", "Mounting virtual filesystem...", "Loading desktop + window manager...", "Ready."];
+    const lines = W().getBootLines?.() || ["Initializing identity shell...", "Ready."];
     let i = 0;
     bar.style.width = "0%";
     const timer = setInterval(() => {
       i += 1;
-      bar.style.width = `${i * 25}%`;
-      status.textContent = lines[Math.min(i, lines.length - 1)];
-      if (i >= 4) {
+      bar.style.width = `${Math.min(100, (i / lines.length) * 100)}%`;
+      status.textContent = lines[Math.min(i - 1, lines.length - 1)];
+      if (i >= lines.length) {
         clearInterval(timer);
         document.querySelector("#boot-screen").classList.add("hidden");
         ui.desktop.classList.remove("hidden");
         window.DevSkitsWindowManager.restoreSession();
       }
-    }, 550);
+    }, 420);
   }
 
   function initDesktop() {
+    W().initLivingSystem?.();
     applyTheme(state.activeTheme);
     applyWallpaper(state.wallpaper);
     toggleCRT(state.crt);
