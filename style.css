@@ -336,10 +336,6 @@ body.reduce-motion .window { transition: none; }
 .thispc-object { background: #efefef; border: 2px solid; border-top-color:#fff; border-left-color:#fff; border-right-color:#777; border-bottom-color:#777; font: inherit; text-align: left; padding: .3rem; display:flex; align-items:center; gap:.35rem; }
 .thispc-object span { font-size: 1.15rem; }
 .thispc-object:hover { background: #dce8ff; }
-.thispc-devices { display: grid; gap: .35rem; }
-.drive-row { width: 100%; border: 2px solid; border-top-color:#fff; border-left-color:#fff; border-right-color:#777; border-bottom-color:#777; background: #efefef; padding: .26rem .35rem; display: grid; gap: .2rem; text-align:left; }
-.drive-meter { height: 8px; background: #fff; border: 1px solid #777; }
-.drive-meter span { display: block; height: 100%; background: #1a7c1a; }
 
 /* Contact upgrade */
 .contact-shell { display:grid; grid-template-columns: minmax(210px, 250px) 1fr; gap: .6rem; min-height: 300px; }

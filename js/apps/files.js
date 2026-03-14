@@ -374,15 +374,7 @@
     }
 
     function renderThisPc(currentFolder) {
-      const usage = estimateUsage(fsState);
       const systemObjects = ["Desktop", "Documents", "Downloads", "Notes", "Contact Info", "DevSkits Projects", "Terminal", "Settings", "Recycle Bin"];
-      const locations = [
-        { name: "Local Disk (C:)", info: usage.c, type: "drive" },
-        { name: "DevSkits Data (D:)", info: usage.d, type: "drive" },
-        { name: "Contacts", info: null, type: "location" },
-        { name: "Projects", info: null, type: "location" },
-        { name: "Network", info: null, type: "location" }
-      ];
 
       return `
         <div class="thispc-grid">
@@ -393,19 +385,6 @@
                 const found = (currentFolder.children || []).find((it) => it.name === name);
                 const appMap = { Terminal: "terminal", Settings: "settings" };
                 return `<button class="thispc-object" data-open-path="${found ? `${currentPath}/${found.name}` : ""}" data-open-app="${appMap[name] || ""}"><span>${found ? ICONS[found.type] || "📦" : "🧩"}</span>${name}</button>`;
-              }).join("")}
-            </div>
-          </section>
-          <section>
-            <h4>Devices & Locations</h4>
-            <div class="thispc-devices">
-              ${locations.map((loc) => {
-                if (!loc.info) {
-                  return `<div class="drive-row"><div><strong>${loc.name}</strong><div>${loc.type === "location" ? "System Location" : "Unavailable"}</div></div></div>`;
-                }
-                const usedPct = Math.min(100, Math.round((loc.info.used / loc.info.capacity) * 100));
-                const free = Math.max(0, loc.info.capacity - loc.info.used);
-                return `<button class="drive-row" data-props-drive="${loc.name}"><div><strong>${loc.name}</strong><div>${loc.info.used} MB used of ${loc.info.capacity} MB</div><div>${free} MB free</div></div><div class="drive-meter"><span style="width:${usedPct}%"></span></div></button>`;
               }).join("")}
             </div>
           </section>
@@ -442,17 +421,6 @@
         content.querySelectorAll("[data-open-path]").forEach((button) => button.addEventListener("dblclick", () => {
           if (button.dataset.openPath) openPath(button.dataset.openPath);
           if (button.dataset.openApp) window.DevSkitsWindowManager.openApp(button.dataset.openApp);
-        }));
-        content.querySelectorAll("[data-props-drive]").forEach((button) => button.addEventListener("click", () => {
-          const usage = estimateUsage(fsState);
-          const map = button.dataset.propsDrive.includes("C:") ? usage.c : usage.d;
-          openProperties({
-            name: button.dataset.propsDrive,
-            type: "system",
-            modified: dateText(),
-            size: map.used,
-            children: []
-          }, `This PC/${button.dataset.propsDrive}`);
         }));
         return;
       }
