@@ -17,6 +17,7 @@
   function render(container) {
     let notes = loadNotes();
     let active = notes[0]?.id;
+    let externalNoteHandler;
 
     container.innerHTML = `<div class="notes-shell"><aside class="notes-list"></aside><section><div class="badges"><button class="link-btn" id="new-note">New</button><button class="link-btn" id="rename-note">Rename</button><button class="link-btn" id="delete-note">Delete</button><button class="link-btn" id="copy-note">Copy</button><button class="link-btn" id="export-note">Export</button><button class="link-btn" id="fmt-bold"><b>B</b></button><button class="link-btn" id="fmt-italic"><i>I</i></button><button class="link-btn" id="fmt-upper">UP</button></div><div class="start-section-label" id="note-status">Last saved: never</div><textarea class="notes-editor"></textarea></section></div>`;
     const list = container.querySelector(".notes-list");
@@ -120,6 +121,39 @@
     });
 
     window.addEventListener("devskits:new-note", () => container.querySelector("#new-note").click());
+
+    externalNoteHandler = (event) => {
+      const detail = event.detail || {};
+      if (!detail.name) return;
+      const existing = notes.find((n) => n.sourcePath && n.sourcePath === detail.sourcePath);
+      if (existing) {
+        existing.content = detail.content || "";
+        existing.updatedAt = Date.now();
+        active = existing.id;
+      } else {
+        const id = `import-${Date.now()}`;
+        notes.push({
+          id,
+          name: detail.name,
+          content: detail.content || "",
+          sourcePath: detail.sourcePath || "",
+          updatedAt: Date.now()
+        });
+        active = id;
+      }
+      saveNotes(notes);
+      drawList();
+      editor.focus();
+      window.DevSkitsDesktop.notify(`Opened ${detail.name} in Notes`, "ok");
+    };
+
+    window.addEventListener("devskits:open-note-file", externalNoteHandler);
+
+    container.addEventListener("DOMNodeRemoved", () => {
+      if (!container.isConnected && externalNoteHandler) {
+        window.removeEventListener("devskits:open-note-file", externalNoteHandler);
+      }
+    });
 
     drawList();
   }
