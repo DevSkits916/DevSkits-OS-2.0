@@ -6,6 +6,37 @@
     return { width: window.innerWidth, height: window.innerHeight - taskbarHeight };
   }
 
+  function playSound(type) {
+    window.DevSkitsBootSound?.playEffect?.(type);
+  }
+
+  function getSavedAppBounds(appId) {
+    const raw = localStorage.getItem("devskits-window-bounds");
+    if (!raw) return null;
+    try {
+      const map = JSON.parse(raw);
+      return map[appId] || null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function saveAppBounds(appId, el) {
+    if (!appId || !el || el.classList.contains("hidden")) return;
+    const rec = [...state.windows.values()].find((r) => r.el === el);
+    if (rec?.maximized) return;
+    const raw = localStorage.getItem("devskits-window-bounds");
+    let map = {};
+    try { map = JSON.parse(raw || "{}"); } catch (e) { map = {}; }
+    map[appId] = {
+      left: el.style.left,
+      top: el.style.top,
+      width: el.style.width,
+      height: el.style.height
+    };
+    localStorage.setItem("devskits-window-bounds", JSON.stringify(map));
+  }
+
   function persistSession() {
     const session = [];
     state.windows.forEach((rec, id) => {
@@ -21,6 +52,7 @@
           height: rec.el.style.height
         }
       });
+      saveAppBounds(rec.appId, rec.el);
     });
     localStorage.setItem("devskits-session", JSON.stringify(session));
   }
@@ -38,6 +70,26 @@
     const top = Math.min(maxTop, Math.max(0, parseInt(el.style.top || rect.top, 10)));
     el.style.left = `${left}px`;
     el.style.top = `${top}px`;
+  }
+
+  function snapWindow(win) {
+    const bounds = viewportBounds();
+    const rect = win.getBoundingClientRect();
+    const snapDist = 24;
+    if (rect.left <= snapDist) {
+      win.style.left = "0px";
+      win.style.width = `${Math.floor(bounds.width / 2)}px`;
+    }
+    if (rect.right >= bounds.width - snapDist) {
+      win.style.left = `${Math.floor(bounds.width / 2)}px`;
+      win.style.width = `${Math.ceil(bounds.width / 2)}px`;
+    }
+    if (rect.top <= snapDist) {
+      win.style.top = "0px";
+      win.style.width = `${bounds.width}px`;
+      win.style.height = `${bounds.height}px`;
+    }
+    clampToViewport(win);
   }
 
   function getWindowKey(appId) {
@@ -105,6 +157,7 @@
   function closeWindow(appId) {
     const rec = state.windows.get(appId);
     if (!rec) return;
+    playSound("windowClose");
     rec.el.remove();
     state.windows.delete(appId);
     ui.taskButtons.querySelector(`[data-app="${appId}"]`)?.remove();
@@ -144,7 +197,8 @@
     });
     bar.addEventListener("pointerup", () => {
       if (!drag) return;
-      clampToViewport(win);
+      snapWindow(win);
+      saveAppBounds(state.windows.get(appId)?.appId, win);
       drag = null;
       persistSession();
     });
@@ -173,6 +227,7 @@
     handle.addEventListener("pointerup", () => {
       if (!resize) return;
       clampToViewport(win);
+      saveAppBounds(state.windows.get(appId)?.appId, win);
       resize = null;
       persistSession();
     });
@@ -188,7 +243,12 @@
     enableResize(win, appId);
   }
 
-  function initialWindowStyle(win) {
+  function initialWindowStyle(win, appId) {
+    const saved = getSavedAppBounds(appId);
+    if (saved) {
+      Object.assign(win.style, saved);
+      return;
+    }
     const bounds = viewportBounds();
     const mobile = window.innerWidth <= 760;
     if (mobile) {
@@ -221,7 +281,7 @@
     win.dataset.app = windowKey;
     win.querySelector(".window-title").textContent = `${meta.title} - DevSkits 3.1`;
     win.style.zIndex = ++state.z;
-    initialWindowStyle(win);
+    initialWindowStyle(win, appId);
 
     wireWindow(win, windowKey);
     ui.windowLayer.appendChild(win);
@@ -232,6 +292,7 @@
     render(win.querySelector(".window-content"), options);
     focusWindow(windowKey);
     clampToViewport(win);
+    playSound("windowOpen");
 
     state.recentApps = [appId, ...state.recentApps.filter((id) => id !== appId)].slice(0, 5);
     window.DevSkitsWorld?.trackActivity?.("app", `opened ${appId}`);

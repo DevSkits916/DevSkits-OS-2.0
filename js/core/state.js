@@ -80,10 +80,11 @@
   };
 
   const START_MENU_SECTIONS = [
-    { id: "favorites", label: "FAVORITES", items: ["about", "contact", "projects", "notes", "terminal"] },
-    { id: "workspace", label: "WORKSPACE", items: ["files", "browser", "settings", "recycle"] },
-    { id: "links", label: "WEB + LINKS", items: ["links", "donate", "loki"] },
-    { id: "power", label: "POWER", items: ["run", "reboot", "shutdown"] }
+    { id: "programs", label: "PROGRAMS", items: ["terminal", "files", "notes", "browser", "calculator"] },
+    { id: "devskits", label: "DEVSKITS", items: ["projects", "links", "loki", "donate"] },
+    { id: "utilities", label: "UTILITIES", items: ["settings", "recycle", "run"] },
+    { id: "contact", label: "CONTACT", items: ["contact"] },
+    { id: "system", label: "SYSTEM", items: ["about", "reboot", "shutdown"] }
   ];
 
   const state = {

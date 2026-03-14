@@ -18,7 +18,7 @@
     let notes = loadNotes();
     let active = notes[0]?.id;
 
-    container.innerHTML = `<div class="notes-shell"><aside class="notes-list"></aside><section><div class="badges"><button class="link-btn" id="new-note">New</button><button class="link-btn" id="rename-note">Rename</button><button class="link-btn" id="delete-note">Delete</button><button class="link-btn" id="copy-note">Copy</button><button class="link-btn" id="export-note">Export</button></div><div class="start-section-label" id="note-status">Last saved: never</div><textarea class="notes-editor"></textarea></section></div>`;
+    container.innerHTML = `<div class="notes-shell"><aside class="notes-list"></aside><section><div class="badges"><button class="link-btn" id="new-note">New</button><button class="link-btn" id="rename-note">Rename</button><button class="link-btn" id="delete-note">Delete</button><button class="link-btn" id="copy-note">Copy</button><button class="link-btn" id="export-note">Export</button><button class="link-btn" id="fmt-bold"><b>B</b></button><button class="link-btn" id="fmt-italic"><i>I</i></button><button class="link-btn" id="fmt-upper">UP</button></div><div class="start-section-label" id="note-status">Last saved: never</div><textarea class="notes-editor"></textarea></section></div>`;
     const list = container.querySelector(".notes-list");
     const editor = container.querySelector(".notes-editor");
     const status = container.querySelector("#note-status");
@@ -28,6 +28,20 @@
       const current = notes.find((n) => n.id === active);
       editor.value = current?.content || "";
       status.textContent = `Last saved: ${current?.updatedAt ? new Date(current.updatedAt).toLocaleString() : "never"}`;
+    }
+
+
+    function wrapSelection(prefix, suffix = prefix) {
+      const start = editor.selectionStart || 0;
+      const end = editor.selectionEnd || 0;
+      const selected = editor.value.slice(start, end);
+      const note = notes.find((n) => n.id === active);
+      if (!note) return;
+      note.content = `${editor.value.slice(0, start)}${prefix}${selected}${suffix}${editor.value.slice(end)}`;
+      note.updatedAt = Date.now();
+      editor.value = note.content;
+      saveNotes(notes);
+      status.textContent = `Last saved: ${new Date(note.updatedAt).toLocaleString()}`;
     }
 
     list.addEventListener("click", (e) => {
@@ -81,6 +95,19 @@
       if (!note) return;
       await navigator.clipboard.writeText(note.content || "").catch(() => {});
       window.DevSkitsDesktop.notify("Copied note to clipboard", "ok");
+    });
+
+
+    container.querySelector("#fmt-bold").addEventListener("click", () => wrapSelection("**"));
+    container.querySelector("#fmt-italic").addEventListener("click", () => wrapSelection("*"));
+    container.querySelector("#fmt-upper").addEventListener("click", () => {
+      const note = notes.find((n) => n.id === active);
+      if (!note) return;
+      note.content = editor.value.toUpperCase();
+      note.updatedAt = Date.now();
+      editor.value = note.content;
+      saveNotes(notes);
+      status.textContent = `Last saved: ${new Date(note.updatedAt).toLocaleString()}`;
     });
 
     container.querySelector("#export-note").addEventListener("click", () => {

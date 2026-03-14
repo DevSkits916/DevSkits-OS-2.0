@@ -292,10 +292,10 @@
       const action = e.target.dataset.action;
       if (!action) return;
       if (action === "refresh") buildDesktopIcons();
-      if (action === "new-note") window.dispatchEvent(new CustomEvent("devskits:new-note"));
-      if (action === "new-sticky") createSticky();
-      if (action === "terminal" || action === "settings") window.DevSkitsWindowManager.launchApp(action);
-      if (action === "reboot") rebootSystem();
+      if (action === "new-folder") window.DevSkitsWindowManager.launchApp("files", { startPath: "Desktop" });
+      if (action === "new-text-document") window.dispatchEvent(new CustomEvent("devskits:new-note"));
+      if (action === "personalize") window.DevSkitsWindowManager.launchApp("settings");
+      if (action === "about") window.DevSkitsWindowManager.launchApp("about");
       menu.classList.add("hidden");
     });
   }
@@ -400,6 +400,16 @@
     });
   }
 
+
+  function bindTaskbarTray() {
+    const tray = document.querySelector(".system-tray");
+    tray?.addEventListener("click", (e) => {
+      const btn = e.target.closest(".tray-icon");
+      if (!btn) return;
+      window.DevSkitsWindowManager.launchApp(btn.dataset.app);
+    });
+  }
+
   function finishBoot() {
     document.querySelector("#boot-screen").classList.add("hidden");
     ui.desktop.classList.remove("hidden");
@@ -414,19 +424,19 @@
     const profile = W().getProfile?.() || { bootCount: 1 };
     const build = W().getUpdates?.().currentBuild || "DSK-200";
     const biosLines = [
-      `Initializing DevSkits BIOS / ${build}...`,
-      "Detecting memory...",
-      `Checking storage devices... (${profile.bootCount} boots logged)`,
-      "Loading system modules...",
-      "Mounting DevSkits kernel..."
+      `DevSkits BIOS / ${build}`,
+      "POST: memory check complete",
+      `Storage map online (${profile.bootCount} boots logged)`,
+      "Loading system modules",
+      "Kernel handoff ready"
     ];
 
     const systemMessages = [
-      "Loading desktop environment...",
-      "Loading applications...",
-      "Initializing icon system...",
-      "Starting DevSkits services...",
-      "Preparing user interface..."
+      "Loading system modules",
+      "Initializing desktop environment",
+      "Starting DevSkits Shell",
+      "Launching Desktop",
+      "Desktop ready"
     ];
 
     window.DevSkitsBoot.runSequence({
@@ -446,6 +456,7 @@
     bindDesktopInteractions();
     bindDesktopContextMenu();
     bindRunDialog();
+    bindTaskbarTray();
     window.addEventListener("resize", () => buildDesktopIcons());
     W().getSticky().forEach((s) => createSticky(s));
     updateClock();

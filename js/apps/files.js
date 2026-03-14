@@ -1,45 +1,67 @@
 (() => {
-  const FS = window.DevSkitsFS;
+  const VIEWS = {
+    Desktop: [
+      { type: "dir", name: "Documents" },
+      { type: "dir", name: "Contact Info" },
+      { type: "dir", name: "DevSkits Projects" },
+      { type: "app", name: "Terminal", app: "terminal" }
+    ],
+    Documents: [
+      { type: "file", name: "welcome.txt", content: "Welcome to DevSkits OS 2.0" },
+      { type: "file", name: "roadmap.txt", content: "Improve, preserve, and extend." }
+    ],
+    "Contact Info": [
+      { type: "app", name: "Open Contact Viewer", app: "contact" }
+    ],
+    "DevSkits Projects": [
+      { type: "app", name: "Projects", app: "projects" },
+      { type: "app", name: "Links", app: "links" }
+    ]
+  };
 
-  function render(container) {
-    let cwd = "C:\\DEVSKITS";
+  function render(container, options = {}) {
+    let cwd = options.startPath && VIEWS[options.startPath] ? options.startPath : "Desktop";
+    const stack = [];
+
     container.innerHTML = `<div class="files-shell"><aside class="files-tree"></aside><section><div class="files-path"></div><div class="files-list"></div></section></div>`;
     const tree = container.querySelector(".files-tree");
     const pathEl = container.querySelector(".files-path");
     const list = container.querySelector(".files-list");
 
-    tree.innerHTML = ["C:\\DEVSKITS", "C:\\DEVSKITS\\PROJECTS", "C:\\DEVSKITS\\CONTACT", "C:\\DEVSKITS\\LOKI", "C:\\DEVSKITS\\NOTES", "C:\\DEVSKITS\\ARCHIVE", "C:\\DEVSKITS\\SECRET"].map((p) => `<button class="task-btn" data-path="${p}">${p}</button>`).join("");
+    const roots = ["Desktop", "Documents", "Contact Info", "DevSkits Projects"];
+    tree.innerHTML = roots.map((p) => `<button class="task-btn" data-path="${p}">${p}</button>`).join("");
 
     function openItem(item) {
-      const full = FS.normalize(item, cwd);
-      const node = FS.getNode(full);
-      if (!node) return;
-      if (node.type === "dir") {
-        cwd = full;
+      if (item.type === "dir") {
+        stack.push(cwd);
+        cwd = item.name;
         draw();
-      } else if (node.type === "app") {
-        window.DevSkitsWindowManager.openApp(node.app);
-      } else if (node.type === "project") {
-        window.DevSkitsWindowManager.openApp("projects", { focusProject: node.ref });
+      } else if (item.type === "app") {
+        window.DevSkitsWindowManager.openApp(item.app);
       } else {
-        if ((node.content || "").includes("devskits://")) {
-          const route = (node.content.match(/devskits:\/\/[\w/-]+/) || [])[0];
-          if (route) return window.DevSkitsWindowManager.openApp("browser", { route });
-        }
-        if (item.toLowerCase().includes("note")) return window.DevSkitsWindowManager.openApp("notes");
-        alert(node.content || "Empty file");
+        alert(item.content || "Empty file");
       }
     }
 
     function draw() {
-      pathEl.textContent = cwd;
-      const rows = FS.list(cwd) || [];
-      list.innerHTML = rows.map((r) => `<button class="task-btn" data-name="${r.name}">${r.type === "dir" ? "📁" : "📄"} ${r.name}</button>`).join("") || "<em>Empty folder</em>";
-      list.querySelectorAll("button").forEach((b) => b.addEventListener("dblclick", () => openItem(b.dataset.name)));
+      pathEl.textContent = `This PC > ${cwd}`;
+      const rows = VIEWS[cwd] || [];
+      list.innerHTML = `${stack.length ? '<button class="task-btn" data-back="1">⬅ Back</button>' : ""}${rows.map((r) => `<button class="task-btn" data-name="${r.name}">${r.type === "dir" ? "📁" : "📄"} ${r.name}</button>`).join("")}` || "<em>Empty folder</em>";
+
+      list.querySelector('[data-back]')?.addEventListener('click', () => {
+        cwd = stack.pop() || "Desktop";
+        draw();
+      });
+
+      list.querySelectorAll("button[data-name]").forEach((b) => b.addEventListener("dblclick", () => {
+        const item = rows.find((r) => r.name === b.dataset.name);
+        if (item) openItem(item);
+      }));
     }
 
     tree.querySelectorAll("button").forEach((b) => b.addEventListener("click", () => {
       cwd = b.dataset.path;
+      stack.length = 0;
       draw();
     }));
 
