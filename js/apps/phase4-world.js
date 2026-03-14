@@ -1,55 +1,163 @@
 (() => {
   const W = window.DevSkitsWorld;
   const APPS = window.DevSkitsState.APPS;
+  const NAV_STORE = {
+    bookmarks: "devskits-nav-bookmarks-v1",
+    recent: "devskits-nav-recent-v1"
+  };
+
+  const DEFAULT_BOOKMARKS = [
+    { label: "DevSkits Home", route: "devskits://home" },
+    { label: "Projects", route: "devskits://projects" },
+    { label: "Contact", route: "devskits://contact" },
+    { label: "Donate", route: "devskits://donate" },
+    { label: "GitHub", route: "https://github.com/DevSkits916" },
+    { label: "Reddit", route: "https://reddit.com" },
+    { label: "GoFundMe", route: "https://www.gofundme.com" }
+  ];
+
+  function escapeHtml(value = "") {
+    return String(value)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#39;");
+  }
 
   function routePage(route) {
     const node = W.pages[route];
-    if (!node) return "<h3>404 // route not found</h3>";
-    if (!W.canAccessRoute(route)) return `<h3>LOCKED NODE</h3><p>Install package: ${node.lock}</p>`;
-    const links = (node.links || []).map((l) => `<a href="#" data-route="${l}">${l}</a>`).join("<br>");
-    return `<div class="retro-web"><h3>${node.title}</h3><p>${node.body}</p>${node.appLink ? `<p><button class="link-btn" data-open-app="${node.appLink}">Open ${APPS[node.appLink]?.title || node.appLink}</button></p>` : ""}${links ? `<div class="retro-links"><strong>Local links</strong><br>${links}</div>` : ""}</div>`;
+    if (!node) {
+      return `<div class="retro-web nav-error"><h3>404 // route not found</h3><p>No internal page exists for <code>${escapeHtml(route)}</code>.</p><button class="link-btn" data-route="devskits://home">Return home</button></div>`;
+    }
+    if (!W.canAccessRoute(route)) {
+      return `<div class="retro-web nav-error"><h3>LOCKED NODE</h3><p>Install package: ${escapeHtml(node.lock || "unknown")}</p></div>`;
+    }
+    const links = (node.links || []).map((l) => `<a href="#" data-route="${escapeHtml(l)}">${escapeHtml(l)}</a>`).join("<br>");
+    return `<div class="retro-web"><h3>${escapeHtml(node.title)}</h3><p>${escapeHtml(node.body)}</p>${node.appLink ? `<p><button class="link-btn" data-open-app="${escapeHtml(node.appLink)}">Open ${escapeHtml(APPS[node.appLink]?.title || node.appLink)}</button></p>` : ""}${links ? `<div class="retro-links"><strong>Local links</strong><br>${links}</div>` : ""}</div>`;
+  }
+
+  function normalizeRoute(input = "") {
+    const value = input.trim();
+    if (!value) return "devskits://home";
+    const shortcuts = {
+      home: "devskits://home",
+      projects: "devskits://projects",
+      contact: "devskits://contact",
+      donate: "devskits://donate",
+      about: "devskits://home",
+      updates: "devskits://updates",
+      changelog: "devskits://updates",
+      github: "https://github.com/DevSkits916",
+      reddit: "https://reddit.com"
+    };
+    if (shortcuts[value.toLowerCase()]) return shortcuts[value.toLowerCase()];
+    if (/^https?:\/\//i.test(value)) return value;
+    if (value.startsWith("devskits://")) return value;
+    return `devskits://${value.replace(/^\/+/, "")}`;
   }
 
   function renderBrowser(container, options = {}) {
     let history = [];
     let pointer = -1;
-    const initial = options.route || "devskits://home";
-    container.innerHTML = `<div class="navigator-shell"><div class="navigator-bar"><button id="nav-back">◀</button><button id="nav-forward">▶</button><button id="nav-reload">↺</button><input id="nav-url" value="${initial}"/><button id="nav-go">Go</button></div><article id="nav-page" class="browser-page"></article></div>`;
+    let loading = false;
+    const initial = normalizeRoute(options.route || "devskits://home");
+    const savedBookmarks = JSON.parse(localStorage.getItem(NAV_STORE.bookmarks) || "null") || DEFAULT_BOOKMARKS;
+
+    container.innerHTML = `<div class="navigator-shell modernized"><header class="navigator-titlebar"><strong>Navigator</strong><span id="nav-status">Idle</span></header><div class="navigator-toolbar"><button id="nav-back" title="Back">◀</button><button id="nav-forward" title="Forward">▶</button><button id="nav-reload" title="Refresh">↺</button><button id="nav-home" title="Home">⌂</button><button id="nav-stop" title="Stop">■</button><input id="nav-url" value="${escapeHtml(initial)}"/><button id="nav-go">Go</button><button id="nav-bookmark">★</button></div><div class="navigator-bookmarks" id="nav-bookmarks"></div><article id="nav-page" class="browser-page"></article><footer class="navigator-statusbar"><span id="nav-route">${escapeHtml(initial)}</span><small id="nav-hint">devskits:// routes + urls supported</small></footer></div>`;
+
     const page = container.querySelector("#nav-page");
     const url = container.querySelector("#nav-url");
+    const status = container.querySelector("#nav-status");
+    const routeText = container.querySelector("#nav-route");
+    const bookmarksWrap = container.querySelector("#nav-bookmarks");
 
-    function openRoute(route, push = true) {
-      if (/^https?:\/\//i.test(route)) {
-        window.open(route, "_blank", "noopener,noreferrer");
-        page.innerHTML = `<div class="retro-web"><h3>External link opened</h3><p>${route}</p></div>`;
-      } else {
-        page.innerHTML = routePage(route);
-      }
-      url.value = route;
-      if (push) {
-        history = history.slice(0, pointer + 1);
-        history.push(route);
-        pointer = history.length - 1;
-      }
-      W.pushBrowserHistory(route);
-      if (route.includes("hidden")) {
-        const p = W.getProfile();
-        p.hiddenPagesFound += 1;
-        W.setProfile(p);
-      }
+    function drawBookmarks() {
+      bookmarksWrap.innerHTML = savedBookmarks.map((b) => `<button class="task-btn" data-bookmark="${escapeHtml(b.route)}">${escapeHtml(b.label)}</button>`).join("");
+      localStorage.setItem(NAV_STORE.bookmarks, JSON.stringify(savedBookmarks));
+    }
+
+    function setStatus(text, busy = false) {
+      loading = busy;
+      status.textContent = text;
+      container.querySelector("#nav-stop").disabled = !busy;
+    }
+
+    function setNavState() {
+      container.querySelector("#nav-back").disabled = pointer <= 0;
+      container.querySelector("#nav-forward").disabled = pointer >= history.length - 1;
+    }
+
+    function recordRecent(route) {
+      const rows = JSON.parse(localStorage.getItem(NAV_STORE.recent) || "[]");
+      rows.unshift({ route, at: Date.now() });
+      localStorage.setItem(NAV_STORE.recent, JSON.stringify(rows.slice(0, 60)));
+    }
+
+    function renderStartPage(route) {
+      const recent = JSON.parse(localStorage.getItem(NAV_STORE.recent) || "[]").slice(0, 6);
+      return `<div class="nav-start"><h3>DevSkits Navigator</h3><p>Quick launch internal routes, projects, and tools.</p><div class="badges">${savedBookmarks.slice(0, 5).map((b) => `<button class="link-btn" data-route="${escapeHtml(b.route)}">${escapeHtml(b.label)}</button>`).join("")}</div><h4>Recent</h4>${recent.map((r) => `<div class="note-row"><button class="link-btn" data-route="${escapeHtml(r.route)}">${escapeHtml(r.route)}</button><small>${new Date(r.at).toLocaleString()}</small></div>`).join("") || "<em>No recent pages yet.</em>"}<div class="retro-links"><strong>Tip:</strong> try <code>devskits://projects</code> or <code>github</code>.</div></div>`;
+    }
+
+    function openRoute(input, push = true) {
+      const route = normalizeRoute(input);
+      setStatus("Loading...", true);
+      setTimeout(() => {
+        if (loading === false) return;
+        if (/^https?:\/\//i.test(route)) {
+          window.open(route, "_blank", "noopener,noreferrer");
+          page.innerHTML = `<div class="retro-web"><h3>External destination opened</h3><p>${escapeHtml(route)}</p></div>`;
+        } else if (route === "devskits://home") {
+          page.innerHTML = renderStartPage(route);
+        } else {
+          page.innerHTML = routePage(route);
+        }
+        url.value = route;
+        routeText.textContent = route;
+        if (push) {
+          history = history.slice(0, pointer + 1);
+          history.push(route);
+          pointer = history.length - 1;
+        }
+        setNavState();
+        setStatus("Ready", false);
+        W.pushBrowserHistory(route);
+        recordRecent(route);
+        if (route.includes("hidden")) {
+          const p = W.getProfile();
+          p.hiddenPagesFound += 1;
+          W.setProfile(p);
+        }
+      }, 120);
     }
 
     container.addEventListener("click", (e) => {
       const route = e.target.dataset.route;
+      const bookmarkRoute = e.target.dataset.bookmark;
       const openApp = e.target.dataset.openApp;
       if (route) openRoute(route);
+      if (bookmarkRoute) openRoute(bookmarkRoute);
       if (openApp) window.DevSkitsWindowManager.openApp(openApp);
     });
+
     container.querySelector("#nav-go").addEventListener("click", () => openRoute(url.value.trim()));
     container.querySelector("#nav-back").addEventListener("click", () => { if (pointer > 0) openRoute(history[--pointer], false); });
     container.querySelector("#nav-forward").addEventListener("click", () => { if (pointer < history.length - 1) openRoute(history[++pointer], false); });
     container.querySelector("#nav-reload").addEventListener("click", () => openRoute(url.value.trim(), false));
+    container.querySelector("#nav-home").addEventListener("click", () => openRoute("devskits://home"));
+    container.querySelector("#nav-stop").addEventListener("click", () => setStatus("Load cancelled", false));
+    container.querySelector("#nav-bookmark").addEventListener("click", () => {
+      const route = normalizeRoute(url.value);
+      if (!savedBookmarks.some((b) => b.route === route)) {
+        savedBookmarks.unshift({ label: route.replace("devskits://", "").slice(0, 18) || "bookmark", route });
+        savedBookmarks.splice(20);
+        drawBookmarks();
+        setStatus("Bookmarked", false);
+      }
+    });
     url.addEventListener("keydown", (e) => e.key === "Enter" && openRoute(url.value.trim()));
+
+    drawBookmarks();
     openRoute(initial);
   }
 
