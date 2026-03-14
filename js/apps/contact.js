@@ -123,7 +123,7 @@
                 ${group.items.length ? group.items.map((item) => `
                   <div class="contact-row" data-id="${item.id}">
                     <div class="contact-main">
-                      <strong>${icon(item.icon || "notes", item.label)} ${item.label}</strong>
+                      <strong>${icon(item.icon || "notes", item.label)}</strong>
                       <span>${item.value || "Not provided"}</span>
                     </div>
                     <div class="contact-actions">
