@@ -4,6 +4,7 @@
     const fastBoot = localStorage.getItem("devskits-fast-boot") === "on";
     const animations = localStorage.getItem("devskits-animations") !== "off";
     const clock24h = appSettings.clock24h !== false;
+    const soundsOn = localStorage.getItem("devskits-sound") !== "off";
 
     container.innerHTML = `
     <h3>Settings / Control Panel</h3>
@@ -25,6 +26,7 @@
       <label><input type="checkbox" id="fast-boot-toggle" ${fastBoot ? "checked" : ""}/> Fast boot mode</label>
       <label><input type="checkbox" id="animations-toggle" ${animations ? "checked" : ""}/> Window animations enabled</label>
       <label><input type="checkbox" id="clock-toggle" ${clock24h ? "checked" : ""}/> 24h clock format</label>
+      <label><input type="checkbox" id="sound-toggle" ${soundsOn ? "checked" : ""}/> System sounds enabled</label>
       <button class="link-btn" id="cycle-theme">Cycle Theme</button>
       <button class="link-btn" id="toggle-crt">Toggle CRT Overlay</button>
       <button class="link-btn" id="reset-layout">Reset Desktop Layout</button>
@@ -63,6 +65,10 @@
       const next = window.DevSkitsWorld.getAppSettings();
       next.clock24h = e.target.checked;
       window.DevSkitsWorld.setAppSettings(next);
+    });
+
+    container.querySelector("#sound-toggle").addEventListener("change", (e) => {
+      localStorage.setItem("devskits-sound", e.target.checked ? "on" : "off");
     });
 
     container.querySelector("#reset-layout").addEventListener("click", () => {

@@ -48,12 +48,10 @@
 
     <div id="desktop-context-menu" class="context-menu hidden">
       <button data-action="refresh">Refresh</button>
-      <button data-action="new-note">New Note</button>
-      <button data-action="new-sticky">New Sticky</button>
-      <button data-action="terminal">Terminal</button>
-      <button data-action="settings">Settings</button>
-      <button data-action="reboot">Reboot</button>
-      <button data-action="shutdown">Shut Down</button>
+      <button data-action="new-folder">New Folder</button>
+      <button data-action="new-text-document">New Text Document</button>
+      <button data-action="personalize">Personalize</button>
+      <button data-action="about">About DevSkits OS</button>
     </div>
 
     <div id="start-menu" class="start-menu hidden" aria-hidden="true" role="menu" aria-label="Start Menu">
@@ -80,6 +78,11 @@
       <button id="start-btn" class="start-btn" aria-expanded="false" aria-controls="start-menu">Start</button>
       <div id="task-buttons" class="task-buttons" aria-label="Open windows"></div>
       <div class="system-tray">
+        <span class="tray-icons" aria-label="System tray icons">
+          <button class="tray-icon" data-app="terminal" title="Terminal">⌨</button>
+          <button class="tray-icon" data-app="files" title="Explorer">📁</button>
+          <button class="tray-icon" data-app="settings" title="Settings">⚙</button>
+        </span>
         <time id="clock"></time>
       </div>
     </footer>
@@ -127,6 +130,7 @@
   <script src="js/apps/settings.js"></script>
   <script src="js/apps/files.js"></script>
   <script src="js/apps/terminal.js"></script>
+  <script src="js/apps/calculator.js"></script>
   <script src="js/apps/phase4-tools.js"></script>
   <script src="js/apps/phase4-world.js"></script>
   <script src="js/apps/phase5-living.js"></script>
