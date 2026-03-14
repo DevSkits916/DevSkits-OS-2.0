@@ -322,6 +322,8 @@
     if (!items.length) {
       launchApp("about");
       launchApp("contact");
+      const contactWindowId = [...state.windows.entries()].find(([, rec]) => rec.appId === "contact")?.[0];
+      if (contactWindowId) toggleMaximize(contactWindowId);
     }
 
     const hasTerminal = [...state.windows.values()].some((rec) => rec.appId === "terminal");
