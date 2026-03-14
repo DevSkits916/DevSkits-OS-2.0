@@ -362,3 +362,59 @@ body.reduce-motion .window { transition: none; }
   .contact-shell { grid-template-columns: 1fr; }
   .explorer-sidebar { max-height: 140px; }
 }
+
+/* Terminal 3.1 upgrades */
+.ds-terminal { display: grid; grid-template-rows: auto 1fr auto; height: 100%; min-height: 280px; border: 1px solid #000; background: #101010; color: #d8ffd8; font-family: "Courier New", monospace; }
+.ds-terminal-header { display: flex; justify-content: space-between; align-items: center; gap: .5rem; padding: .25rem .45rem; background: #1b1b1b; border-bottom: 1px solid #2d2d2d; color: #a4f8a4; font-size: .76rem; }
+.ds-terminal-output { overflow: auto; padding: .5rem; display: grid; gap: .26rem; }
+.ds-term-line { white-space: pre-wrap; word-break: break-word; }
+.ds-term-line.input { color: #b8ffb8; font-weight: 700; }
+.ds-term-line.error { color: #ff9f9f; }
+.ds-term-line.success { color: #8ef58e; }
+.ds-term-line.warn { color: #ffe2a3; }
+.ds-term-box, .ds-term-file, .ds-term-section, .ds-term-table-wrap { border: 1px solid #2a462a; background: #0d140d; padding: .34rem; }
+.ds-term-box strong, .ds-term-file h4, .ds-term-section h4 { margin: 0 0 .2rem; display: block; color: #8ef58e; }
+.ds-term-box pre, .ds-term-file pre, .ds-term-section pre { margin: 0; white-space: pre-wrap; }
+.ds-term-table { width: 100%; border-collapse: collapse; font-size: .78rem; }
+.ds-term-table th, .ds-term-table td { border: 1px solid #2a462a; text-align: left; padding: .16rem .24rem; }
+.ds-term-footnote { margin-top: .2rem; font-size: .7rem; color: #9eb79e; }
+.ds-terminal-input-row { position: sticky; bottom: 0; display: flex; align-items: center; gap: .35rem; padding: .34rem .4rem; background: #121212; border-top: 1px solid #2d2d2d; }
+.ds-terminal-prompt { color: #8ef58e; font-weight: 700; white-space: nowrap; }
+.ds-terminal-input { flex: 1; min-width: 120px; background: #0d0d0d; color: #d8ffd8; border: 1px solid #345634; padding: .2rem .3rem; font: inherit; }
+.ds-terminal-input:focus { outline: 1px dotted #d8ffd8; }
+.ds-terminal-cursor { width: 8px; height: 1.1em; background: #8ef58e; animation: dsBlink 1s steps(2, start) infinite; }
+@keyframes dsBlink { to { opacity: 0; } }
+
+/* Calculator 3.1 upgrades */
+.ds-calc { display: grid; gap: .4rem; height: 100%; }
+.ds-calc-head { display: flex; justify-content: space-between; align-items: center; border: 1px solid #777; background: #ececec; padding: .3rem .4rem; }
+.ds-calc-modes { display: flex; gap: .2rem; }
+.ds-calc-modes .active { background: #0000a8; color: #fff; }
+.ds-calc-display-wrap { border: 1px solid #666; background: #f9f9f9; padding: .35rem; }
+.ds-calc-memory { font-size: .74rem; margin-bottom: .2rem; }
+.ds-calc-display { width: 100%; text-align: right; font: 700 1.2rem/1 "Courier New", monospace; padding: .35rem; background: #fff; border: 1px inset #888; }
+.ds-calc-status { font-size: .72rem; margin-top: .2rem; color: #3a3a3a; }
+.ds-calc-layout { display: grid; grid-template-columns: minmax(220px, 1fr) minmax(140px, 220px); gap: .4rem; }
+.ds-calc-panel, .ds-calc-history { border: 1px solid #7c7c7c; background: #efefef; padding: .3rem; }
+.ds-calc-keys { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .24rem; }
+.calc-key { min-height: 32px; background: var(--surface); }
+.calc-key.op { background: #dfdfdf; font-weight: 700; }
+.calc-key:hover { filter: brightness(0.96); }
+.calc-key:active { transform: translateY(1px); }
+.calc-h-row { width: 100%; display: grid; gap: .1rem; text-align: left; margin-bottom: .2rem; background: #fff; border: 1px solid #777; padding: .22rem; }
+.calc-h-row strong { text-align: right; }
+
+/* Navigator upgrades */
+.navigator-shell.modernized { grid-template-rows: auto auto auto 1fr auto; }
+.navigator-titlebar { display: flex; justify-content: space-between; align-items: center; padding: .25rem .4rem; background: #0000a8; color: #fff; font-size: .76rem; }
+.navigator-toolbar { display: flex; gap: .22rem; flex-wrap: wrap; background: #ececec; border: 1px solid #7f7f7f; padding: .25rem; }
+.navigator-toolbar button:disabled { opacity: .45; }
+.navigator-toolbar input { flex: 1; min-width: 180px; background: #fff; }
+.navigator-bookmarks { display: flex; gap: .2rem; flex-wrap: wrap; border: 1px solid #8d8d8d; background: #f3f3f3; padding: .2rem; }
+.navigator-statusbar { margin-top: .2rem; border: 1px solid #8b8b8b; background: #ececec; padding: .2rem .35rem; display: flex; justify-content: space-between; gap: .5rem; font-size: .72rem; }
+.nav-start { background: #fff; border: 1px dashed #777; padding: .45rem; }
+.nav-error { border: 1px solid #7a0000; background: #fff3f3; padding: .45rem; }
+
+@media (max-width: 760px) {
+  .ds-calc-layout { grid-template-columns: 1fr; }
+}
