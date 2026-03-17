@@ -186,7 +186,22 @@ body[data-icon-density="compact"] .icon-label { font-size: 10px; }
   padding: 4px;
   z-index: 2500;
 }
-.start-btn { min-width: 96px; height: 100%; font-weight: 700; background: var(--surface); }
+.start-btn {
+  min-width: 96px;
+  height: 100%;
+  font-weight: 700;
+  background: var(--surface);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.start-logo {
+  width: 16px;
+  height: 12px;
+  display: inline-flex;
+}
+.start-logo svg { width: 100%; height: 100%; display: block; }
 .task-buttons { flex: 1; display: flex; gap: 4px; overflow: auto; }
 .task-btn { min-width: 130px; max-width: 240px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background: var(--surface); }
 .task-btn.minimized { opacity: .7; font-style: italic; }
