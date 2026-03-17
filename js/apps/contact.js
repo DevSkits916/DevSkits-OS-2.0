@@ -24,7 +24,6 @@
       `FN:${profile.name}`,
       `N:${profile.lastName || "Ramsey"};${profile.firstName || "Travis"};;;`,
       `ORG:${profile.brand}`,
-      `TITLE:${profile.descriptor}`,
       `EMAIL:${email}`,
       `TEL:${phone}`,
       `URL:${github}`,
@@ -48,7 +47,6 @@
       firstName: "Travis",
       lastName: "Ramsey",
       brand: byId.brand?.value || "DevSkits",
-      descriptor: "Retro web OS builder, indie creator, and digital identity architect."
     };
 
     const groups = [
@@ -90,7 +88,6 @@
           <div class="contact-avatar" aria-hidden="true">${icon("contact", "Profile")}</div>
           <h3>${profile.name}</h3>
           <p><strong>${profile.brand}</strong></p>
-          <p>${profile.descriptor}</p>
           <div class="contact-quick-actions">
             <button class="link-btn" data-action="download-vcf">Download vCard</button>
           </div>

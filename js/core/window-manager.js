@@ -320,17 +320,13 @@
       if (item.minimized) minimizeWindow(targetId);
     });
     if (!items.length) {
-      launchApp("about");
       launchApp("contact");
-      const contactWindowId = [...state.windows.entries()].find(([, rec]) => rec.appId === "contact")?.[0];
-      if (contactWindowId) toggleMaximize(contactWindowId);
+      launchApp("terminal");
     }
 
     const hasTerminal = [...state.windows.values()].some((rec) => rec.appId === "terminal");
     if (!hasTerminal) {
       launchApp("terminal");
-      const terminalWindowId = [...state.windows.entries()].find(([, rec]) => rec.appId === "terminal")?.[0];
-      if (terminalWindowId) minimizeWindow(terminalWindowId);
     }
   }
 
