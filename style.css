@@ -16,6 +16,7 @@
   --icon-gap-x: 12px;
   --icon-gap-y: 12px;
   --font-ui: "MS Sans Serif", Tahoma, Verdana, sans-serif;
+  --desktop-bliss: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOTIwIDEwODAiIHByZXNlcnZlQXNwZWN0UmF0aW89InhNaWRZTWlkIHNsaWNlIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9InNreSIgeDE9IjAiIHkxPSIwIiB4Mj0iMCIgeTI9IjEiPjxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiM2OGI2ZmYiLz48c3RvcCBvZmZzZXQ9IjU1JSIgc3RvcC1jb2xvcj0iIzhmZDBmZiIvPjxzdG9wIG9mZnNldD0iMTAwJSIgc3RvcC1jb2xvcj0iI2M3ZWNmZiIvPjwvbGluZWFyR3JhZGllbnQ+PGxpbmVhckdyYWRpZW50IGlkPSJoaWxsQSIgeDE9IjAiIHkxPSIwIiB4Mj0iMCIgeTI9IjEiPjxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiM3YWM5NDMiLz48c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMzZDhkMmYiLz48L2xpbmVhckdyYWRpZW50PjxsaW5lYXJHcmFkaWVudCBpZD0iaGlsbEIiIHgxPSIwIiB5MT0iMCIgeDI9IjAiIHkyPSIxIj48c3RvcCBvZmZzZXQ9IjAlIiBzdG9wLWNvbG9yPSIjNjViNTNiIi8+PHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjMmY3NzI0Ii8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PHJlY3Qgd2lkdGg9IjE5MjAiIGhlaWdodD0iMTA4MCIgZmlsbD0idXJsKCNza3kpIi8+PGVsbGlwc2UgY3g9IjQzMCIgY3k9IjIzMCIgcng9IjIzMCIgcnk9IjcwIiBmaWxsPSIjZmZmIiBvcGFjaXR5PSIuNiIvPjxlbGxpcHNlIGN4PSI4NjAiIGN5PSIxODAiIHJ4PSIyNjAiIHJ5PSI3NiIgZmlsbD0iI2ZmZiIgb3BhY2l0eT0iLjQ1Ii8+PGVsbGlwc2UgY3g9IjEzOTAiIGN5PSIyNTAiIHJ4PSIyNTAiIHJ5PSI3MiIgZmlsbD0iI2ZmZiIgb3BhY2l0eT0iLjUyIi8+PHBhdGggZD0iTTAgNjkwQzIxMCA2NDAgNDMwIDYwMCA3MDAgNjM2YzI0MCAzMiA0MDkgMTMxIDU5NiAxMjUgMjQ1LTggNDE0LTE5NiA2MjQtMTYxdjQ4MEgwWiIgZmlsbD0idXJsKCNoaWxsQSkiLz48cGF0aCBkPSJNMCA4MTBjMjY2LTk1IDQ3MS0xMjQgNzI2LTkzIDE3MSAyMSAzMjAgNzIgNDk4IDY3IDI2MS03IDQ0NS0xMjYgNjk2LTk0djM5MEgwWiIgZmlsbD0idXJsKCNoaWxsQikiLz48cGF0aCBkPSJNMCA3NDBDMjQ3IDY0MiA0MTggNjU0IDY0MiA2OTljMTk3IDQwIDM0MiAxMzMgNTc5IDEzMSAyODYtMiA0NDEtMTQyIDY5OS0xMzF2NzdjLTI5MS02LTQyNSAxMzktNzA0IDE0MC0yNTIgMS00MTMtOTYtNjEyLTE0MS0yMDgtNDgtMzY4LTU3LTYwNCAyNHoiIGZpbGw9IiM5NWQ4NjkiIG9wYWNpdHk9Ii42NCIvPjwvc3ZnPg==");
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; width: 100%; height: 100%; }
@@ -77,14 +78,11 @@ fieldset,
   position: fixed;
   inset: 0;
   background-color: var(--desktop-bg);
-  background-image: var(--desktop-logo, none);
+  background-image: var(--desktop-bliss);
   background-repeat: no-repeat;
-  background-position: center 42%;
-  background-size: min(980px, 86vw) auto;
+  background-position: center;
+  background-size: cover;
 }
-.desktop[data-wallpaper="grid"] { background-image: linear-gradient(rgba(255,255,255,.12) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.12) 1px, transparent 1px), var(--desktop-logo, none); background-size: 16px 16px, 16px 16px, min(980px, 86vw) auto; }
-.desktop[data-wallpaper="noise"] { background-image: repeating-radial-gradient(rgba(255,255,255,.16) 0 1px, transparent 1px 2px), var(--desktop-logo, none); background-size: 3px 3px, min(980px, 86vw) auto; }
-.desktop[data-wallpaper="fade"] { background-image: var(--desktop-logo, none), linear-gradient(180deg, #10a4a4, var(--desktop-bg)); background-size: min(980px, 86vw) auto, cover; }
 .desktop-brandmark { position: absolute; inset: 6% 8% auto 8%; display: none; place-items: center; opacity: .12; pointer-events: none; z-index: 0; }
 .desktop-brandmark svg { width: min(920px, 88vw); }
 .scanlines { position: absolute; inset: 0; pointer-events: none; z-index: 1; background: repeating-linear-gradient(to bottom, rgba(255,255,255,.03) 0 1px, rgba(0,0,0,.02) 2px 3px); }
