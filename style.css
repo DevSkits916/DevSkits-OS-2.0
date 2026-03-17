@@ -441,6 +441,9 @@ body.reduce-motion .window { transition: none; }
 .navigator-iframe { width: 100%; height: 100%; min-height: 260px; border: 0; background: #fff; }
 .nav-loading { padding: .55rem; border-bottom: 1px dashed #8b8b8b; background: #f8f8f8; font-size: .77rem; }
 .navigator-statusbar { margin-top: .2rem; border: 1px solid #8b8b8b; background: #ececec; padding: .2rem .35rem; display: flex; justify-content: space-between; gap: .5rem; font-size: .72rem; }
+.navigator-statusbar #nav-mode { border: 1px solid #8a8a8a; background: #fff; padding: 0 .3rem; }
+.nav-fallback .badges { margin-top: .45rem; }
+.nav-fallback .link-btn { min-width: 130px; }
 .nav-start { background: #fff; border: 1px dashed #777; padding: .55rem; }
 .nav-error { border: 1px solid #7a0000; background: #fff3f3; padding: .55rem; }
 
