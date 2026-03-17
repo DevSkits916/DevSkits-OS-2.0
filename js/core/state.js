@@ -50,9 +50,9 @@
     contact: defineApp("contact", { title: "Contact", icon: "☎", iconSvg: icon("contact"), category: "Identity" }),
     links: defineApp("links", { title: "Links", icon: "↗", iconSvg: icon("links"), category: "Identity" }),
     donate: defineApp("donate", { title: "Donate", icon: "$", iconSvg: icon("donate"), category: "Identity" }),
-    loki: defineApp("loki", { title: "Loki", icon: "DOG", iconSvg: icon("loki"), category: "Identity" }),
+    loki: defineApp("loki", { title: "Loki", icon: "DOG", iconSvg: icon("loki"), category: "Identity", startMenuVisible: false }),
 
-    projects: defineApp("projects", { title: "Projects", icon: "⌘", iconSvg: icon("projects"), category: "Projects" }),
+    projects: defineApp("projects", { title: "Projects", icon: "⌘", iconSvg: icon("projects"), category: "Projects", startMenuVisible: false }),
     notes: defineApp("notes", { title: "Notepad", icon: "TXT", iconSvg: icon("notes"), category: "Projects" }),
     browser: defineApp("browser", { title: "Navigator", icon: "WWW", iconSvg: icon("browser"), category: "Projects" }),
     reminders: defineApp("reminders", { title: "Planner", icon: "REM", iconSvg: icon("default"), category: "Projects" }),
@@ -82,7 +82,7 @@
 
   const START_MENU_SECTIONS = [
     { id: "programs", label: "PROGRAMS", items: ["terminal", "files", "notes", "browser", "calculator"] },
-    { id: "devskits", label: "DEVSKITS", items: ["projects", "links", "loki", "donate"] },
+    { id: "devskits", label: "DEVSKITS", items: ["links", "donate"] },
     { id: "utilities", label: "UTILITIES", items: ["settings", "recycle", "run"] },
     { id: "contact", label: "CONTACT", items: ["contact"] },
     { id: "system", label: "SYSTEM", items: ["about", "reboot", "shutdown"] }
