@@ -2,9 +2,9 @@
   const W = window.DevSkitsWorld;
   const APPS = window.DevSkitsState.APPS;
   const NAV_STORE = {
-    bookmarks: "devskits-nav-bookmarks-v1",
-    recent: "devskits-nav-recent-v1",
-    last: "devskits-nav-last-v1"
+    bookmarks: "devskits-nav-bookmarks-v2",
+    history: "devskits-nav-history-v2",
+    last: "devskits-nav-last-v2"
   };
 
   const DEFAULT_BOOKMARKS = [
@@ -12,9 +12,14 @@
     { label: "Projects", route: "devskits://projects" },
     { label: "Contact", route: "devskits://contact" },
     { label: "Donate", route: "devskits://donate" },
+    { label: "Google", route: "https://www.google.com" },
     { label: "GitHub", route: "https://github.com/DevSkits916" },
-    { label: "Reddit", route: "https://reddit.com" },
-    { label: "GoFundMe", route: "https://www.gofundme.com" }
+    { label: "Reddit", route: "https://www.reddit.com" },
+    { label: "Facebook", route: "https://www.facebook.com" }
+  ];
+
+  const EMBED_BLOCKLIST = [
+    "google.com", "facebook.com", "x.com", "twitter.com", "reddit.com", "instagram.com", "linkedin.com", "tiktok.com"
   ];
 
   function escapeHtml(value = "") {
@@ -74,21 +79,46 @@
     return null;
   }
 
+  function getHost(route = "") {
+    try {
+      return new URL(route).hostname.toLowerCase();
+    } catch {
+      return "";
+    }
+  }
+
+  function shouldUseExternalFallback(route = "") {
+    if (!/^https?:\/\//i.test(route)) return false;
+    const host = getHost(route);
+    return EMBED_BLOCKLIST.some((blocked) => host === blocked || host.endsWith(`.${blocked}`));
+  }
+
+  function buildSearchUrl(query = "") {
+    return `https://www.google.com/search?q=${encodeURIComponent(query.trim())}`;
+  }
+
   function renderBrowser(container, options = {}) {
     let history = [];
     let pointer = -1;
     let loading = false;
     let navToken = 0;
+    let currentMode = "embedded";
     const initial = normalizeRoute(options.route || localStorage.getItem(NAV_STORE.last) || "devskits://home") || "devskits://home";
     const savedBookmarks = JSON.parse(localStorage.getItem(NAV_STORE.bookmarks) || "null") || DEFAULT_BOOKMARKS;
 
-    container.innerHTML = `<div class="navigator-shell modernized"><header class="navigator-titlebar"><strong>Navigator</strong><span id="nav-status">Idle</span></header><div class="navigator-toolbar"><button id="nav-back" title="Back" aria-label="Back">◀</button><button id="nav-forward" title="Forward" aria-label="Forward">▶</button><button id="nav-reload" title="Refresh" aria-label="Refresh">↺</button><button id="nav-home" title="Home" aria-label="Home">⌂</button><button id="nav-stop" title="Stop" aria-label="Stop">■</button><input id="nav-url" value="${escapeHtml(initial)}" aria-label="Address bar"/><button id="nav-go">Go</button><button id="nav-open-tab" title="Open in new tab">↗</button><button id="nav-bookmark" title="Add bookmark">★</button></div><div class="navigator-bookmarks" id="nav-bookmarks"></div><article id="nav-page" class="browser-page"><div class="nav-viewport" id="nav-viewport"></div></article><footer class="navigator-statusbar"><span id="nav-route">${escapeHtml(initial)}</span><small id="nav-hint">devskits:// routes + web urls supported</small></footer></div>`;
+    container.innerHTML = `<div class="navigator-shell modernized"><header class="navigator-titlebar"><strong>Navigator</strong><span id="nav-status">Idle</span></header><div class="navigator-toolbar"><button id="nav-back" title="Back" aria-label="Back">◀</button><button id="nav-forward" title="Forward" aria-label="Forward">▶</button><button id="nav-reload" title="Refresh" aria-label="Refresh">↺</button><button id="nav-home" title="Home" aria-label="Home">⌂</button><button id="nav-stop" title="Stop" aria-label="Stop">■</button><input id="nav-url" value="${escapeHtml(initial)}" aria-label="Address bar" autocomplete="off"/><button id="nav-go">Go</button><button id="nav-open-tab" title="Open in new tab" aria-label="Open in new tab">↗</button><button id="nav-bookmark" title="Add bookmark" aria-label="Add bookmark">★</button><button id="nav-history" title="Show history" aria-label="Show history">🕘</button><button id="nav-bookmarks-toggle" title="Show bookmarks" aria-label="Show bookmarks">☰</button></div><div class="navigator-bookmarks" id="nav-bookmarks"></div><article id="nav-page" class="browser-page"><div class="nav-viewport" id="nav-viewport"></div></article><footer class="navigator-statusbar"><span id="nav-route">${escapeHtml(initial)}</span><small id="nav-hint">devskits:// routes + web urls supported</small><strong id="nav-mode">Embedded</strong></footer></div>`;
 
     const viewport = container.querySelector("#nav-viewport");
     const url = container.querySelector("#nav-url");
     const status = container.querySelector("#nav-status");
     const routeText = container.querySelector("#nav-route");
+    const modeText = container.querySelector("#nav-mode");
     const bookmarksWrap = container.querySelector("#nav-bookmarks");
+
+    function setMode(mode) {
+      currentMode = mode;
+      modeText.textContent = mode === "external" ? "External" : "Embedded";
+    }
 
     function drawBookmarks() {
       bookmarksWrap.innerHTML = savedBookmarks.map((b) => `<button class="task-btn" data-bookmark="${escapeHtml(b.route)}">${escapeHtml(b.label)}</button>`).join("");
@@ -106,24 +136,32 @@
       container.querySelector("#nav-forward").disabled = pointer >= history.length - 1;
     }
 
-    function recordRecent(route) {
-      const rows = JSON.parse(localStorage.getItem(NAV_STORE.recent) || "[]");
+    function recordHistory(route) {
+      const rows = JSON.parse(localStorage.getItem(NAV_STORE.history) || "[]");
       rows.unshift({ route, at: Date.now() });
-      localStorage.setItem(NAV_STORE.recent, JSON.stringify(rows.slice(0, 60)));
+      localStorage.setItem(NAV_STORE.history, JSON.stringify(rows.slice(0, 100)));
+    }
+
+    function drawHistoryPanel() {
+      const rows = JSON.parse(localStorage.getItem(NAV_STORE.history) || "[]").slice(0, 20);
+      showView(`<div class="nav-start"><h3>Navigator History</h3>${rows.map((r) => `<div class="note-row"><button class="link-btn" data-route="${escapeHtml(r.route)}">${escapeHtml(r.route)}</button><small>${new Date(r.at).toLocaleString()}</small></div>`).join("") || "<em>No browsing history yet.</em>"}</div>`);
+      setMode("embedded");
+      setStatus("Showing history", false);
     }
 
     function renderStartPage() {
-      const recent = JSON.parse(localStorage.getItem(NAV_STORE.recent) || "[]").slice(0, 6);
-      return `<div class="nav-start"><h3>DevSkits Navigator</h3><p>Browse the web inside this window when a site allows embedding. Use fallback open-tab if blocked.</p><div class="badges">${savedBookmarks.slice(0, 5).map((b) => `<button class="link-btn" data-route="${escapeHtml(b.route)}">${escapeHtml(b.label)}</button>`).join("")}</div><h4>Quick launch</h4><div class="badges"><button class="link-btn" data-route="devskits://projects">Projects</button><button class="link-btn" data-route="devskits://updates">Updates</button><button class="link-btn" data-route="https://example.com">example.com</button><button class="link-btn" data-route="https://neverssl.com">neverssl.com</button></div><h4>Recent</h4>${recent.map((r) => `<div class="note-row"><button class="link-btn" data-route="${escapeHtml(r.route)}">${escapeHtml(r.route)}</button><small>${new Date(r.at).toLocaleString()}</small></div>`).join("") || "<em>No recent pages yet.</em>"}<div class="retro-links"><strong>Tip:</strong> Enter domains like <code>example.com</code> and Navigator will auto-add <code>https://</code>.</div></div>`;
+      const recent = JSON.parse(localStorage.getItem(NAV_STORE.history) || "[]").slice(0, 6);
+      return `<div class="nav-start"><h3>DevSkits Navigator Home</h3><p>Two modes: Embedded for iframe-friendly pages, External fallback for restricted sites.</p><h4>Shortcuts</h4><div class="badges"><button class="link-btn" data-route="https://www.google.com">Google</button><button class="link-btn" data-route="https://github.com/DevSkits916">GitHub</button><button class="link-btn" data-route="https://www.reddit.com">Reddit</button><button class="link-btn" data-route="https://www.facebook.com">Facebook</button><button class="link-btn" data-route="devskits://projects">DevSkits Projects</button><button class="link-btn" data-route="devskits://updates">DevSkits Updates</button></div><h4>Bookmarks</h4><div class="badges">${savedBookmarks.slice(0, 8).map((b) => `<button class="link-btn" data-route="${escapeHtml(b.route)}">${escapeHtml(b.label)}</button>`).join("") || "<em>No bookmarks yet.</em>"}</div><h4>Recent</h4>${recent.map((r) => `<div class="note-row"><button class="link-btn" data-route="${escapeHtml(r.route)}">${escapeHtml(r.route)}</button><small>${new Date(r.at).toLocaleString()}</small></div>`).join("") || "<em>No browsing history yet.</em>"}<div class="retro-links"><strong>Search tip:</strong> Plain text search opens in a new external tab for maximum compatibility.</div></div>`;
     }
 
     function showView(html) {
       viewport.innerHTML = html;
     }
 
-    function showEmbedBlocked(route) {
-      showView(`<div class="retro-web nav-error"><h3>Can't embed this page</h3><p><code>${escapeHtml(route)}</code></p><p>This site appears to block iframe embedding via security headers (<code>X-Frame-Options</code> or <code>frame-ancestors</code> policy).</p><button class="link-btn" data-open-tab="${escapeHtml(route)}">Open in new tab</button></div>`);
-      setStatus("Embedding blocked", false);
+    function showEmbedBlocked(route, reason = "This site blocks embedding, open externally instead") {
+      setMode("external");
+      showView(`<div class="retro-web nav-error nav-fallback"><h3>External mode required</h3><p><code>${escapeHtml(route)}</code></p><p>${escapeHtml(reason)}</p><div class="badges"><button class="link-btn" data-open-tab="${escapeHtml(route)}">Open in New Tab</button><button class="link-btn" data-copy-url="${escapeHtml(route)}">Copy URL</button><button class="link-btn" data-add-bookmark="${escapeHtml(route)}">Add Bookmark</button></div></div>`);
+      setStatus("This site blocks embedding, open externally instead", false);
     }
 
     function loadExternal(route, token) {
@@ -152,29 +190,59 @@
         }
         if (blocked) return showEmbedBlocked(route);
         viewport.querySelector(".nav-loading")?.remove();
+        setMode("embedded");
         setStatus("Page loaded", false);
       }, { once: true });
 
       frame.src = route;
     }
 
+    function addBookmark(route) {
+      if (!savedBookmarks.some((b) => b.route === route)) {
+        savedBookmarks.unshift({ label: route.replace(/^https?:\/\//i, "").replace("devskits://", "").slice(0, 24) || "bookmark", route });
+        savedBookmarks.splice(20);
+        drawBookmarks();
+      }
+      setStatus("Bookmarked", false);
+    }
+
+    function handleEntry(raw) {
+      const trimmed = (raw || "").trim();
+      if (!trimmed) return openRoute("devskits://home");
+      const forceSearch = /\s/.test(trimmed) || (!trimmed.includes(".") && !trimmed.includes("://") && !W.pages[`devskits://${trimmed.toLowerCase()}`]);
+      if (!forceSearch) {
+        const parsed = normalizeRoute(trimmed);
+        if (parsed) return openRoute(parsed);
+      }
+      const searchUrl = buildSearchUrl(trimmed);
+      setMode("external");
+      setStatus("Search opened in external tab", false);
+      window.open(searchUrl, "_blank", "noopener,noreferrer");
+      showEmbedBlocked(searchUrl, "Search queries open in a new tab to avoid embed restrictions.");
+      url.value = searchUrl;
+      routeText.textContent = searchUrl;
+    }
+
     function openRoute(input, push = true) {
       const route = normalizeRoute(input);
       if (!route) {
-        showView(`<div class="retro-web nav-error"><h3>Invalid address</h3><p>Navigator couldn't parse <code>${escapeHtml(input || "")}</code>.</p><p>Try a full URL like <code>https://example.com</code> or an internal route like <code>devskits://projects</code>.</p></div>`);
-        setStatus("Invalid URL", false);
-        return;
+        return handleEntry(input);
       }
       navToken += 1;
       const token = navToken;
       setStatus("Loading...", true);
       if (route === "devskits://home") {
         showView(renderStartPage());
+        setMode("embedded");
         setStatus("Ready", false);
+      } else if (shouldUseExternalFallback(route)) {
+        showEmbedBlocked(route);
       } else if (/^https?:\/\//i.test(route)) {
+        setMode("embedded");
         loadExternal(route, token);
       } else {
         showView(routePage(route));
+        setMode("embedded");
         setStatus("Ready", false);
       }
       url.value = route;
@@ -187,7 +255,7 @@
       }
       setNavState();
       W.pushBrowserHistory(route);
-      recordRecent(route);
+      recordHistory(route);
       if (route.includes("hidden")) {
         const p = W.getProfile();
         p.hiddenPagesFound += 1;
@@ -200,13 +268,17 @@
       const bookmarkRoute = e.target.dataset.bookmark;
       const openApp = e.target.dataset.openApp;
       const openTab = e.target.dataset.openTab;
+      const copyUrl = e.target.dataset.copyUrl;
+      const addBookmarkRoute = e.target.dataset.addBookmark;
       if (route) openRoute(route);
       if (bookmarkRoute) openRoute(bookmarkRoute);
       if (openApp) window.DevSkitsWindowManager.openApp(openApp);
       if (openTab) window.open(openTab, "_blank", "noopener,noreferrer");
+      if (copyUrl) navigator.clipboard?.writeText(copyUrl).then(() => setStatus("URL copied", false)).catch(() => setStatus("Copy failed", false));
+      if (addBookmarkRoute) addBookmark(addBookmarkRoute);
     });
 
-    container.querySelector("#nav-go").addEventListener("click", () => openRoute(url.value.trim()));
+    container.querySelector("#nav-go").addEventListener("click", () => handleEntry(url.value.trim()));
     container.querySelector("#nav-back").addEventListener("click", () => { if (pointer > 0) openRoute(history[--pointer], false); });
     container.querySelector("#nav-forward").addEventListener("click", () => { if (pointer < history.length - 1) openRoute(history[++pointer], false); });
     container.querySelector("#nav-reload").addEventListener("click", () => openRoute(url.value.trim(), false));
@@ -224,14 +296,18 @@
     container.querySelector("#nav-bookmark").addEventListener("click", () => {
       const route = normalizeRoute(url.value);
       if (!route) return setStatus("Invalid URL", false);
-      if (!savedBookmarks.some((b) => b.route === route)) {
-        savedBookmarks.unshift({ label: route.replace("devskits://", "").slice(0, 18) || "bookmark", route });
-        savedBookmarks.splice(20);
-        drawBookmarks();
-        setStatus("Bookmarked", false);
-      }
+      addBookmark(route);
     });
-    url.addEventListener("keydown", (e) => e.key === "Enter" && openRoute(url.value.trim()));
+    container.querySelector("#nav-history").addEventListener("click", () => drawHistoryPanel());
+    container.querySelector("#nav-bookmarks-toggle").addEventListener("click", () => {
+      bookmarksWrap.classList.toggle("hidden");
+      setStatus(bookmarksWrap.classList.contains("hidden") ? "Bookmarks hidden" : "Bookmarks shown", false);
+    });
+    url.addEventListener("keydown", (e) => e.key === "Enter" && handleEntry(url.value.trim()));
+    container.addEventListener("keydown", (e) => {
+      if (e.altKey && e.key === "ArrowLeft") container.querySelector("#nav-back").click();
+      if (e.altKey && e.key === "ArrowRight") container.querySelector("#nav-forward").click();
+    });
 
     drawBookmarks();
     openRoute(initial);
