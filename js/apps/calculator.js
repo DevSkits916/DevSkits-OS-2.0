@@ -1,301 +1,342 @@
 (() => {
   const STORE_KEYS = {
-    memory: "devskits-calc-memory-v1",
-    history: "devskits-calc-history-v1",
-    mode: "devskits-calc-mode-v1"
+    memory: "devskits-calc-memory-v2",
+    history: "devskits-calc-history-v2"
   };
 
-  const PRECEDENCE = { "+": 1, "-": 1, "*": 2, "/": 2, "%": 2, "^": 3 };
+  const MAX_HISTORY = 12;
+  const MAX_DIGITS = 14;
 
-  function tokenize(expr) {
-    const clean = expr.replace(/\s+/g, "");
-    if (!clean) return [];
-    const out = [];
-    let i = 0;
-    while (i < clean.length) {
-      const c = clean[i];
-      if (/[0-9.]/.test(c)) {
-        let num = c;
-        i += 1;
-        while (i < clean.length && /[0-9.]/.test(clean[i])) num += clean[i++];
-        if ((num.match(/\./g) || []).length > 1) throw new Error("Malformed number");
-        out.push({ type: "num", value: Number(num) });
-        continue;
-      }
-      if (/[()+\-*/%^]/.test(c)) {
-        out.push({ type: "op", value: c });
-        i += 1;
-        continue;
-      }
-      throw new Error(`Invalid token: ${c}`);
+  function parseNumber(value) {
+    const num = Number(value);
+    return Number.isFinite(num) ? num : 0;
+  }
+
+  function formatNumber(value) {
+    if (!Number.isFinite(value)) return "ERR";
+    if (Object.is(value, -0)) value = 0;
+
+    const abs = Math.abs(value);
+    if ((abs >= 1e12 || (abs > 0 && abs < 1e-9))) {
+      return value.toExponential(8).replace(/\.?0+e/, "e");
     }
-    return out;
+
+    const fixed = Number(value.toFixed(10)).toString();
+    if (fixed.length <= MAX_DIGITS + 2) return fixed;
+    return value.toPrecision(MAX_DIGITS).replace(/\.?0+$/, "");
   }
 
-  function toRpn(tokens) {
-    const output = [];
-    const stack = [];
-    let prev = null;
-    tokens.forEach((token) => {
-      if (token.type === "num") {
-        output.push(token);
-      } else if (token.value === "(") {
-        stack.push(token);
-      } else if (token.value === ")") {
-        while (stack.length && stack[stack.length - 1].value !== "(") output.push(stack.pop());
-        if (!stack.length) throw new Error("Mismatched parentheses");
-        stack.pop();
-      } else {
-        if (token.value === "-" && (!prev || (prev.type === "op" && prev.value !== ")"))) {
-          output.push({ type: "num", value: 0 });
-        }
-        while (stack.length) {
-          const top = stack[stack.length - 1];
-          if (top.value === "(") break;
-          const rightAssoc = token.value === "^";
-          if ((rightAssoc && PRECEDENCE[token.value] < PRECEDENCE[top.value]) || (!rightAssoc && PRECEDENCE[token.value] <= PRECEDENCE[top.value])) {
-            output.push(stack.pop());
-          } else {
-            break;
-          }
-        }
-        stack.push(token);
-      }
-      prev = token;
-    });
-    while (stack.length) {
-      const op = stack.pop();
-      if (op.value === "(" || op.value === ")") throw new Error("Mismatched parentheses");
-      output.push(op);
+  function calculate(a, b, op) {
+    if (op === "+") return a + b;
+    if (op === "-") return a - b;
+    if (op === "×") return a * b;
+    if (op === "÷") {
+      if (b === 0) throw new Error("Cannot divide by zero");
+      return a / b;
     }
-    return output;
+    return b;
   }
 
-  function evalRpn(rpn) {
-    const stack = [];
-    rpn.forEach((t) => {
-      if (t.type === "num") return stack.push(t.value);
-      const b = stack.pop();
-      const a = stack.pop();
-      if (a == null || b == null) throw new Error("Malformed expression");
-      if (t.value === "+") stack.push(a + b);
-      if (t.value === "-") stack.push(a - b);
-      if (t.value === "*") stack.push(a * b);
-      if (t.value === "/") {
-        if (b === 0) throw new Error("Divide by zero");
-        stack.push(a / b);
-      }
-      if (t.value === "%") stack.push(a % b);
-      if (t.value === "^") stack.push(a ** b);
-    });
-    if (stack.length !== 1 || !Number.isFinite(stack[0])) throw new Error("Invalid result");
-    return stack[0];
-  }
-
-  function safeEval(expr) {
-    const result = evalRpn(toRpn(tokenize(expr)));
-    return Math.abs(result) > 1e12 ? result.toExponential(8) : Number(result.toFixed(10)).toString();
+  function createButton(label, kind = "") {
+    return `<button type="button" class="calc-key ${kind}" data-key="${label}" aria-label="${label}">${label}</button>`;
   }
 
   function render(container) {
-    const persistedMode = localStorage.getItem(STORE_KEYS.mode) || "standard";
-    let mode = persistedMode;
-    let expression = "0";
-    let memory = Number(localStorage.getItem(STORE_KEYS.memory) || "0");
-    let history = JSON.parse(localStorage.getItem(STORE_KEYS.history) || "[]");
+    const savedHistory = JSON.parse(localStorage.getItem(STORE_KEYS.history) || "[]");
+
+    let displayValue = "0";
+    let expressionText = "";
+    let accumulator = null;
+    let pendingOperator = null;
+    let lastOperand = null;
+    let lastOperator = null;
+    let justEvaluated = false;
+    let memory = parseNumber(localStorage.getItem(STORE_KEYS.memory) || "0");
+    let history = Array.isArray(savedHistory) ? savedHistory.slice(0, MAX_HISTORY) : [];
 
     container.innerHTML = `
-      <div class="ds-calc">
-        <header class="ds-calc-head"><strong>Calculator</strong><div class="ds-calc-modes">
-          <button data-mode="standard" class="link-btn">STD</button>
-          <button data-mode="scientific" class="link-btn">SCI</button>
-          <button data-mode="programmer" class="link-btn">PRG</button>
-        </div></header>
-        <div class="ds-calc-display-wrap">
-          <div class="ds-calc-memory">M: <span id="calc-memory">0</span></div>
-          <input id="calc-display" class="ds-calc-display" value="0" aria-label="Calculator display" readonly />
-          <div id="calc-status" class="ds-calc-status">Ready</div>
+      <section class="ds-calc" aria-label="Calculator">
+        <header class="ds-calc-head">
+          <strong>Calculator</strong>
+          <button type="button" class="link-btn calc-copy" data-key="COPY">Copy</button>
+        </header>
+
+        <div class="ds-calc-display-wrap" role="status" aria-live="polite">
+          <div class="ds-calc-topline">
+            <span class="ds-calc-memory">M: <strong id="calc-memory">0</strong></span>
+            <span class="ds-calc-expression" id="calc-expression">&nbsp;</span>
+          </div>
+          <output id="calc-display" class="ds-calc-display">0</output>
         </div>
-        <div class="ds-calc-layout">
-          <section class="ds-calc-panel">
-            <div id="calc-keys" class="ds-calc-keys"></div>
-          </section>
-          <aside class="ds-calc-history">
+
+        <div class="ds-calc-main">
+          <div id="calc-keys" class="ds-calc-keys"></div>
+          <aside class="ds-calc-history" aria-label="Recent calculations">
             <h4>History</h4>
             <div id="calc-history-list"></div>
           </aside>
         </div>
-      </div>`;
+      </section>
+    `;
 
-    const display = container.querySelector("#calc-display");
-    const status = container.querySelector("#calc-status");
     const memoryEl = container.querySelector("#calc-memory");
+    const expressionEl = container.querySelector("#calc-expression");
+    const displayEl = container.querySelector("#calc-display");
     const keysWrap = container.querySelector("#calc-keys");
-    const historyList = container.querySelector("#calc-history-list");
+    const historyWrap = container.querySelector("#calc-history-list");
 
-    const baseKeys = [
-      "MC", "MR", "M+", "M-", "MS",
-      "CE", "C", "⌫", "%", "/",
-      "7", "8", "9", "*", "sqrt",
-      "4", "5", "6", "-", "1/x",
-      "1", "2", "3", "+", "+/-",
-      "0", ".", "(", ")", "="
+    const keyRows = [
+      ["MC", "MR", "M+", "M-", "⌫"],
+      ["C", "+/-", "%", "÷"],
+      ["7", "8", "9", "×"],
+      ["4", "5", "6", "-"],
+      ["1", "2", "3", "+"],
+      ["0", ".", "="]
     ];
 
-    const sciKeys = ["pi", "sin", "cos", "tan", "^"];
-    const prgKeys = ["AND", "OR", "XOR", "BIN", "HEX"];
-
-    function saveState() {
+    function persist() {
       localStorage.setItem(STORE_KEYS.memory, String(memory));
-      localStorage.setItem(STORE_KEYS.history, JSON.stringify(history.slice(0, 25)));
-      localStorage.setItem(STORE_KEYS.mode, mode);
+      localStorage.setItem(STORE_KEYS.history, JSON.stringify(history.slice(0, MAX_HISTORY)));
+    }
+
+    function refresh() {
+      displayEl.textContent = displayValue;
+      expressionEl.textContent = expressionText || "\u00A0";
+      memoryEl.textContent = formatNumber(memory);
     }
 
     function drawKeys() {
-      const extra = mode === "scientific" ? sciKeys : (mode === "programmer" ? prgKeys : []);
-      const keys = [...extra, ...baseKeys];
-      keysWrap.innerHTML = keys.map((k) => `<button class="calc-key ${/[=+\-*/^]/.test(k) ? "op" : ""}" data-k="${k}">${k}</button>`).join("");
-      container.querySelectorAll("[data-mode]").forEach((btn) => btn.classList.toggle("active", btn.dataset.mode === mode));
+      keysWrap.innerHTML = keyRows.map((row) => {
+        const template = row.length === 3 ? "2fr 1fr 1fr" : `repeat(${row.length}, minmax(0, 1fr))`;
+        return `<div class="calc-row" style="grid-template-columns:${template}">${row.map((label) => {
+          const isOperator = ["+", "-", "×", "÷", "="].includes(label);
+          const isUtility = ["C", "⌫", "%", "+/-", "MC", "MR", "M+", "M-"].includes(label);
+          const className = isOperator ? "op" : (isUtility ? "util" : "");
+          return createButton(label, className);
+        }).join("")}</div>`;
+      }).join("");
     }
 
     function drawHistory() {
-      historyList.innerHTML = history.map((row, idx) => `<button class="calc-h-row" data-h="${idx}"><span>${row.expr}</span><strong>${row.result}</strong></button>`).join("") || "<em>No calculations yet.</em>";
-    }
-
-    function updateView() {
-      display.value = expression;
-      memoryEl.textContent = String(Number(memory.toFixed(8)));
+      if (!history.length) {
+        historyWrap.innerHTML = '<em class="calc-empty">No calculations yet.</em>';
+        return;
+      }
+      historyWrap.innerHTML = history.map((item, idx) => (
+        `<button type="button" class="calc-h-row" data-history="${idx}"><span>${item.expr}</span><strong>${item.result}</strong></button>`
+      )).join("");
     }
 
     function setError(message) {
-      status.textContent = message;
-      display.value = "ERR";
-      expression = "0";
+      expressionText = message;
+      displayValue = "ERR";
+      accumulator = null;
+      pendingOperator = null;
+      lastOperand = null;
+      lastOperator = null;
+      justEvaluated = true;
+      refresh();
     }
 
-    function appendValue(v) {
-      if (expression === "0" && /[0-9.]/.test(v)) expression = "";
-      expression += v;
-      status.textContent = "Ready";
-      updateView();
+    function clearAll() {
+      displayValue = "0";
+      expressionText = "";
+      accumulator = null;
+      pendingOperator = null;
+      lastOperand = null;
+      lastOperator = null;
+      justEvaluated = false;
+      refresh();
     }
 
-    function commitResult() {
-      try {
-        const result = safeEval(expression);
-        history.unshift({ expr: expression, result });
-        expression = result;
-        status.textContent = "OK";
-        drawHistory();
-        saveState();
-      } catch (err) {
-        setError(err.message);
+    function inputDigit(digit) {
+      if (displayValue === "ERR") clearAll();
+      if (justEvaluated && pendingOperator) {
+        displayValue = "0";
+      } else if (justEvaluated && !pendingOperator) {
+        displayValue = "0";
+        expressionText = "";
       }
-      updateView();
+      justEvaluated = false;
+      if (displayValue === "0") displayValue = digit;
+      else if (displayValue.replace("-", "").length < MAX_DIGITS) displayValue += digit;
+      refresh();
     }
 
-    function applyFunction(fn) {
-      try {
-        const current = Number(safeEval(expression));
-        let next = current;
-        if (fn === "sqrt") {
-          if (current < 0) throw new Error("Invalid input");
-          next = Math.sqrt(current);
-        }
-        if (fn === "1/x") {
-          if (current === 0) throw new Error("Divide by zero");
-          next = 1 / current;
-        }
-        if (["sin", "cos", "tan"].includes(fn)) {
-          const rad = current * (Math.PI / 180);
-          if (fn === "sin") next = Math.sin(rad);
-          if (fn === "cos") next = Math.cos(rad);
-          if (fn === "tan") next = Math.tan(rad);
-        }
-        expression = String(Number(next.toFixed(10)));
-        status.textContent = `${fn} applied`;
-      } catch (err) {
-        setError(err.message);
+    function inputDecimal() {
+      if (displayValue === "ERR") clearAll();
+      if (justEvaluated && pendingOperator) {
+        displayValue = "0";
+      } else if (justEvaluated && !pendingOperator) {
+        displayValue = "0";
+        expressionText = "";
       }
-      updateView();
+      justEvaluated = false;
+      if (!displayValue.includes(".")) displayValue += ".";
+      refresh();
     }
 
-    function handleKey(key) {
-      if (!key) return;
-      if (/^[0-9]$/.test(key) || ["+", "-", "*", "/", "(", ")", "^"].includes(key)) return appendValue(key);
-      if (key === ".") {
-        const last = expression.split(/[+\-*/%^()]/).pop();
-        if (!last.includes(".")) appendValue(".");
-        return;
-      }
-      if (key === "C") { expression = "0"; status.textContent = "Cleared"; }
-      if (key === "CE") { expression = expression.replace(/[0-9.]+$/, "") || "0"; status.textContent = "Entry cleared"; }
-      if (key === "⌫") { expression = expression.slice(0, -1) || "0"; }
-      if (key === "%") appendValue("%");
-      if (key === "+/-") {
-        if (expression.startsWith("-")) expression = expression.slice(1);
-        else expression = `-${expression}`;
-      }
-      if (key === "=") commitResult();
-      if (key === "pi") appendValue(String(Math.PI.toFixed(8)));
-      if (["sqrt", "1/x", "sin", "cos", "tan"].includes(key)) applyFunction(key);
+    function applyOperator(nextOperator) {
+      if (displayValue === "ERR") return;
+      const current = parseNumber(displayValue);
 
-      if (key === "MC") { memory = 0; status.textContent = "Memory cleared"; saveState(); }
-      if (key === "MR") { expression = String(memory); status.textContent = "Memory recalled"; }
-      if (key === "MS") {
-        try { memory = Number(safeEval(expression)); status.textContent = "Memory stored"; saveState(); } catch { setError("Invalid input"); }
-      }
-      if (key === "M+") {
-        try { memory += Number(safeEval(expression)); status.textContent = "Memory add"; saveState(); } catch { setError("Invalid input"); }
-      }
-      if (key === "M-") {
-        try { memory -= Number(safeEval(expression)); status.textContent = "Memory subtract"; saveState(); } catch { setError("Invalid input"); }
-      }
-
-      if (mode === "programmer" && ["AND", "OR", "XOR", "BIN", "HEX"].includes(key)) {
+      if (pendingOperator && !justEvaluated) {
         try {
-          const value = Number(safeEval(expression));
-          if (key === "BIN") expression = `0b${value.toString(2)}`;
-          if (key === "HEX") expression = `0x${value.toString(16).toUpperCase()}`;
-          if (["AND", "OR", "XOR"].includes(key)) status.textContent = `${key} requires manual operands`;
+          accumulator = calculate(accumulator ?? 0, current, pendingOperator);
         } catch (err) {
           setError(err.message);
+          return;
         }
+      } else {
+        accumulator = pendingOperator ? accumulator : current;
       }
-      updateView();
+
+      pendingOperator = nextOperator;
+      justEvaluated = true;
+      displayValue = formatNumber(accumulator);
+      expressionText = `${displayValue} ${nextOperator}`;
+      refresh();
     }
 
-    keysWrap.addEventListener("click", (e) => handleKey(e.target.closest("button")?.dataset.k));
-    container.querySelector(".ds-calc-modes").addEventListener("click", (e) => {
-      const nextMode = e.target.dataset.mode;
-      if (!nextMode) return;
-      mode = nextMode;
-      status.textContent = `Mode: ${mode}`;
-      drawKeys();
-      saveState();
-    });
-    historyList.addEventListener("click", (e) => {
-      const idx = Number(e.target.closest("button")?.dataset.h);
-      if (Number.isNaN(idx) || !history[idx]) return;
-      expression = history[idx].result;
-      status.textContent = "History loaded";
-      updateView();
+    function doPercent() {
+      if (displayValue === "ERR") return;
+      const current = parseNumber(displayValue);
+      const base = accumulator ?? 0;
+      const percentValue = pendingOperator ? (base * current) / 100 : current / 100;
+      displayValue = formatNumber(percentValue);
+      justEvaluated = false;
+      refresh();
+    }
+
+    function toggleSign() {
+      if (displayValue === "ERR") return;
+      if (displayValue === "0") return;
+      displayValue = displayValue.startsWith("-") ? displayValue.slice(1) : `-${displayValue}`;
+      refresh();
+    }
+
+    function backspace() {
+      if (displayValue === "ERR") return clearAll();
+      if (justEvaluated) return;
+      displayValue = displayValue.length > 1 ? displayValue.slice(0, -1) : "0";
+      if (displayValue === "-" || displayValue === "") displayValue = "0";
+      refresh();
+    }
+
+    function equals() {
+      if (displayValue === "ERR") return;
+      const current = parseNumber(displayValue);
+
+      if (!pendingOperator) {
+        if (lastOperator && lastOperand != null) {
+          try {
+            const result = calculate(current, lastOperand, lastOperator);
+            expressionText = `${formatNumber(current)} ${lastOperator} ${formatNumber(lastOperand)} =`;
+            displayValue = formatNumber(result);
+          } catch (err) {
+            setError(err.message);
+            return;
+          }
+        }
+        justEvaluated = true;
+        refresh();
+        return;
+      }
+
+      const left = accumulator ?? current;
+      const right = justEvaluated ? (lastOperand ?? left) : current;
+
+      try {
+        const result = calculate(left, right, pendingOperator);
+        expressionText = `${formatNumber(left)} ${pendingOperator} ${formatNumber(right)} =`;
+        displayValue = formatNumber(result);
+        history.unshift({ expr: expressionText, result: displayValue });
+        history = history.slice(0, MAX_HISTORY);
+        lastOperand = right;
+        lastOperator = pendingOperator;
+        accumulator = parseNumber(displayValue);
+        pendingOperator = null;
+        justEvaluated = true;
+        persist();
+        drawHistory();
+        refresh();
+      } catch (err) {
+        setError(err.message);
+      }
+    }
+
+    function memoryAction(action) {
+      const current = parseNumber(displayValue);
+      if (action === "MC") memory = 0;
+      if (action === "MR") {
+        displayValue = formatNumber(memory);
+        justEvaluated = false;
+      }
+      if (action === "M+") memory += current;
+      if (action === "M-") memory -= current;
+      persist();
+      refresh();
+    }
+
+    function copyResult() {
+      if (!navigator.clipboard || displayValue === "ERR") return;
+      navigator.clipboard.writeText(displayValue).catch(() => {});
+    }
+
+    function press(key) {
+      if (/^[0-9]$/.test(key)) return inputDigit(key);
+      if (key === ".") return inputDecimal();
+      if (["+", "-", "×", "÷"].includes(key)) return applyOperator(key);
+      if (key === "=") return equals();
+      if (key === "C") return clearAll();
+      if (key === "⌫") return backspace();
+      if (key === "%") return doPercent();
+      if (key === "+/-") return toggleSign();
+      if (["MC", "MR", "M+", "M-"].includes(key)) return memoryAction(key);
+      if (key === "COPY") return copyResult();
+    }
+
+    keysWrap.addEventListener("click", (event) => {
+      const button = event.target.closest("button[data-key]");
+      if (!button) return;
+      press(button.dataset.key);
     });
 
-    container.addEventListener("keydown", (e) => {
-      const map = { Enter: "=", Backspace: "⌫", Escape: "C", "%": "%" };
-      const key = map[e.key] || e.key;
-      if (/^[0-9.+\-*/()^]$/.test(key) || ["=", "⌫", "C", "%"].includes(key)) {
-        e.preventDefault();
-        handleKey(key);
+    historyWrap.addEventListener("click", (event) => {
+      const row = event.target.closest("button[data-history]");
+      if (!row) return;
+      const entry = history[Number(row.dataset.history)];
+      if (!entry) return;
+      displayValue = entry.result;
+      expressionText = entry.expr;
+      justEvaluated = true;
+      refresh();
+    });
+
+    container.addEventListener("keydown", (event) => {
+      const keyMap = {
+        Enter: "=",
+        "=": "=",
+        Escape: "C",
+        Delete: "C",
+        Backspace: "⌫",
+        "/": "÷",
+        "*": "×"
+      };
+      const mapped = keyMap[event.key] || event.key;
+      if (/^[0-9]$/.test(mapped) || [".", "+", "-", "×", "÷", "=", "C", "⌫", "%"].includes(mapped)) {
+        event.preventDefault();
+        press(mapped);
       }
     });
+
+    container.querySelector(".calc-copy").addEventListener("click", () => press("COPY"));
 
     drawKeys();
     drawHistory();
-    updateView();
+    refresh();
     container.tabIndex = 0;
-    saveState();
+    persist();
   }
 
   window.DevSkitsAppRegistry = window.DevSkitsAppRegistry || {};

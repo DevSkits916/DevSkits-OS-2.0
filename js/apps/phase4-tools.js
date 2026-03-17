@@ -121,7 +121,6 @@
 
   window.DevSkitsAppRegistry = window.DevSkitsAppRegistry || {};
   Object.assign(window.DevSkitsAppRegistry, {
-    calculator: renderCalculator,
     calendar: renderCalendar,
     quoteforge: renderQuoteForge,
     asciimaker: renderAscii,
