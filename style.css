@@ -131,6 +131,9 @@ fieldset,
 .desktop-icon:focus-visible { background: rgba(0, 0, 168, .35); border-color: #fff; outline: none; }
 .desktop-icon.selected { background: rgba(0,0,168,.55); border-color: #fff; }
 .desktop-icon.dragging { opacity: .7; z-index: 2100; }
+body[data-icon-density="compact"] .desktop-icon { width: 66px; gap: .2rem; }
+body[data-icon-density="compact"] .desktop-icon .icon-glyph { width: 30px; height: 28px; }
+body[data-icon-density="compact"] .icon-label { font-size: 10px; }
 
 .window-layer { position: absolute; inset: 0 0 var(--taskbar-h) 0; z-index: 4; }
 .window {
@@ -186,6 +189,7 @@ fieldset,
 .start-btn { min-width: 96px; height: 100%; font-weight: 700; background: var(--surface); }
 .task-buttons { flex: 1; display: flex; gap: 4px; overflow: auto; }
 .task-btn { min-width: 130px; max-width: 240px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background: var(--surface); }
+.task-btn.minimized { opacity: .7; font-style: italic; }
 .system-tray { min-width: 76px; background: var(--surface-soft); padding: .2rem .4rem; display: flex; justify-content: center; }
 
 .start-menu {

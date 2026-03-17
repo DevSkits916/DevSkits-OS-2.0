@@ -1,5 +1,5 @@
 (() => {
-  const { state, APPS } = window.DevSkitsState;
+  const { state, APPS, RUN_ALIASES } = window.DevSkitsState;
   const FS = window.DevSkitsFS;
   const W = () => window.DevSkitsWorld;
 
@@ -53,22 +53,8 @@
   };
 
   const APP_ALIASES = {
-    browser: "browser",
-    navigator: "browser",
-    contact: "contact",
-    donate: "donate",
-    links: "links",
-    projects: "projects",
-    loki: "loki",
-    calculator: "calculator",
-    calc: "calculator",
-    settings: "settings",
-    notes: "notes",
-    files: "files",
-    terminal: "terminal",
-    mail: "inbox",
-    inbox: "inbox",
-    logs: "syslogs"
+    ...RUN_ALIASES,
+    mail: "inbox"
   };
 
   const CMD_ALIASES = {

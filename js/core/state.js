@@ -16,6 +16,7 @@
     projects: retroSvg(`<rect x="8" y="11" width="48" height="42" fill="#efefef" stroke="#444"/><rect x="12" y="15" width="40" height="7" fill="#0000a8"/><rect x="14" y="27" width="17" height="11" fill="#fff" stroke="#777"/><rect x="34" y="27" width="17" height="11" fill="#fff" stroke="#777"/><rect x="14" y="40" width="37" height="9" fill="#fff" stroke="#777"/>`),
     notes: retroSvg(`<rect x="12" y="8" width="40" height="48" fill="#fff9c4" stroke="#666"/><line x1="19" y1="20" x2="45" y2="20" stroke="#7f7f7f"/><line x1="19" y1="28" x2="45" y2="28" stroke="#7f7f7f"/><line x1="19" y1="36" x2="45" y2="36" stroke="#7f7f7f"/><rect x="14" y="8" width="4" height="48" fill="#d55"/>`),
     browser: retroSvg(`<rect x="7" y="12" width="50" height="40" fill="#fff" stroke="#444"/><rect x="9" y="14" width="46" height="8" fill="#0000a8"/><circle cx="14" cy="18" r="2" fill="#fff"/><circle cx="20" cy="18" r="2" fill="#fff"/><rect x="12" y="27" width="40" height="20" fill="#d8e7ff" stroke="#557"/><path d="M16 42c7-10 16-6 20-12 1 6 6 8 12 10" stroke="#2f7f2f" stroke-width="2" fill="none"/>`),
+    calculator: retroSvg(`<rect x="12" y="8" width="40" height="48" fill="#e8e8e8" stroke="#444"/><rect x="16" y="14" width="32" height="10" fill="#d6f6c2" stroke="#6d6d6d"/><g fill="#fff" stroke="#666"><rect x="16" y="28" width="8" height="8"/><rect x="26" y="28" width="8" height="8"/><rect x="36" y="28" width="8" height="8"/><rect x="16" y="38" width="8" height="8"/><rect x="26" y="38" width="8" height="8"/><rect x="36" y="38" width="8" height="8"/></g>`),
     default: retroSvg(`<rect x="10" y="10" width="44" height="44" fill="#efefef" stroke="#444"/><rect x="14" y="14" width="36" height="8" fill="#0000a8"/><rect x="18" y="29" width="28" height="3" fill="#666"/><rect x="18" y="36" width="20" height="3" fill="#666"/>`)
   };
 
@@ -55,7 +56,7 @@
     notes: defineApp("notes", { title: "Notepad", icon: "TXT", iconSvg: icon("notes"), category: "Projects" }),
     browser: defineApp("browser", { title: "Navigator", icon: "WWW", iconSvg: icon("browser"), category: "Projects" }),
     reminders: defineApp("reminders", { title: "Planner", icon: "REM", iconSvg: icon("default"), category: "Projects" }),
-    calculator: defineApp("calculator", { title: "Calculator", icon: "⊞", iconSvg: icon("default"), category: "Projects" }),
+    calculator: defineApp("calculator", { title: "Calculator", icon: "⊞", iconSvg: icon("calculator"), category: "Projects" }),
 
     run: defineApp("run", { title: "Run", icon: ">", iconSvg: icon("default"), category: "System", desktopVisible: false, startMenuVisible: false }),
 
@@ -87,6 +88,49 @@
     { id: "system", label: "SYSTEM", items: ["about", "reboot", "shutdown"] }
   ];
 
+
+  const RUN_ALIASES = {
+    terminal: "terminal",
+    cmd: "terminal",
+    shell: "terminal",
+    files: "files",
+    explorer: "files",
+    settings: "settings",
+    control: "settings",
+    contact: "contact",
+    donate: "donate",
+    projects: "projects",
+    loki: "loki",
+    links: "links",
+    about: "about",
+    calculator: "calculator",
+    calc: "calculator",
+    notes: "notes",
+    notepad: "notes",
+    browser: "browser",
+    navigator: "browser",
+    inbox: "inbox",
+    updater: "updater",
+    processmon: "processmon",
+    activity: "activity",
+    logs: "syslogs",
+    syslogs: "syslogs",
+    reminders: "reminders",
+    profile: "profile",
+    presence: "presence",
+    packages: "packages",
+    achievements: "achievements",
+    calendar: "calendar",
+    clock: "clock",
+    quoteforge: "quoteforge",
+    asciimaker: "asciimaker",
+    draftpad: "draftpad",
+    networkmap: "networkmap",
+    lokigame: "lokigame",
+    search: "search",
+    recycle: "recycle"
+  };
+
   const state = {
     windows: new Map(),
     z: 10,
@@ -110,5 +154,5 @@
     localStorage.setItem(key, JSON.stringify(value));
   }
 
-  window.DevSkitsState = { APPS, START_MENU_SECTIONS, state, ui, saveState, ICON_LIBRARY };
+  window.DevSkitsState = { APPS, START_MENU_SECTIONS, RUN_ALIASES, state, ui, saveState, ICON_LIBRARY };
 })();

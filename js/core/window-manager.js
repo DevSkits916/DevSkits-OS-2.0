@@ -103,6 +103,7 @@
       rec.el.classList.toggle("active", id === appId);
       const task = ui.taskButtons.querySelector(`[data-app="${id}"]`);
       task?.classList.toggle("active", id === appId);
+      task?.classList.toggle("minimized", rec.minimized);
     });
     const rec = state.windows.get(appId);
     if (!rec) return;
@@ -117,6 +118,9 @@
     setTimeout(() => {
       rec.el.classList.add("hidden");
       rec.el.classList.remove("minimizing");
+      const task = ui.taskButtons.querySelector(`[data-app="${appId}"]`);
+      task?.classList.remove("active");
+      task?.classList.add("minimized");
     }, 140);
     persistSession();
   }
@@ -126,6 +130,8 @@
     if (!rec) return;
     rec.minimized = false;
     rec.el.classList.remove("hidden");
+    const task = ui.taskButtons.querySelector(`[data-app="${appId}"]`);
+    task?.classList.remove("minimized");
     focusWindow(appId);
     persistSession();
   }
@@ -238,7 +244,10 @@
     win.querySelector(".win-close").addEventListener("click", () => closeWindow(appId));
     win.querySelector(".win-min").addEventListener("click", () => minimizeWindow(appId));
     win.querySelector(".win-max").addEventListener("click", () => toggleMaximize(appId));
-    win.querySelector(".window-titlebar").addEventListener("dblclick", () => toggleMaximize(appId));
+    win.querySelector(".window-titlebar").addEventListener("dblclick", (e) => {
+      if (e.target.closest("button")) return;
+      toggleMaximize(appId);
+    });
     enableDragging(win, appId);
     enableResize(win, appId);
   }
@@ -287,6 +296,7 @@
     ui.windowLayer.appendChild(win);
 
     const record = { el: win, minimized: false, maximized: false, appId };
+    if (window.innerWidth <= 760) record.maximized = true;
     state.windows.set(windowKey, record);
     createTaskButton(windowKey, meta.title);
     render(win.querySelector(".window-content"), options);
