@@ -1,5 +1,5 @@
 (() => {
-  const { APPS, START_MENU_SECTIONS } = window.DevSkitsState;
+  const { APPS, START_MENU_SECTIONS, state } = window.DevSkitsState;
 
   const POWER_ITEMS = {
     reboot: { id: "reboot", title: "Reboot", iconSvg: APPS.settings.iconSvg },
@@ -53,19 +53,43 @@
   function renderStartMenu(filter = "") {
     const q = filter.trim().toLowerCase();
     const sectionsWrap = document.querySelector("#start-sections");
-    sectionsWrap.innerHTML = START_MENU_SECTIONS.map((section) => {
+    const recent = !q && state.recentApps?.length
+      ? `<section class="start-group"><h3 class="start-section-label">RECENT</h3><div class="start-group-items">${state.recentApps
+        .filter((id) => APPS[id] && window.DevSkitsAppRegistry?.[id])
+        .map((id) => renderItem(id)).join("")}</div></section>`
+      : "";
+    const sectionMarkup = START_MENU_SECTIONS.map((section) => {
       const items = section.items
         .filter((id) => {
           if (!q) return true;
           if (POWER_ITEMS[id]) return POWER_ITEMS[id].title.toLowerCase().includes(q);
           const app = APPS[id];
-          return app && `${app.title} ${app.category}`.toLowerCase().includes(q);
+          return app && window.DevSkitsAppRegistry?.[id] && `${app.title} ${app.category} ${id}`.toLowerCase().includes(q);
         })
         .map(renderItem)
         .join("");
       if (!items) return "";
       return `<section class="start-group"><h3 class="start-section-label">${section.label}</h3><div class="start-group-items">${items}</div></section>`;
-    }).join("") || '<div class="start-empty">No matching apps.</div>';
+    }).join("");
+
+    const globalMatches = q
+      ? Object.entries(APPS)
+        .filter(([id, app]) => window.DevSkitsAppRegistry?.[id]
+          && `${id} ${app.title} ${app.category} ${app.description || ""}`.toLowerCase().includes(q))
+        .map(([id]) => id)
+      : [];
+
+    const fromSections = new Set(Array.from(sectionMarkup.matchAll(/data-open="([^"]+)"/g)).map((m) => m[1]));
+    const extraMatches = globalMatches.filter((id) => !fromSections.has(id));
+    const searchExtras = extraMatches.length
+      ? `<section class="start-group"><h3 class="start-section-label">SEARCH RESULTS</h3><div class="start-group-items">${extraMatches.map((id) => renderItem(id)).join("")}</div></section>`
+      : "";
+
+    sectionsWrap.innerHTML = `${sectionMarkup}${searchExtras}` || '<div class="start-empty">No matching apps.</div>';
+
+    if (recent) {
+      sectionsWrap.innerHTML = `${recent}${sectionsWrap.innerHTML}`;
+    }
 
     focusedIndex = -1;
   }

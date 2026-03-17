@@ -1,5 +1,5 @@
 (() => {
-  const { state, APPS, ui } = window.DevSkitsState;
+  const { state, APPS, ui, RUN_ALIASES } = window.DevSkitsState;
   const W = () => window.DevSkitsWorld;
   const BASE_GRID = { x: 98, y: 100, margin: 8 };
   let selectedIconId = null;
@@ -355,16 +355,24 @@
   }
 
   function runCommand(input) {
-    const cmd = input.trim().toLowerCase();
+    const cmd = (input || "").trim();
     if (!cmd) return;
-    const appAlias = {
-      browser: "browser", navigator: "browser", terminal: "terminal", files: "files", notes: "notes", links: "links", settings: "settings", projects: "projects", contact: "contact", donate: "donate", about: "about"
-    };
-    if (cmd.startsWith("devskits://")) return window.DevSkitsWindowManager.launchApp("browser", { route: cmd });
-    if (cmd.startsWith("open ")) return runCommand(cmd.replace(/^open\s+/, ""));
-    const target = appAlias[cmd];
-    if (target) return window.DevSkitsWindowManager.launchApp(target);
-    notify("Run: command not found", "warn");
+    const normalized = cmd.toLowerCase();
+
+    if (normalized.startsWith("devskits://") || /^https?:\/\//i.test(cmd)) {
+      return window.DevSkitsWindowManager.launchApp("browser", { route: cmd });
+    }
+
+    if (normalized.startsWith("open ")) {
+      return runCommand(cmd.replace(/^open\s+/i, ""));
+    }
+
+    const target = RUN_ALIASES[normalized] || (window.DevSkitsAppRegistry?.[normalized] ? normalized : "");
+    if (target && window.DevSkitsAppRegistry?.[target]) {
+      return window.DevSkitsWindowManager.launchApp(target);
+    }
+
+    notify(`Run: '${cmd}' not found`, "warn");
   }
 
   function openRunDialog() {
@@ -452,6 +460,9 @@
     applyWallpaper(state.wallpaper);
     toggleCRT(state.crt);
     applyBranding();
+    const appSettings = W().getAppSettings();
+    document.body.dataset.iconDensity = appSettings.iconDensity || "normal";
+    document.body.classList.toggle("reduce-motion", localStorage.getItem("devskits-animations") === "off");
     buildDesktopIcons();
     bindDesktopInteractions();
     bindDesktopContextMenu();
