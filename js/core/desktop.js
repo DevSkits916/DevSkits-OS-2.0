@@ -60,10 +60,9 @@
 
   function getDesktopEntries() {
     const appEntries = Object.entries(APPS)
-      .filter(([id, app]) => app.desktopVisible && window.DevSkitsAppRegistry?.[id])
+      .filter(([id, app]) => id === "files" && app.desktopVisible && window.DevSkitsAppRegistry?.[id])
       .map(([id, app]) => ({ id, app, isShortcut: false }));
-    const shortcuts = (W()?.getShortcuts?.() || [])
-      .map((s) => ({ id: s.id, app: { title: s.label, iconSvg: s.iconSvg || APPS.browser.iconSvg }, isShortcut: true, shortcut: s }));
+    const shortcuts = [];
     return [...appEntries, ...shortcuts];
   }
 
