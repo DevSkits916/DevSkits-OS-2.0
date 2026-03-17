@@ -17,6 +17,7 @@
     notes: retroSvg(`<rect x="12" y="8" width="40" height="48" fill="#fff9c4" stroke="#666"/><line x1="19" y1="20" x2="45" y2="20" stroke="#7f7f7f"/><line x1="19" y1="28" x2="45" y2="28" stroke="#7f7f7f"/><line x1="19" y1="36" x2="45" y2="36" stroke="#7f7f7f"/><rect x="14" y="8" width="4" height="48" fill="#d55"/>`),
     browser: retroSvg(`<rect x="7" y="12" width="50" height="40" fill="#fff" stroke="#444"/><rect x="9" y="14" width="46" height="8" fill="#0000a8"/><circle cx="14" cy="18" r="2" fill="#fff"/><circle cx="20" cy="18" r="2" fill="#fff"/><rect x="12" y="27" width="40" height="20" fill="#d8e7ff" stroke="#557"/><path d="M16 42c7-10 16-6 20-12 1 6 6 8 12 10" stroke="#2f7f2f" stroke-width="2" fill="none"/>`),
     calculator: retroSvg(`<rect x="12" y="8" width="40" height="48" fill="#e8e8e8" stroke="#444"/><rect x="16" y="14" width="32" height="10" fill="#d6f6c2" stroke="#6d6d6d"/><g fill="#fff" stroke="#666"><rect x="16" y="28" width="8" height="8"/><rect x="26" y="28" width="8" height="8"/><rect x="36" y="28" width="8" height="8"/><rect x="16" y="38" width="8" height="8"/><rect x="26" y="38" width="8" height="8"/><rect x="36" y="38" width="8" height="8"/></g>`),
+    lokigame: window.LokiGameAssets?.pawIconSvg?.() || retroSvg(`<circle cx="32" cy="34" r="12" fill="#c68f59" stroke="#553019"/><ellipse cx="19" cy="20" rx="5" ry="7" fill="#c68f59" stroke="#553019"/><ellipse cx="30" cy="16" rx="5" ry="7" fill="#c68f59" stroke="#553019"/><ellipse cx="42" cy="16" rx="5" ry="7" fill="#c68f59" stroke="#553019"/><ellipse cx="50" cy="24" rx="5" ry="7" fill="#c68f59" stroke="#553019"/>`),
     default: retroSvg(`<rect x="10" y="10" width="44" height="44" fill="#efefef" stroke="#444"/><rect x="14" y="14" width="36" height="8" fill="#0000a8"/><rect x="18" y="29" width="28" height="3" fill="#666"/><rect x="18" y="36" width="20" height="3" fill="#666"/>`)
   };
 
@@ -76,12 +77,13 @@
     asciimaker: defineApp("asciimaker", { title: "ASCII Maker", icon: "#", iconSvg: icon("default"), category: "Creator", startMenuVisible: false, desktopVisible: false }),
     draftpad: defineApp("draftpad", { title: "Post Draft Pad", icon: "✎", iconSvg: icon("default"), category: "Creator", startMenuVisible: false, desktopVisible: false }),
     networkmap: defineApp("networkmap", { title: "Network Map", icon: "⌗", iconSvg: icon("default"), category: "Network", startMenuVisible: false, desktopVisible: false }),
-    lokigame: defineApp("lokigame", { title: "Loki Mini Game", icon: "🐾", iconSvg: icon("default"), category: "Companion", startMenuVisible: false, desktopVisible: false }),
+    "loki-game": defineApp("loki-game", { title: "Loki Game", icon: "🐾", iconSvg: icon("lokigame"), category: "Companion", startMenuVisible: true, desktopVisible: true }),
+    lokigame: defineApp("lokigame", { title: "Loki Mini Game", icon: "🐾", iconSvg: icon("lokigame"), category: "Companion", startMenuVisible: false, desktopVisible: false }),
     search: defineApp("search", { title: "Search Everywhere", icon: "⌕", iconSvg: icon("default"), category: "System", startMenuVisible: false, desktopVisible: false })
   };
 
   const START_MENU_SECTIONS = [
-    { id: "programs", label: "PROGRAMS", items: ["terminal", "files", "notes", "browser", "calculator"] },
+    { id: "programs", label: "PROGRAMS", items: ["terminal", "files", "notes", "browser", "calculator", "loki-game"] },
     { id: "devskits", label: "DEVSKITS", items: ["links", "donate"] },
     { id: "utilities", label: "UTILITIES", items: ["settings", "recycle", "run"] },
     { id: "contact", label: "CONTACT", items: ["contact"] },
@@ -126,7 +128,9 @@
     asciimaker: "asciimaker",
     draftpad: "draftpad",
     networkmap: "networkmap",
-    lokigame: "lokigame",
+    "loki-game": "loki-game",
+    lokigame: "loki-game",
+    lokigamelegacy: "lokigame",
     search: "search",
     recycle: "recycle"
   };

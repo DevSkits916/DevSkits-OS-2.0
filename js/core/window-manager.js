@@ -163,6 +163,7 @@
   function closeWindow(appId) {
     const rec = state.windows.get(appId);
     if (!rec) return;
+    rec.el.querySelector(".window-content")?._lokiCleanup?.();
     playSound("windowClose");
     rec.el.remove();
     state.windows.delete(appId);

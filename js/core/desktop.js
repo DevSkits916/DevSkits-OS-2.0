@@ -59,8 +59,10 @@
   }
 
   function getDesktopEntries() {
-    const appEntries = Object.entries(APPS)
-      .filter(([id, app]) => id === "files" && app.desktopVisible && window.DevSkitsAppRegistry?.[id])
+    const pinOrder = ["files", "loki-game"];
+    const appEntries = pinOrder
+      .map((id) => [id, APPS[id]])
+      .filter(([id, app]) => app && app.desktopVisible && window.DevSkitsAppRegistry?.[id])
       .map(([id, app]) => ({ id, app, isShortcut: false }));
     const shortcuts = [];
     return [...appEntries, ...shortcuts];
