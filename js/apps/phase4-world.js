@@ -3,7 +3,8 @@
   const APPS = window.DevSkitsState.APPS;
   const NAV_STORE = {
     bookmarks: "devskits-nav-bookmarks-v1",
-    recent: "devskits-nav-recent-v1"
+    recent: "devskits-nav-recent-v1",
+    last: "devskits-nav-last-v1"
   };
 
   const DEFAULT_BOOKMARKS = [
@@ -52,21 +53,38 @@
       reddit: "https://reddit.com"
     };
     if (shortcuts[value.toLowerCase()]) return shortcuts[value.toLowerCase()];
-    if (/^https?:\/\//i.test(value)) return value;
+    if (/^https?:\/\//i.test(value)) {
+      try {
+        const parsed = new URL(value);
+        if (["http:", "https:"].includes(parsed.protocol)) return parsed.href;
+      } catch {
+        return null;
+      }
+      return null;
+    }
     if (value.startsWith("devskits://")) return value;
-    return `devskits://${value.replace(/^\/+/, "")}`;
+    if (/^[\w-]+(\.[\w-]+)+(\/.*)?$/i.test(value) || /^localhost(:\d+)?(\/.*)?$/i.test(value)) {
+      try {
+        return new URL(`https://${value}`).href;
+      } catch {
+        return null;
+      }
+    }
+    if (/^[\w-]+$/i.test(value)) return `devskits://${value.replace(/^\/+/, "")}`;
+    return null;
   }
 
   function renderBrowser(container, options = {}) {
     let history = [];
     let pointer = -1;
     let loading = false;
-    const initial = normalizeRoute(options.route || "devskits://home");
+    let navToken = 0;
+    const initial = normalizeRoute(options.route || localStorage.getItem(NAV_STORE.last) || "devskits://home") || "devskits://home";
     const savedBookmarks = JSON.parse(localStorage.getItem(NAV_STORE.bookmarks) || "null") || DEFAULT_BOOKMARKS;
 
-    container.innerHTML = `<div class="navigator-shell modernized"><header class="navigator-titlebar"><strong>Navigator</strong><span id="nav-status">Idle</span></header><div class="navigator-toolbar"><button id="nav-back" title="Back">◀</button><button id="nav-forward" title="Forward">▶</button><button id="nav-reload" title="Refresh">↺</button><button id="nav-home" title="Home">⌂</button><button id="nav-stop" title="Stop">■</button><input id="nav-url" value="${escapeHtml(initial)}"/><button id="nav-go">Go</button><button id="nav-bookmark">★</button></div><div class="navigator-bookmarks" id="nav-bookmarks"></div><article id="nav-page" class="browser-page"></article><footer class="navigator-statusbar"><span id="nav-route">${escapeHtml(initial)}</span><small id="nav-hint">devskits:// routes + urls supported</small></footer></div>`;
+    container.innerHTML = `<div class="navigator-shell modernized"><header class="navigator-titlebar"><strong>Navigator</strong><span id="nav-status">Idle</span></header><div class="navigator-toolbar"><button id="nav-back" title="Back" aria-label="Back">◀</button><button id="nav-forward" title="Forward" aria-label="Forward">▶</button><button id="nav-reload" title="Refresh" aria-label="Refresh">↺</button><button id="nav-home" title="Home" aria-label="Home">⌂</button><button id="nav-stop" title="Stop" aria-label="Stop">■</button><input id="nav-url" value="${escapeHtml(initial)}" aria-label="Address bar"/><button id="nav-go">Go</button><button id="nav-open-tab" title="Open in new tab">↗</button><button id="nav-bookmark" title="Add bookmark">★</button></div><div class="navigator-bookmarks" id="nav-bookmarks"></div><article id="nav-page" class="browser-page"><div class="nav-viewport" id="nav-viewport"></div></article><footer class="navigator-statusbar"><span id="nav-route">${escapeHtml(initial)}</span><small id="nav-hint">devskits:// routes + web urls supported</small></footer></div>`;
 
-    const page = container.querySelector("#nav-page");
+    const viewport = container.querySelector("#nav-viewport");
     const url = container.querySelector("#nav-url");
     const status = container.querySelector("#nav-status");
     const routeText = container.querySelector("#nav-route");
@@ -94,50 +112,98 @@
       localStorage.setItem(NAV_STORE.recent, JSON.stringify(rows.slice(0, 60)));
     }
 
-    function renderStartPage(route) {
+    function renderStartPage() {
       const recent = JSON.parse(localStorage.getItem(NAV_STORE.recent) || "[]").slice(0, 6);
-      return `<div class="nav-start"><h3>DevSkits Navigator</h3><p>Quick launch internal routes, projects, and tools.</p><div class="badges">${savedBookmarks.slice(0, 5).map((b) => `<button class="link-btn" data-route="${escapeHtml(b.route)}">${escapeHtml(b.label)}</button>`).join("")}</div><h4>Recent</h4>${recent.map((r) => `<div class="note-row"><button class="link-btn" data-route="${escapeHtml(r.route)}">${escapeHtml(r.route)}</button><small>${new Date(r.at).toLocaleString()}</small></div>`).join("") || "<em>No recent pages yet.</em>"}<div class="retro-links"><strong>Tip:</strong> try <code>devskits://projects</code> or <code>github</code>.</div></div>`;
+      return `<div class="nav-start"><h3>DevSkits Navigator</h3><p>Browse the web inside this window when a site allows embedding. Use fallback open-tab if blocked.</p><div class="badges">${savedBookmarks.slice(0, 5).map((b) => `<button class="link-btn" data-route="${escapeHtml(b.route)}">${escapeHtml(b.label)}</button>`).join("")}</div><h4>Quick launch</h4><div class="badges"><button class="link-btn" data-route="devskits://projects">Projects</button><button class="link-btn" data-route="devskits://updates">Updates</button><button class="link-btn" data-route="https://example.com">example.com</button><button class="link-btn" data-route="https://neverssl.com">neverssl.com</button></div><h4>Recent</h4>${recent.map((r) => `<div class="note-row"><button class="link-btn" data-route="${escapeHtml(r.route)}">${escapeHtml(r.route)}</button><small>${new Date(r.at).toLocaleString()}</small></div>`).join("") || "<em>No recent pages yet.</em>"}<div class="retro-links"><strong>Tip:</strong> Enter domains like <code>example.com</code> and Navigator will auto-add <code>https://</code>.</div></div>`;
+    }
+
+    function showView(html) {
+      viewport.innerHTML = html;
+    }
+
+    function showEmbedBlocked(route) {
+      showView(`<div class="retro-web nav-error"><h3>Can't embed this page</h3><p><code>${escapeHtml(route)}</code></p><p>This site appears to block iframe embedding via security headers (<code>X-Frame-Options</code> or <code>frame-ancestors</code> policy).</p><button class="link-btn" data-open-tab="${escapeHtml(route)}">Open in new tab</button></div>`);
+      setStatus("Embedding blocked", false);
+    }
+
+    function loadExternal(route, token) {
+      showView(`<div class="nav-loading">Loading <code>${escapeHtml(route)}</code>…</div><iframe class="navigator-iframe" title="Navigator viewport" referrerpolicy="no-referrer"></iframe>`);
+      const frame = viewport.querySelector(".navigator-iframe");
+      const warningTimer = setTimeout(() => {
+        if (token !== navToken || !loading) return;
+        setStatus("Waiting for page response...", true);
+      }, 3000);
+      const failTimer = setTimeout(() => {
+        if (token !== navToken || !loading) return;
+        showEmbedBlocked(route);
+      }, 12000);
+
+      frame.addEventListener("load", () => {
+        if (token !== navToken || !loading) return;
+        clearTimeout(warningTimer);
+        clearTimeout(failTimer);
+        let blocked = false;
+        try {
+          const href = frame.contentWindow?.location?.href;
+          const text = frame.contentDocument?.body?.textContent?.trim() || "";
+          blocked = href === "about:blank" && !text && !/about:blank/i.test(route);
+        } catch {
+          blocked = false;
+        }
+        if (blocked) return showEmbedBlocked(route);
+        viewport.querySelector(".nav-loading")?.remove();
+        setStatus("Page loaded", false);
+      }, { once: true });
+
+      frame.src = route;
     }
 
     function openRoute(input, push = true) {
       const route = normalizeRoute(input);
+      if (!route) {
+        showView(`<div class="retro-web nav-error"><h3>Invalid address</h3><p>Navigator couldn't parse <code>${escapeHtml(input || "")}</code>.</p><p>Try a full URL like <code>https://example.com</code> or an internal route like <code>devskits://projects</code>.</p></div>`);
+        setStatus("Invalid URL", false);
+        return;
+      }
+      navToken += 1;
+      const token = navToken;
       setStatus("Loading...", true);
-      setTimeout(() => {
-        if (loading === false) return;
-        if (/^https?:\/\//i.test(route)) {
-          window.open(route, "_blank", "noopener,noreferrer");
-          page.innerHTML = `<div class="retro-web"><h3>External destination opened</h3><p>${escapeHtml(route)}</p></div>`;
-        } else if (route === "devskits://home") {
-          page.innerHTML = renderStartPage(route);
-        } else {
-          page.innerHTML = routePage(route);
-        }
-        url.value = route;
-        routeText.textContent = route;
-        if (push) {
-          history = history.slice(0, pointer + 1);
-          history.push(route);
-          pointer = history.length - 1;
-        }
-        setNavState();
+      if (route === "devskits://home") {
+        showView(renderStartPage());
         setStatus("Ready", false);
-        W.pushBrowserHistory(route);
-        recordRecent(route);
-        if (route.includes("hidden")) {
-          const p = W.getProfile();
-          p.hiddenPagesFound += 1;
-          W.setProfile(p);
-        }
-      }, 120);
+      } else if (/^https?:\/\//i.test(route)) {
+        loadExternal(route, token);
+      } else {
+        showView(routePage(route));
+        setStatus("Ready", false);
+      }
+      url.value = route;
+      routeText.textContent = route;
+      localStorage.setItem(NAV_STORE.last, route);
+      if (push) {
+        history = history.slice(0, pointer + 1);
+        history.push(route);
+        pointer = history.length - 1;
+      }
+      setNavState();
+      W.pushBrowserHistory(route);
+      recordRecent(route);
+      if (route.includes("hidden")) {
+        const p = W.getProfile();
+        p.hiddenPagesFound += 1;
+        W.setProfile(p);
+      }
     }
 
     container.addEventListener("click", (e) => {
       const route = e.target.dataset.route;
       const bookmarkRoute = e.target.dataset.bookmark;
       const openApp = e.target.dataset.openApp;
+      const openTab = e.target.dataset.openTab;
       if (route) openRoute(route);
       if (bookmarkRoute) openRoute(bookmarkRoute);
       if (openApp) window.DevSkitsWindowManager.openApp(openApp);
+      if (openTab) window.open(openTab, "_blank", "noopener,noreferrer");
     });
 
     container.querySelector("#nav-go").addEventListener("click", () => openRoute(url.value.trim()));
@@ -145,9 +211,19 @@
     container.querySelector("#nav-forward").addEventListener("click", () => { if (pointer < history.length - 1) openRoute(history[++pointer], false); });
     container.querySelector("#nav-reload").addEventListener("click", () => openRoute(url.value.trim(), false));
     container.querySelector("#nav-home").addEventListener("click", () => openRoute("devskits://home"));
-    container.querySelector("#nav-stop").addEventListener("click", () => setStatus("Load cancelled", false));
+    container.querySelector("#nav-stop").addEventListener("click", () => {
+      navToken += 1;
+      setStatus("Load cancelled", false);
+      const frame = viewport.querySelector(".navigator-iframe");
+      if (frame) frame.src = "about:blank";
+    });
+    container.querySelector("#nav-open-tab").addEventListener("click", () => {
+      const route = normalizeRoute(url.value.trim());
+      if (route && /^https?:\/\//i.test(route)) window.open(route, "_blank", "noopener,noreferrer");
+    });
     container.querySelector("#nav-bookmark").addEventListener("click", () => {
       const route = normalizeRoute(url.value);
+      if (!route) return setStatus("Invalid URL", false);
       if (!savedBookmarks.some((b) => b.route === route)) {
         savedBookmarks.unshift({ label: route.replace("devskits://", "").slice(0, 18) || "bookmark", route });
         savedBookmarks.splice(20);
