@@ -83,6 +83,12 @@
     const allItems = groups.flatMap((group) => group.items);
 
     container.innerHTML = `
+      <pre class="devskits-ascii"> ____              _____ _    _ _ _       
+|  _ \            / ____| |  (_) | |      
+| | | | _____   _| (___ | | ___| | |_ ___ 
+| | | |/ _ \\ \ / /\___ \| |/ / | | __/ __|
+| |_| |  __/\ V / ____) |   <| | | |_\__ \
+|____/ \___| \_/ |_____/|_|\_\_|_|\__|___/</pre>
       <div class="contact-shell">
         <aside class="contact-profile">
           <div class="contact-avatar" aria-hidden="true">${icon("contact", "Profile")}</div>

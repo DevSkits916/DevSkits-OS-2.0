@@ -371,6 +371,15 @@ body.reduce-motion .window { transition: none; }
 .contact-main span { display:block; margin-top: .1rem; }
 .contact-actions { display:flex; gap: .2rem; flex-wrap: wrap; justify-content:flex-end; }
 .contact-empty { font-style: italic; opacity: .8; }
+.devskits-ascii {
+  font-family: monospace;
+  font-size: 10px;
+  line-height: 1.1;
+  margin-bottom: 10px;
+  white-space: pre;
+  overflow-x: auto;
+  color: var(--text, #111);
+}
 
 @media (max-width: 760px) {
   .explorer-shell,
