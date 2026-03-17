@@ -57,6 +57,8 @@
     mail: "inbox"
   };
 
+  const TERMINAL_BLOCKED_APPS = new Set(["inbox", "reminders"]);
+
   const CMD_ALIASES = {
     cls: "clear",
     dir: "ls",
@@ -129,11 +131,14 @@
     };
 
     function normalizeAppName(arg = "") {
-      return APP_ALIASES[(arg || "").toLowerCase()] || (arg || "").toLowerCase();
+      const normalized = APP_ALIASES[(arg || "").toLowerCase()] || (arg || "").toLowerCase();
+      return TERMINAL_BLOCKED_APPS.has(normalized) ? "" : normalized;
     }
 
     function listApps() {
-      const rows = Object.values(APPS).map((app) => ({ id: app.id, title: app.title, category: app.category || "misc" }));
+      const rows = Object.values(APPS)
+        .filter((app) => !TERMINAL_BLOCKED_APPS.has(app.id))
+        .map((app) => ({ id: app.id, title: app.title, category: app.category || "misc" }));
       return { type: "table", headers: ["ID", "Title", "Category"], rows: rows.slice(0, 24).map((r) => [r.id, r.title, r.category]) };
     }
 
@@ -302,7 +307,9 @@
       }
       const head = (tokens[0] || "").toLowerCase();
       if (["open", "run", "browser"].includes(head)) {
-        const pool = Object.keys(APP_ALIASES).concat(Object.keys(APPS));
+        const pool = Object.keys(APP_ALIASES)
+          .filter((alias) => !TERMINAL_BLOCKED_APPS.has(APP_ALIASES[alias]))
+          .concat(Object.keys(APPS).filter((id) => !TERMINAL_BLOCKED_APPS.has(id)));
         return [...new Set(pool)].filter((x) => x.startsWith(target.toLowerCase())).slice(0, 8);
       }
       return [];
