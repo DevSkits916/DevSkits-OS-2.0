@@ -12,14 +12,11 @@
     { label: "Projects", route: "devskits://projects" },
     { label: "Contact", route: "devskits://contact" },
     { label: "Donate", route: "devskits://donate" },
-    { label: "Google", route: "https://www.google.com" },
-    { label: "GitHub", route: "https://github.com/DevSkits916" },
-    { label: "Reddit", route: "https://www.reddit.com" },
-    { label: "Facebook", route: "https://www.facebook.com" }
-  ];
-
-  const EMBED_BLOCKLIST = [
-    "google.com", "facebook.com", "x.com", "twitter.com", "reddit.com", "instagram.com", "linkedin.com", "tiktok.com"
+    { label: "Example", route: "https://example.com" },
+    { label: "MDN", route: "https://developer.mozilla.org" },
+    { label: "Wikipedia", route: "https://www.wikipedia.org" },
+    { label: "Archive.org", route: "https://archive.org" },
+    { label: "GitHub", route: "https://github.com" }
   ];
 
   function escapeHtml(value = "") {
@@ -54,47 +51,33 @@
       about: "devskits://home",
       updates: "devskits://updates",
       changelog: "devskits://updates",
-      github: "https://github.com/DevSkits916",
+      github: "https://github.com",
       reddit: "https://reddit.com"
     };
     if (shortcuts[value.toLowerCase()]) return shortcuts[value.toLowerCase()];
-    if (/^https?:\/\//i.test(value)) {
-      try {
-        const parsed = new URL(value);
-        if (["http:", "https:"].includes(parsed.protocol)) return parsed.href;
-      } catch {
-        return null;
-      }
-      return null;
-    }
     if (value.startsWith("devskits://")) return value;
-    if (/^[\w-]+(\.[\w-]+)+(\/.*)?$/i.test(value) || /^localhost(:\d+)?(\/.*)?$/i.test(value)) {
-      try {
-        return new URL(`https://${value}`).href;
-      } catch {
-        return null;
-      }
-    }
+    const externalUrl = normalizeExternalUrl(value);
+    if (externalUrl) return externalUrl;
     if (/^[\w-]+$/i.test(value)) return `devskits://${value.replace(/^\/+/, "")}`;
     return null;
   }
 
-  function getHost(route = "") {
+  function normalizeExternalUrl(input = "") {
+    const trimmed = String(input).trim();
+    if (!trimmed) return null;
+    const candidate = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
     try {
-      return new URL(route).hostname.toLowerCase();
+      const parsed = new URL(candidate);
+      if (!["http:", "https:"].includes(parsed.protocol)) return null;
+      if (!parsed.hostname) return null;
+      return parsed.href;
     } catch {
-      return "";
+      return null;
     }
   }
 
-  function shouldUseExternalFallback(route = "") {
-    if (!/^https?:\/\//i.test(route)) return false;
-    const host = getHost(route);
-    return EMBED_BLOCKLIST.some((blocked) => host === blocked || host.endsWith(`.${blocked}`));
-  }
-
-  function buildSearchUrl(query = "") {
-    return `https://www.google.com/search?q=${encodeURIComponent(query.trim())}`;
+  function isExternalWebUrl(route = "") {
+    return /^https?:\/\//i.test(route);
   }
 
   function renderBrowser(container, options = {}) {
@@ -102,6 +85,7 @@
     let pointer = -1;
     let loading = false;
     let navToken = 0;
+    let clearExternalLoad = () => {};
     let currentMode = "embedded";
     const initial = normalizeRoute(options.route || localStorage.getItem(NAV_STORE.last) || "devskits://home") || "devskits://home";
     const savedBookmarks = JSON.parse(localStorage.getItem(NAV_STORE.bookmarks) || "null") || DEFAULT_BOOKMARKS;
@@ -149,50 +133,67 @@
       setStatus("Showing history", false);
     }
 
-    function renderStartPage() {
+    function renderNavigatorHome() {
       const recent = JSON.parse(localStorage.getItem(NAV_STORE.history) || "[]").slice(0, 6);
-      return `<div class="nav-start"><h3>DevSkits Navigator Home</h3><p>Two modes: Embedded for iframe-friendly pages, External fallback for restricted sites.</p><h4>Shortcuts</h4><div class="badges"><button class="link-btn" data-route="https://www.google.com">Google</button><button class="link-btn" data-route="https://github.com/DevSkits916">GitHub</button><button class="link-btn" data-route="https://www.reddit.com">Reddit</button><button class="link-btn" data-route="https://www.facebook.com">Facebook</button><button class="link-btn" data-route="devskits://projects">DevSkits Projects</button><button class="link-btn" data-route="devskits://updates">DevSkits Updates</button></div><h4>Bookmarks</h4><div class="badges">${savedBookmarks.slice(0, 8).map((b) => `<button class="link-btn" data-route="${escapeHtml(b.route)}">${escapeHtml(b.label)}</button>`).join("") || "<em>No bookmarks yet.</em>"}</div><h4>Recent</h4>${recent.map((r) => `<div class="note-row"><button class="link-btn" data-route="${escapeHtml(r.route)}">${escapeHtml(r.route)}</button><small>${new Date(r.at).toLocaleString()}</small></div>`).join("") || "<em>No browsing history yet.</em>"}<div class="retro-links"><strong>Search tip:</strong> Plain text search opens in a new external tab for maximum compatibility.</div></div>`;
+      return `<div class="nav-start"><h3>DevSkits Navigator Home</h3><p>Type any devskits:// route or website URL. External sites are attempted in-frame when possible.</p><h4>Starter Links</h4><div class="badges"><button class="link-btn" data-route="https://example.com">Example</button><button class="link-btn" data-route="https://developer.mozilla.org">MDN</button><button class="link-btn" data-route="https://www.wikipedia.org">Wikipedia</button><button class="link-btn" data-route="https://archive.org">Archive.org</button><button class="link-btn" data-route="https://github.com">GitHub</button><button class="link-btn" data-route="devskits://projects">DevSkits Projects</button><button class="link-btn" data-route="devskits://updates">DevSkits Updates</button></div><h4>Bookmarks</h4><div class="badges">${savedBookmarks.slice(0, 8).map((b) => `<button class="link-btn" data-route="${escapeHtml(b.route)}">${escapeHtml(b.label)}</button>`).join("") || "<em>No bookmarks yet.</em>"}</div><h4>Recent</h4>${recent.map((r) => `<div class="note-row"><button class="link-btn" data-route="${escapeHtml(r.route)}">${escapeHtml(r.route)}</button><small>${new Date(r.at).toLocaleString()}</small></div>`).join("") || "<em>No browsing history yet.</em>"}</div>`;
     }
 
     function showView(html) {
       viewport.innerHTML = html;
     }
 
-    function showEmbedBlocked(route, reason = "This site blocks embedding, open externally instead") {
+    function renderEmbedFailure(route) {
       setMode("external");
-      showView(`<div class="retro-web nav-error nav-fallback"><h3>External mode required</h3><p><code>${escapeHtml(route)}</code></p><p>${escapeHtml(reason)}</p><div class="badges"><button class="link-btn" data-open-tab="${escapeHtml(route)}">Open in New Tab</button><button class="link-btn" data-copy-url="${escapeHtml(route)}">Copy URL</button><button class="link-btn" data-add-bookmark="${escapeHtml(route)}">Add Bookmark</button></div></div>`);
-      setStatus("This site blocks embedding, open externally instead", false);
+      showView(`<div class="retro-web nav-error nav-fallback"><h3>Site could not be embedded</h3><p>This website does not allow itself to be shown inside an iframe, or it failed to load here.</p><p><code>${escapeHtml(route)}</code></p><div class="badges"><button class="link-btn" data-open-tab="${escapeHtml(route)}">Open in New Tab</button></div></div>`);
+      setStatus(`Blocked or failed: ${route}`, false);
     }
 
-    function loadExternal(route, token) {
+    function loadExternalInIframe(route, token) {
+      clearExternalLoad();
+      setStatus(`Loading ${route} ...`, true);
       showView(`<div class="nav-loading">Loading <code>${escapeHtml(route)}</code>…</div><iframe class="navigator-iframe" title="Navigator viewport" referrerpolicy="no-referrer"></iframe>`);
       const frame = viewport.querySelector(".navigator-iframe");
-      const warningTimer = setTimeout(() => {
-        if (token !== navToken || !loading) return;
-        setStatus("Waiting for page response...", true);
-      }, 3000);
+      let settled = false;
       const failTimer = setTimeout(() => {
-        if (token !== navToken || !loading) return;
-        showEmbedBlocked(route);
-      }, 12000);
+        if (settled || token !== navToken || !loading) return;
+        settled = true;
+        renderEmbedFailure(route);
+      }, 5000);
 
-      frame.addEventListener("load", () => {
-        if (token !== navToken || !loading) return;
-        clearTimeout(warningTimer);
+      const cleanup = () => {
         clearTimeout(failTimer);
-        let blocked = false;
+        frame.removeEventListener("load", onLoad);
+        frame.removeEventListener("error", onError);
+      };
+      clearExternalLoad = cleanup;
+
+      const onError = () => {
+        if (settled || token !== navToken || !loading) return;
+        settled = true;
+        cleanup();
+        renderEmbedFailure(route);
+      };
+
+      const onLoad = () => {
+        if (settled || token !== navToken || !loading) return;
+        let blockedOrBlank = false;
         try {
           const href = frame.contentWindow?.location?.href;
           const text = frame.contentDocument?.body?.textContent?.trim() || "";
-          blocked = href === "about:blank" && !text && !/about:blank/i.test(route);
+          blockedOrBlank = href === "about:blank" || (!text && href === "");
         } catch {
-          blocked = false;
+          blockedOrBlank = false;
         }
-        if (blocked) return showEmbedBlocked(route);
+        settled = true;
+        cleanup();
+        if (blockedOrBlank) return renderEmbedFailure(route);
         viewport.querySelector(".nav-loading")?.remove();
         setMode("embedded");
-        setStatus("Page loaded", false);
-      }, { once: true });
+        setStatus(`Embedded: ${route}`, false);
+      };
+
+      frame.addEventListener("load", onLoad);
+      frame.addEventListener("error", onError);
 
       frame.src = route;
     }
@@ -209,18 +210,11 @@
     function handleEntry(raw) {
       const trimmed = (raw || "").trim();
       if (!trimmed) return openRoute("devskits://home");
-      const forceSearch = /\s/.test(trimmed) || (!trimmed.includes(".") && !trimmed.includes("://") && !W.pages[`devskits://${trimmed.toLowerCase()}`]);
-      if (!forceSearch) {
-        const parsed = normalizeRoute(trimmed);
-        if (parsed) return openRoute(parsed);
-      }
-      const searchUrl = buildSearchUrl(trimmed);
-      setMode("external");
-      setStatus("Search opened in external tab", false);
-      window.open(searchUrl, "_blank", "noopener,noreferrer");
-      showEmbedBlocked(searchUrl, "Search queries open in a new tab to avoid embed restrictions.");
-      url.value = searchUrl;
-      routeText.textContent = searchUrl;
+      const parsed = normalizeRoute(trimmed);
+      if (parsed) return openRoute(parsed);
+      showView(`<div class="retro-web nav-error"><h3>Invalid address</h3><p>Enter a valid <code>devskits://</code> route or an external <code>http/https</code> URL.</p></div>`);
+      setMode("embedded");
+      setStatus(`Invalid address: ${trimmed}`, false);
     }
 
     function openRoute(input, push = true) {
@@ -230,16 +224,15 @@
       }
       navToken += 1;
       const token = navToken;
+      clearExternalLoad();
       setStatus("Loading...", true);
       if (route === "devskits://home") {
-        showView(renderStartPage());
+        showView(renderNavigatorHome());
         setMode("embedded");
         setStatus("Ready", false);
-      } else if (shouldUseExternalFallback(route)) {
-        showEmbedBlocked(route);
-      } else if (/^https?:\/\//i.test(route)) {
+      } else if (isExternalWebUrl(route)) {
         setMode("embedded");
-        loadExternal(route, token);
+        loadExternalInIframe(route, token);
       } else {
         showView(routePage(route));
         setMode("embedded");
@@ -285,13 +278,14 @@
     container.querySelector("#nav-home").addEventListener("click", () => openRoute("devskits://home"));
     container.querySelector("#nav-stop").addEventListener("click", () => {
       navToken += 1;
+      clearExternalLoad();
       setStatus("Load cancelled", false);
       const frame = viewport.querySelector(".navigator-iframe");
       if (frame) frame.src = "about:blank";
     });
     container.querySelector("#nav-open-tab").addEventListener("click", () => {
       const route = normalizeRoute(url.value.trim());
-      if (route && /^https?:\/\//i.test(route)) window.open(route, "_blank", "noopener,noreferrer");
+      if (route && isExternalWebUrl(route)) window.open(route, "_blank", "noopener,noreferrer");
     });
     container.querySelector("#nav-bookmark").addEventListener("click", () => {
       const route = normalizeRoute(url.value);
