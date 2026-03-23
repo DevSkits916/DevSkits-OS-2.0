@@ -4,7 +4,7 @@
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
-      .replace(/\"/g, "&quot;")
+      .replace(/"/g, "&quot;")
       .replace(/'/g, "&#39;");
   }
 
@@ -41,11 +41,21 @@
     return date.toLocaleString();
   }
 
+  function registerApp(id, render, aliases = []) {
+    const registry = window.DevSkitsAppRegistry = window.DevSkitsAppRegistry || {};
+    registry[id] = render;
+    aliases.forEach((alias) => {
+      if (alias && alias !== id) registry[alias] = render;
+    });
+    return render;
+  }
+
   window.DevSkitsAppHelpers = {
     copyText,
     downloadText,
     escapeHtml,
     formatTimestamp,
+    registerApp,
     safeOpen
   };
 })();

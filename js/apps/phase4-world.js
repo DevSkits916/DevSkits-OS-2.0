@@ -454,7 +454,7 @@
       if (b.dataset.type === "page") window.DevSkitsWindowManager.openApp("browser", { route: b.dataset.target });
       if (b.dataset.type === "note") window.DevSkitsWindowManager.openApp("notes");
       if (b.dataset.type === "message") window.DevSkitsWindowManager.openApp("inbox");
-      if (b.dataset.type === "log") window.DevSkitsWindowManager.openApp("syslogs");
+      if (b.dataset.type === "log") window.DevSkitsWindowManager.openApp("system-logs");
     });
     draw();
   }
@@ -486,7 +486,6 @@
     achievements: renderAchievements,
     recycle: renderRecycle,
     networkmap: renderNetworkMap,
-    lokigame: renderLokiGame,
     search: renderSearch
   });
 })();
