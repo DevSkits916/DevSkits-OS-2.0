@@ -30,7 +30,7 @@
 
     apps: { category: "apps", description: "List launchable apps", usage: "apps" },
     open: { category: "apps", description: "Open app/file/route/url", usage: "open <target>" },
-    run: { category: "apps", description: "Run app by id", usage: "run <app>" },
+    run: { category: "apps", description: "Run app by id or alias", usage: "run <app>" },
     browser: { category: "apps", description: "Open route or url in Navigator", usage: "browser <route|url>" },
     links: { category: "apps", description: "Open Links app", usage: "links" },
     projects: { category: "apps", description: "Open Projects app", usage: "projects" },
@@ -57,7 +57,7 @@
     mail: "inbox"
   };
 
-  const TERMINAL_BLOCKED_APPS = new Set(["inbox", "reminders"]);
+  const TERMINAL_BLOCKED_APPS = new Set(["inbox", "run"]);
 
   const CMD_ALIASES = {
     cls: "clear",
@@ -111,7 +111,7 @@
       cat: (_, arg) => catFile(arg),
 
       open: (_, ...arg) => openTarget(arg.join(" ")),
-      run: (_, arg) => runApp(arg),
+      run: (_, ...arg) => runApp(arg.join(" ")),
       browser: (_, ...arg) => browserRoute(arg.join(" ")),
       settings: () => runApp("settings"),
       apps: () => listApps(),
@@ -131,15 +131,17 @@
     };
 
     function normalizeAppName(arg = "") {
-      const normalized = APP_ALIASES[(arg || "").toLowerCase()] || (arg || "").toLowerCase();
+      const trimmed = (arg || "").trim().toLowerCase();
+      const normalized = APP_ALIASES[trimmed] || trimmed;
       return TERMINAL_BLOCKED_APPS.has(normalized) ? "" : normalized;
     }
 
     function listApps() {
       const rows = Object.values(APPS)
-        .filter((app) => !TERMINAL_BLOCKED_APPS.has(app.id))
-        .map((app) => ({ id: app.id, title: app.title, category: app.category || "misc" }));
-      return { type: "table", headers: ["ID", "Title", "Category"], rows: rows.slice(0, 24).map((r) => [r.id, r.title, r.category]) };
+        .filter((app) => !TERMINAL_BLOCKED_APPS.has(app.id) && window.DevSkitsAppRegistry?.[app.id])
+        .map((app) => [app.id, app.title, app.category || "misc"])
+        .sort((a, b) => a[0].localeCompare(b[0]));
+      return { type: "table", headers: ["ID", "Title", "Category"], rows };
     }
 
     function helpText(topic) {
@@ -220,9 +222,9 @@
 
     function openTarget(arg = "") {
       if (!arg) return { type: "warn", text: "Usage: open <app-or-file-or-route>" };
-      const lower = arg.toLowerCase();
-      if (window.DevSkitsAppRegistry[normalizeAppName(lower)]) return runApp(lower);
-      if (arg.startsWith("devskits://") || /^https?:\/\//i.test(arg) || /^(github|reddit)$/.test(lower)) return browserRoute(arg);
+      const normalizedApp = normalizeAppName(arg);
+      if (normalizedApp && window.DevSkitsAppRegistry[normalizedApp]) return runApp(arg);
+      if (arg.startsWith("devskits://") || /^https?:\/\//i.test(arg) || /^(github|reddit)$/i.test(arg)) return browserRoute(arg);
       const node = FS.getNode(FS.normalize(arg, cwd));
       if (!node) return { type: "error", text: "Target not found." };
       if (node.type === "app") return runApp(node.app);
@@ -309,8 +311,8 @@
       if (["open", "run", "browser"].includes(head)) {
         const pool = Object.keys(APP_ALIASES)
           .filter((alias) => !TERMINAL_BLOCKED_APPS.has(APP_ALIASES[alias]))
-          .concat(Object.keys(APPS).filter((id) => !TERMINAL_BLOCKED_APPS.has(id)));
-        return [...new Set(pool)].filter((x) => x.startsWith(target.toLowerCase())).slice(0, 8);
+          .concat(Object.keys(APPS).filter((id) => !TERMINAL_BLOCKED_APPS.has(id) && window.DevSkitsAppRegistry?.[id]));
+        return [...new Set(pool)].filter((value) => value.startsWith(target.toLowerCase())).sort().slice(0, 20);
       }
       return [];
     }

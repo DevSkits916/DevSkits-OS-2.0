@@ -33,6 +33,5 @@
     };
   }
 
-  window.DevSkitsAppRegistry = window.DevSkitsAppRegistry || {};
-  window.DevSkitsAppRegistry["loki-game"] = render;
+  window.DevSkitsAppHelpers.registerApp("loki-game", render, ["lokigame", "lokigamelegacy"]);
 })();

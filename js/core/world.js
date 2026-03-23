@@ -35,8 +35,8 @@
   const INTERNAL_PAGES = {
     "devskits://home": { title: "DevSkits Home", body: "Welcome to Navigator. Browse internal nodes, inspect build history, and jump into apps.", links: ["devskits://projects", "devskits://changelog", "devskits://system", "devskits://updates"] },
     "devskits://updates": { title: "Updater Node", body: "System Update service mirror.", appLink: "updater" },
-    "devskits://services": { title: "Service Registry", body: "Service state and process snapshots.", appLink: "processmon" },
-    "devskits://logs": { title: "System Console", body: "Timestamped runtime logs and alerts.", appLink: "syslogs" },
+    "devskits://services": { title: "Service Registry", body: "Service state and process snapshots.", appLink: "process-monitor" },
+    "devskits://logs": { title: "System Console", body: "Timestamped runtime logs and alerts.", appLink: "system-logs" },
     "devskits://projects": { title: "Projects Wire", body: "Status board mirror for active, building, and concept tracks.", appLink: "projects", links: ["devskits://notes-index", "devskits://contact"] },
     "devskits://loki/archive": { title: "Loki Archive", lock: "loki_archive", body: "Unlocked dossier: stat blocks, toy routes, snack debt matrix." },
     "devskits://labs": { title: "DevSkits Labs", lock: "devskits_labs", body: "Experimental routes unlocked through Install Center.", links: ["devskits://hidden/loki-note"] },
@@ -44,7 +44,7 @@
   };
 
   const BASE_CHANGELOG = [{ id: "p4", version: "0.4.0", build: "DSK-420", timestamp: "2026-05-21 09:15", title: "Phase 4 systems", tags: ["shell", "app"], body: "Install Center, inbox, browser routes, run dialog, media deck." }];
-  const AVAILABLE_UPDATES = [{ id: "upd-500", version: "0.5.0", build: "DSK-500", title: "Living OS rollout", notes: { shell: ["Dynamic boot report", "Service-aware restart", "Widget memory layer"], apps: ["System Update", "Process Monitor", "System Logs", "Activity", "Reminders", "Network Status", "System Identity"], fixes: ["Inbox threading", "Search index coverage expansion", "Mobile readability in system apps"], hidden: ["Loki guard relay tuned", "Archive watcher signal"], } }];
+  const AVAILABLE_UPDATES = [{ id: "upd-500", version: "0.5.0", build: "DSK-500", title: "Living OS rollout", notes: { shell: ["Dynamic boot report", "Service-aware restart", "Widget memory layer"], apps: ["Updater", "Process Monitor", "System Logs", "Activity Log", "Reminders", "Presence", "Profile"], fixes: ["Inbox threading", "Search index coverage expansion", "Mobile readability in system apps"], hidden: ["Loki guard relay tuned", "Archive watcher signal"], } }];
 
   function getJSON(key, fallback) { try { return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback)); } catch { return fallback; } }
   function setJSON(key, value) { localStorage.setItem(key, JSON.stringify(value)); }

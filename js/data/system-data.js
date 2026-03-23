@@ -208,10 +208,10 @@
     supportMethods,
     links,
     about: {
-      version: '3.2.0',
-      codename: 'RetroShell',
-      features: ['Windowed desktop shell', 'App launcher + categories', 'Persistent notes + terminal history', 'Fake filesystem + navigator', 'Settings, recycle, activity tracking'],
-      changelog: ['New staged boot with skip + fast boot', 'Improved Notes, Projects, Contact, Links, About', 'Expanded terminal command set']
+      version: '2.0.0',
+      codename: 'RetroShell 2',
+      features: ['Windowed desktop shell + start menu', 'Terminal, faux filesystem, and Navigator routes', 'Standalone productivity and creator apps', 'Updater, process monitor, logs, profile, and presence tools', 'LocalStorage persistence for notes, reminders, drafts, quotes, and settings'],
+      changelog: ['Consolidated bundled apps into standalone modules', 'Standardized app ids, aliases, and launcher visibility', 'Aligned terminal commands and docs with the live feature set']
     }
   };
 
