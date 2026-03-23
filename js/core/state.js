@@ -83,9 +83,6 @@
 
   const START_MENU_SECTIONS = [
     { id: "programs", label: "PROGRAMS", items: ["terminal", "files", "notes", "browser", "calculator", "loki-game"] },
-    { id: "tools", label: "TOOLS", items: ["calendar", "clock", "reminders", "updater"] },
-    { id: "creator", label: "CREATOR", items: ["quoteforge", "asciimaker", "draftpad"] },
-    { id: "system", label: "SYSTEM", items: ["settings", "activity", "process-monitor", "system-logs", "profile", "presence", "recycle", "run"] },
     { id: "devskits", label: "DEVSKITS", items: ["links", "donate", "contact", "about", "reboot", "shutdown"] }
   ];
 
