@@ -1,161 +1,392 @@
 (() => {
-  const KEY = "devskits-notes-v2";
-  const defaultNotes = [
-    { id: "quick-notes", name: "quick-notes.txt", content: "Quick capture...", updatedAt: Date.now() },
-    { id: "draft-pad", name: "draft-pad.txt", content: "Draft ideas here.", updatedAt: Date.now() },
-    { id: "scratchpad", name: "scratchpad.txt", content: "Persistent scratchpad.", updatedAt: Date.now() }
-  ];
+  const STORAGE_KEY = 'devskits-notepad-state-v1';
+  const AUTOSAVE_DELAY = 450;
+  const HISTORY_LIMIT = 120;
+  const TAB_SPACES = '    ';
 
-  function loadNotes() {
-    return JSON.parse(localStorage.getItem(KEY) || JSON.stringify(defaultNotes));
+  const { downloadText, escapeHtml, formatTimestamp } = window.DevSkitsAppHelpers;
+
+  function defaultState() {
+    return {
+      text: '',
+      fileName: 'devskits-note.txt',
+      draftUpdatedAt: 0,
+      lastSavedAt: 0,
+      wrap: true,
+      darkTheme: false,
+      monospace: true,
+      restored: false
+    };
   }
 
-  function saveNotes(notes) {
-    localStorage.setItem(KEY, JSON.stringify(notes));
+  function loadState() {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+      return parsed ? { ...defaultState(), ...parsed, restored: Boolean(parsed.text) } : defaultState();
+    } catch (error) {
+      return defaultState();
+    }
+  }
+
+  function saveState(state) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      text: state.text,
+      fileName: state.fileName,
+      draftUpdatedAt: state.draftUpdatedAt,
+      lastSavedAt: state.lastSavedAt,
+      wrap: state.wrap,
+      darkTheme: state.darkTheme,
+      monospace: state.monospace
+    }));
+  }
+
+  function countsForText(text) {
+    const normalized = text.replace(/\r/g, '');
+    const words = normalized.trim() ? normalized.trim().split(/\s+/).length : 0;
+    const lines = normalized.length ? normalized.split('\n').length : 1;
+    return {
+      characters: text.length,
+      words,
+      lines
+    };
+  }
+
+  function lineColumnFromPosition(text, position) {
+    const head = text.slice(0, position);
+    const parts = head.split('\n');
+    return {
+      line: parts.length,
+      column: parts[parts.length - 1].length + 1
+    };
+  }
+
+  function promptBeforeClearing(message) {
+    return window.confirm(message);
   }
 
   function render(container) {
-    let notes = loadNotes();
-    let active = notes[0]?.id;
-    let externalNoteHandler;
+    const state = loadState();
+    const history = [{ text: state.text, selectionStart: 0, selectionEnd: 0 }];
+    let historyIndex = 0;
+    let ignoreHistory = false;
+    let autosaveTimer = null;
+    let fileInput = null;
 
-    container.innerHTML = `<div class="notes-shell"><aside class="notes-list"></aside><section><div class="badges"><button class="link-btn" id="new-note">New</button><button class="link-btn" id="rename-note">Rename</button><button class="link-btn" id="delete-note">Delete</button><button class="link-btn" id="copy-note">Copy</button><button class="link-btn" id="export-note">Export</button><button class="link-btn" id="fmt-bold"><b>B</b></button><button class="link-btn" id="fmt-italic"><i>I</i></button><button class="link-btn" id="fmt-upper">UP</button></div><div class="start-section-label" id="note-status">Last saved: never</div><textarea class="notes-editor"></textarea></section></div>`;
-    const list = container.querySelector(".notes-list");
-    const editor = container.querySelector(".notes-editor");
-    const status = container.querySelector("#note-status");
+    container.innerHTML = `
+      <div class="notepad-shell${state.darkTheme ? ' is-dark' : ''}${state.wrap ? ' wrap-on' : ' wrap-off'}${state.monospace ? ' monospace-on' : ' monospace-off'}">
+        <div class="notepad-menubar">
+          <span>File</span>
+          <span>Edit</span>
+          <span>View</span>
+          <span>Help</span>
+        </div>
 
-    function drawList() {
-      list.innerHTML = notes.map((n) => `<button class="task-btn ${n.id === active ? "active" : ""}" data-id="${n.id}">${n.name}</button>`).join("");
-      const current = notes.find((n) => n.id === active);
-      editor.value = current?.content || "";
-      status.textContent = `Last saved: ${current?.updatedAt ? new Date(current.updatedAt).toLocaleString() : "never"}`;
+        <div class="notepad-toolbar">
+          <button class="link-btn" data-action="new">New</button>
+          <button class="link-btn" data-action="open">Open</button>
+          <button class="link-btn" data-action="save">Save As</button>
+          <button class="link-btn" data-action="clear">Clear</button>
+          <button class="link-btn" data-action="undo">Undo</button>
+          <button class="link-btn" data-action="redo">Redo</button>
+          <button class="link-btn" data-action="select-all">Select All</button>
+          <button class="link-btn" data-action="wrap">Word Wrap: <span class="notepad-wrap-label"></span></button>
+          <button class="link-btn" data-action="theme">Theme: <span class="notepad-theme-label"></span></button>
+          <button class="link-btn" data-action="font">Font: <span class="notepad-font-label"></span></button>
+        </div>
+
+        <div class="notepad-title-row">
+          <div>
+            <strong class="notepad-file-label">${escapeHtml(state.fileName)}</strong>
+            <small class="notepad-status-text"></small>
+          </div>
+          <div class="notepad-counts"></div>
+        </div>
+
+        <div class="notepad-editor-wrap">
+          <textarea class="notes-editor notepad-editor" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Notepad editor"></textarea>
+        </div>
+
+        <div class="notepad-statusbar">
+          <span class="notepad-position">Ln 1, Col 1</span>
+          <span class="notepad-meta">Draft ready</span>
+        </div>
+      </div>`;
+
+    const shell = container.querySelector('.notepad-shell');
+    const editor = container.querySelector('.notepad-editor');
+    const fileLabel = container.querySelector('.notepad-file-label');
+    const statusText = container.querySelector('.notepad-status-text');
+    const counts = container.querySelector('.notepad-counts');
+    const position = container.querySelector('.notepad-position');
+    const meta = container.querySelector('.notepad-meta');
+    const wrapLabel = container.querySelector('.notepad-wrap-label');
+    const themeLabel = container.querySelector('.notepad-theme-label');
+    const fontLabel = container.querySelector('.notepad-font-label');
+
+    function syncShellFlags() {
+      shell.classList.toggle('is-dark', state.darkTheme);
+      shell.classList.toggle('wrap-on', state.wrap);
+      shell.classList.toggle('wrap-off', !state.wrap);
+      shell.classList.toggle('monospace-on', state.monospace);
+      shell.classList.toggle('monospace-off', !state.monospace);
+      wrapLabel.textContent = state.wrap ? 'On' : 'Off';
+      themeLabel.textContent = state.darkTheme ? 'Night' : 'Classic';
+      fontLabel.textContent = state.monospace ? 'Mono' : 'UI';
     }
 
-
-    function wrapSelection(prefix, suffix = prefix) {
-      const start = editor.selectionStart || 0;
-      const end = editor.selectionEnd || 0;
-      const selected = editor.value.slice(start, end);
-      const note = notes.find((n) => n.id === active);
-      if (!note) return;
-      note.content = `${editor.value.slice(0, start)}${prefix}${selected}${suffix}${editor.value.slice(end)}`;
-      note.updatedAt = Date.now();
-      editor.value = note.content;
-      saveNotes(notes);
-      status.textContent = `Last saved: ${new Date(note.updatedAt).toLocaleString()}`;
+    function updateStatus(reason = '') {
+      const stats = countsForText(state.text);
+      const cursor = lineColumnFromPosition(state.text, editor.selectionStart || 0);
+      fileLabel.textContent = state.fileName;
+      counts.textContent = `${stats.characters} chars · ${stats.words} words · ${stats.lines} lines`;
+      position.textContent = `Ln ${cursor.line}, Col ${cursor.column}`;
+      if (reason) meta.textContent = reason;
+      const stateBits = [];
+      if (state.restored) stateBits.push(`Draft restored ${formatTimestamp(state.draftUpdatedAt)}`);
+      if (state.lastSavedAt) stateBits.push(`Last saved ${formatTimestamp(state.lastSavedAt)}`);
+      if (!stateBits.length) stateBits.push('Draft ready');
+      statusText.textContent = stateBits.join(' · ');
+      syncShellFlags();
     }
 
-    list.addEventListener("click", (e) => {
-      const id = e.target.dataset.id;
-      if (!id) return;
-      active = id;
-      drawList();
-    });
+    function pushHistorySnapshot(nextText = state.text) {
+      if (ignoreHistory) return;
+      const current = history[historyIndex];
+      if (current && current.text === nextText) return;
+      history.splice(historyIndex + 1);
+      history.push({ text: nextText, selectionStart: editor.selectionStart || 0, selectionEnd: editor.selectionEnd || 0 });
+      if (history.length > HISTORY_LIMIT) history.shift();
+      historyIndex = history.length - 1;
+    }
 
-    editor.addEventListener("input", () => {
-      const note = notes.find((n) => n.id === active);
-      if (!note) return;
-      note.content = editor.value;
-      note.updatedAt = Date.now();
-      saveNotes(notes);
-      status.textContent = `Last saved: ${new Date(note.updatedAt).toLocaleString()}`;
-    });
+    function applySnapshot(snapshot, reason) {
+      if (!snapshot) return;
+      ignoreHistory = true;
+      state.text = snapshot.text;
+      editor.value = snapshot.text;
+      editor.selectionStart = snapshot.selectionStart || 0;
+      editor.selectionEnd = snapshot.selectionEnd || editor.selectionStart;
+      state.draftUpdatedAt = Date.now();
+      saveState(state);
+      updateStatus(reason);
+      ignoreHistory = false;
+    }
 
-    container.querySelector("#new-note").addEventListener("click", () => {
-      const name = `note-${notes.length + 1}.txt`;
-      const id = `note-${Date.now()}`;
-      notes.push({ id, name, content: "", updatedAt: Date.now() });
-      active = id;
-      saveNotes(notes);
-      drawList();
-    });
+    function scheduleAutosave(reason = 'Draft autosaved') {
+      window.clearTimeout(autosaveTimer);
+      autosaveTimer = window.setTimeout(() => {
+        state.text = editor.value;
+        state.draftUpdatedAt = Date.now();
+        state.restored = false;
+        saveState(state);
+        updateStatus(reason);
+      }, AUTOSAVE_DELAY);
+    }
 
-    container.querySelector("#rename-note").addEventListener("click", () => {
-      const note = notes.find((n) => n.id === active);
-      if (!note) return;
-      const name = prompt("Rename note", note.name);
-      if (!name) return;
-      note.name = name;
-      saveNotes(notes);
-      drawList();
-    });
+    function setText(nextText, reason) {
+      state.text = nextText;
+      editor.value = nextText;
+      pushHistorySnapshot(nextText);
+      scheduleAutosave(reason);
+      updateStatus(reason);
+    }
 
-    container.querySelector("#delete-note").addEventListener("click", () => {
-      if (notes.length === 1) return;
-      const removed = notes.find((n) => n.id === active);
-      if (removed) window.DevSkitsWorld.pushRecycle({ name: removed.name, source: "notes", payload: removed });
-      notes = notes.filter((n) => n.id !== active);
-      active = notes[0].id;
-      saveNotes(notes);
-      drawList();
-      window.DevSkitsDesktop.notify("Note moved to Recycle Bin");
-    });
+    function saveAsFile() {
+      const baseName = (state.fileName || 'devskits-note').replace(/\s+/g, '-');
+      const fileName = baseName.toLowerCase().endsWith('.txt') ? baseName : `${baseName}.txt`;
+      state.fileName = fileName;
+      state.lastSavedAt = Date.now();
+      state.draftUpdatedAt = state.lastSavedAt;
+      downloadText(fileName, editor.value, 'text/plain;charset=utf-8');
+      saveState(state);
+      updateStatus('File saved.');
+    }
 
-    container.querySelector("#copy-note").addEventListener("click", async () => {
-      const note = notes.find((n) => n.id === active);
-      if (!note) return;
-      await navigator.clipboard.writeText(note.content || "").catch(() => {});
-      window.DevSkitsDesktop.notify("Copied note to clipboard", "ok");
-    });
-
-
-    container.querySelector("#fmt-bold").addEventListener("click", () => wrapSelection("**"));
-    container.querySelector("#fmt-italic").addEventListener("click", () => wrapSelection("*"));
-    container.querySelector("#fmt-upper").addEventListener("click", () => {
-      const note = notes.find((n) => n.id === active);
-      if (!note) return;
-      note.content = editor.value.toUpperCase();
-      note.updatedAt = Date.now();
-      editor.value = note.content;
-      saveNotes(notes);
-      status.textContent = `Last saved: ${new Date(note.updatedAt).toLocaleString()}`;
-    });
-
-    container.querySelector("#export-note").addEventListener("click", () => {
-      const note = notes.find((n) => n.id === active);
-      if (!note) return;
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(new Blob([note.content || ""], { type: "text/plain" }));
-      a.download = note.name;
-      a.click();
-    });
-
-    window.addEventListener("devskits:new-note", () => container.querySelector("#new-note").click());
-
-    externalNoteHandler = (event) => {
-      const detail = event.detail || {};
-      if (!detail.name) return;
-      const existing = notes.find((n) => n.sourcePath && n.sourcePath === detail.sourcePath);
-      if (existing) {
-        existing.content = detail.content || "";
-        existing.updatedAt = Date.now();
-        active = existing.id;
-      } else {
-        const id = `import-${Date.now()}`;
-        notes.push({
-          id,
-          name: detail.name,
-          content: detail.content || "",
-          sourcePath: detail.sourcePath || "",
-          updatedAt: Date.now()
+    function openPicker() {
+      if (!fileInput) {
+        fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = '.txt,text/plain';
+        fileInput.className = 'hidden';
+        fileInput.addEventListener('change', async () => {
+          const file = fileInput.files?.[0];
+          if (!file) return;
+          const text = await file.text();
+          state.fileName = file.name || state.fileName;
+          state.text = text;
+          state.draftUpdatedAt = Date.now();
+          state.restored = false;
+          editor.value = text;
+          history.splice(0, history.length, { text, selectionStart: 0, selectionEnd: 0 });
+          historyIndex = 0;
+          saveState(state);
+          updateStatus(`Opened ${file.name}.`);
+          editor.focus();
+          fileInput.value = '';
         });
-        active = id;
+        container.appendChild(fileInput);
       }
-      saveNotes(notes);
-      drawList();
+      fileInput.click();
+    }
+
+    function clearEditor() {
+      if (editor.value && !promptBeforeClearing('Clear the current note? Unsaved text will be removed from the editor.')) return;
+      setText('', 'Editor cleared.');
       editor.focus();
-      window.DevSkitsDesktop.notify(`Opened ${detail.name} in Notes`, "ok");
+    }
+
+    function newDocument() {
+      if (editor.value && !promptBeforeClearing('Start a new note? Current unsaved text will be replaced.')) return;
+      state.fileName = 'devskits-note.txt';
+      setText('', 'New note created.');
+      editor.focus();
+    }
+
+    function selectAllText() {
+      editor.focus();
+      editor.select();
+      updateStatus('Selected all text.');
+    }
+
+    function toggleWrap() {
+      state.wrap = !state.wrap;
+      saveState(state);
+      updateStatus(`Word wrap ${state.wrap ? 'enabled' : 'disabled'}.`);
+      editor.focus();
+    }
+
+    function toggleTheme() {
+      state.darkTheme = !state.darkTheme;
+      saveState(state);
+      updateStatus(`Theme set to ${state.darkTheme ? 'Night' : 'Classic'}.`);
+    }
+
+    function toggleFont() {
+      state.monospace = !state.monospace;
+      saveState(state);
+      updateStatus(`Font set to ${state.monospace ? 'Monospace' : 'System UI'}.`);
+      editor.focus();
+    }
+
+    function undo() {
+      if (historyIndex <= 0) {
+        updateStatus('Nothing to undo.');
+        return;
+      }
+      historyIndex -= 1;
+      applySnapshot(history[historyIndex], 'Undo complete.');
+      editor.focus();
+    }
+
+    function redo() {
+      if (historyIndex >= history.length - 1) {
+        updateStatus('Nothing to redo.');
+        return;
+      }
+      historyIndex += 1;
+      applySnapshot(history[historyIndex], 'Redo complete.');
+      editor.focus();
+    }
+
+    function runAction(action) {
+      if (action === 'new') return newDocument();
+      if (action === 'open') return openPicker();
+      if (action === 'save') return saveAsFile();
+      if (action === 'clear') return clearEditor();
+      if (action === 'undo') return undo();
+      if (action === 'redo') return redo();
+      if (action === 'select-all') return selectAllText();
+      if (action === 'wrap') return toggleWrap();
+      if (action === 'theme') return toggleTheme();
+      if (action === 'font') return toggleFont();
+    }
+
+    container.addEventListener('click', (event) => {
+      const button = event.target.closest('[data-action]');
+      if (!button) return;
+      runAction(button.dataset.action);
+    });
+
+    editor.addEventListener('input', () => {
+      state.text = editor.value;
+      pushHistorySnapshot(editor.value);
+      scheduleAutosave('Draft autosaved.');
+      updateStatus('Editing draft...');
+    });
+
+    editor.addEventListener('click', () => updateStatus());
+    editor.addEventListener('keyup', () => updateStatus());
+    editor.addEventListener('select', () => updateStatus());
+
+    editor.addEventListener('keydown', (event) => {
+      const modifier = event.ctrlKey || event.metaKey;
+      if (modifier && event.key.toLowerCase() === 's') {
+        event.preventDefault();
+        saveAsFile();
+        return;
+      }
+      if (modifier && event.key.toLowerCase() === 'o') {
+        event.preventDefault();
+        openPicker();
+        return;
+      }
+      if (modifier && event.key.toLowerCase() === 'a') {
+        event.preventDefault();
+        selectAllText();
+        return;
+      }
+      if (modifier && event.key.toLowerCase() === 'z' && !event.shiftKey) {
+        event.preventDefault();
+        undo();
+        return;
+      }
+      if ((modifier && event.key.toLowerCase() === 'y') || (modifier && event.shiftKey && event.key.toLowerCase() === 'z')) {
+        event.preventDefault();
+        redo();
+        return;
+      }
+      if (event.key === 'Tab') {
+        event.preventDefault();
+        const start = editor.selectionStart;
+        const end = editor.selectionEnd;
+        editor.setRangeText(TAB_SPACES, start, end, 'end');
+        state.text = editor.value;
+        pushHistorySnapshot(editor.value);
+        scheduleAutosave('Inserted tab spacing.');
+        updateStatus('Inserted tab spacing.');
+      }
+    });
+
+    window.addEventListener('devskits:new-note', newDocument);
+
+    const openImportedNote = (event) => {
+      const detail = event.detail || {};
+      state.fileName = detail.name || state.fileName;
+      state.text = detail.content || '';
+      state.draftUpdatedAt = Date.now();
+      state.restored = false;
+      editor.value = state.text;
+      history.splice(0, history.length, { text: state.text, selectionStart: 0, selectionEnd: 0 });
+      historyIndex = 0;
+      saveState(state);
+      updateStatus(`Opened ${state.fileName}.`);
+      editor.focus();
     };
 
-    window.addEventListener("devskits:open-note-file", externalNoteHandler);
+    window.addEventListener('devskits:open-note-file', openImportedNote);
 
-    container.addEventListener("DOMNodeRemoved", () => {
-      if (!container.isConnected && externalNoteHandler) {
-        window.removeEventListener("devskits:open-note-file", externalNoteHandler);
+    container.addEventListener('DOMNodeRemoved', () => {
+      if (!container.isConnected) {
+        window.clearTimeout(autosaveTimer);
+        window.removeEventListener('devskits:new-note', newDocument);
+        window.removeEventListener('devskits:open-note-file', openImportedNote);
       }
     });
 
-    drawList();
+    editor.value = state.text;
+    syncShellFlags();
+    updateStatus(state.restored ? 'Draft restored from local storage.' : 'Draft ready.');
+    editor.focus();
   }
 
   window.DevSkitsAppRegistry = window.DevSkitsAppRegistry || {};

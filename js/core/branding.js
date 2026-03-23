@@ -15,6 +15,8 @@
     phone: `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="${monoStroke}" d="m6.6 2 3.2 3.2-1.8 2.7a15.6 15.6 0 0 0 8.1 8.1l2.7-1.8L22 17.4l-2.9 2.9c-.7.7-1.7 1-2.6.7A20.6 20.6 0 0 1 3 7.5c-.3-.9 0-1.9.7-2.6L6.6 2Z"/></svg>`,
     person: `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="${monoStroke}" d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm0 2c-4.4 0-8 2.2-8 5v3h16v-3c0-2.8-3.6-5-8-5Z"/></svg>`,
     location: `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="${monoStroke}" d="M12 2a7 7 0 0 0-7 7c0 5.1 7 13 7 13s7-7.9 7-13a7 7 0 0 0-7-7Zm0 10.2A3.2 3.2 0 1 1 12 5.8a3.2 3.2 0 0 1 0 6.4Z"/></svg>`,
+    contact: `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="${monoStroke}" d="M4 4h16v16H4V4Zm2 2v12h12V6H6Zm2.3 2.8a2.7 2.7 0 1 1 5.4 0 2.7 2.7 0 0 1-5.4 0Zm7.7 6.9H8c.2-1.8 1.7-3 4-3s3.8 1.2 4 3Z"/></svg>`,
+    donate: `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="${monoStroke}" d="M13.1 2h-2v2.1c-3 .3-5 2.2-5 4.8 0 3 2.5 4.2 4.9 4.9v4c-1.7-.2-3.1-.9-4.2-1.9l-1.4 1.8c1.6 1.4 3.4 2.2 5.6 2.4V22h2v-1.9c3.1-.4 5.2-2.4 5.2-5 0-3.1-2.5-4.4-5.2-5.1V6c1.1.2 2.2.7 3.1 1.5l1.4-1.8c-1.3-1.1-2.8-1.8-4.5-2V2Zm-2 7.5c-1.7-.5-2.9-1.1-2.9-2.4 0-1.2 1-2 2.9-2.2v4.6Zm2 8.5v-4.8c1.9.6 3.2 1.2 3.2 2.7 0 1.3-1 2-3.2 2.1Z"/></svg>`,
     external: `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="${monoStroke}" d="M14 3h7v7h-2V6.4l-7.3 7.3-1.4-1.4L17.6 5H14V3ZM5 5h6v2H7v10h10v-4h2v6H5V5Z"/></svg>`,
     copy: `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="${monoStroke}" d="M8 8h12v14H8V8Zm-4-6h12v4H6v12H4V2Z"/></svg>`,
     browser: `<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="${monoStroke}" d="M2 4h20v16H2V4Zm2 4v10h16V8H4Zm2.8 2.3a1.3 1.3 0 1 0 0 2.6 1.3 1.3 0 0 0 0-2.6Z"/></svg>`,

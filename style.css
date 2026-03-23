@@ -379,10 +379,146 @@ body.reduce-motion .window { transition: none; }
   color: var(--text, #111);
 }
 
+
+/* Links / Donate / Notepad upgrades */
+.links-app, .donate-app, .notepad-shell { display: grid; gap: .5rem; min-height: 100%; }
+.links-hero, .donate-hero, .links-toolbar, .notepad-toolbar, .notepad-title-row, .notepad-statusbar, .notepad-menubar {
+  background: #ececec;
+  border: 2px solid;
+  border-top-color: #fff;
+  border-left-color: #fff;
+  border-right-color: #777;
+  border-bottom-color: #777;
+  padding: .35rem .45rem;
+}
+.links-hero { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .55rem; align-items: center; }
+.links-hero__identity { display: flex; gap: .55rem; align-items: center; min-width: 0; }
+.links-hero__identity h3, .donate-hero h3 { margin: 0 0 .18rem; }
+.links-hero__identity p, .donate-hero p { margin: 0 0 .15rem; }
+.links-hero__identity small, .donate-hero small { display: block; opacity: .82; }
+.links-avatar, .link-card__icon {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border: 2px solid;
+  border-top-color: #777;
+  border-left-color: #777;
+  border-right-color: #fff;
+  border-bottom-color: #fff;
+  background: #fff;
+  flex: 0 0 auto;
+}
+.links-hero__actions { display: flex; gap: .3rem; flex-wrap: wrap; justify-content: flex-end; }
+.links-toolbar { display: flex; gap: .45rem; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+.links-search { display: flex; gap: .35rem; align-items: center; flex: 1; min-width: min(100%, 240px); }
+.links-search .start-search { flex: 1; min-width: 160px; }
+.links-status { font-size: .76rem; min-height: 1.2em; }
+.links-sections { display: grid; gap: .5rem; align-content: start; }
+.links-section, .donate-featured-wrap, .donate-grid-wrap {
+  background: #efefef;
+  border: 2px solid;
+  border-top-color: #fff;
+  border-left-color: #fff;
+  border-right-color: #777;
+  border-bottom-color: #777;
+  padding: .4rem;
+}
+.links-section header, .donate-featured-wrap header, .donate-grid-wrap header {
+  display: flex;
+  justify-content: space-between;
+  gap: .4rem;
+  align-items: baseline;
+  border-bottom: 1px dashed #8a8a8a;
+  margin-bottom: .35rem;
+  padding-bottom: .2rem;
+}
+.links-section h4, .donate-featured-wrap h4, .donate-grid-wrap h4 { margin: 0; }
+.links-list, .donate-grid { display: grid; gap: .35rem; }
+.link-card, .donate-card {
+  background: #f8f8f8;
+  border: 2px solid;
+  border-top-color: #fff;
+  border-left-color: #fff;
+  border-right-color: #888;
+  border-bottom-color: #888;
+  padding: .35rem;
+  display: grid;
+  gap: .35rem;
+}
+.link-card:hover, .donate-card:hover { background: #f3f7ff; }
+.link-card__main { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .45rem; align-items: start; }
+.link-card__body p, .donate-card p { margin: .14rem 0; }
+.link-card__body small, .donate-card__value { display: block; font-family: "Courier New", monospace; word-break: break-word; }
+.link-card__actions, .donate-actions { display: flex; gap: .25rem; flex-wrap: wrap; justify-content: flex-end; }
+.donate-hero { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .6rem; align-items: center; }
+.donate-hero__status {
+  min-width: 160px;
+  background: #fff;
+  border: 2px inset #8a8a8a;
+  padding: .3rem .4rem;
+  font-size: .76rem;
+}
+.donate-card.featured { background: #f7fff2; }
+.donate-card__header { display: flex; justify-content: space-between; gap: .35rem; align-items: center; }
+.donate-note-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .45rem; }
+.donate-note-card p { margin-bottom: 0; }
+.notepad-shell { grid-template-rows: auto auto auto minmax(0, 1fr) auto; height: 100%; min-height: 280px; }
+.notepad-menubar { display: flex; gap: 1rem; font-size: .76rem; font-weight: 700; }
+.notepad-toolbar { display: flex; gap: .25rem; flex-wrap: wrap; }
+.notepad-title-row { display: flex; justify-content: space-between; gap: .5rem; align-items: center; flex-wrap: wrap; }
+.notepad-title-row small, .notepad-counts, .notepad-statusbar { font-size: .75rem; }
+.notepad-editor-wrap {
+  min-height: 0;
+  background: #fff;
+  border: 2px solid;
+  border-top-color: #777;
+  border-left-color: #777;
+  border-right-color: #fff;
+  border-bottom-color: #fff;
+  padding: .2rem;
+}
+.notepad-editor {
+  width: 100%;
+  height: 100%;
+  min-height: 220px;
+  resize: none;
+  border: 0;
+  background: transparent;
+  outline: none;
+  font: 14px/1.45 "Courier New", monospace;
+  padding: .3rem;
+  tab-size: 4;
+  -moz-tab-size: 4;
+}
+.notepad-shell.wrap-off .notepad-editor { white-space: pre; overflow: auto; }
+.notepad-shell.wrap-on .notepad-editor { white-space: pre-wrap; overflow-wrap: break-word; }
+.notepad-shell.monospace-off .notepad-editor { font-family: var(--font-ui); }
+.notepad-statusbar { display: flex; justify-content: space-between; gap: .5rem; flex-wrap: wrap; }
+.notepad-shell.is-dark .notepad-editor-wrap { background: #1d1d1d; border-top-color: #555; border-left-color: #555; border-right-color: #ccc; border-bottom-color: #ccc; }
+.notepad-shell.is-dark .notepad-editor { color: #f2f2f2; }
+.notepad-shell.is-dark .notepad-menubar,
+.notepad-shell.is-dark .notepad-toolbar,
+.notepad-shell.is-dark .notepad-title-row,
+.notepad-shell.is-dark .notepad-statusbar { background: #3b3b3b; color: #f2f2f2; border-right-color: #111; border-bottom-color: #111; border-top-color: #8d8d8d; border-left-color: #8d8d8d; }
+.notepad-shell.is-dark .link-btn,
+.notepad-shell.is-dark .copy-btn { color: #111; }
+
 @media (max-width: 760px) {
   .explorer-shell,
   .contact-shell { grid-template-columns: 1fr; }
   .explorer-sidebar { max-height: 140px; }
+  .links-hero,
+  .donate-hero,
+  .donate-note-row { grid-template-columns: 1fr; }
+  .links-hero__actions,
+  .link-card__actions,
+  .donate-actions { justify-content: flex-start; }
+  .links-search { flex-direction: column; align-items: stretch; }
+  .notepad-toolbar,
+  .notepad-menubar,
+  .notepad-statusbar,
+  .notepad-title-row { gap: .35rem; }
 }
 
 /* Terminal 3.1 upgrades */
