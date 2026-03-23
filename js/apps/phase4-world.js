@@ -6,6 +6,7 @@
     history: "devskits-nav-history-v2",
     last: "devskits-nav-last-v2"
   };
+  const DEFAULT_LAUNCH_ROUTE = "https://www.wikipedia.org";
 
   const DEFAULT_BOOKMARKS = [
     { label: "DevSkits Home", route: "devskits://home" },
@@ -87,7 +88,7 @@
     let navToken = 0;
     let clearExternalLoad = () => {};
     let currentMode = "embedded";
-    const initial = normalizeRoute(options.route || localStorage.getItem(NAV_STORE.last) || "devskits://home") || "devskits://home";
+    const initial = normalizeRoute(options.route || DEFAULT_LAUNCH_ROUTE) || DEFAULT_LAUNCH_ROUTE;
     const savedBookmarks = JSON.parse(localStorage.getItem(NAV_STORE.bookmarks) || "null") || DEFAULT_BOOKMARKS;
 
     container.innerHTML = `<div class="navigator-shell modernized"><header class="navigator-titlebar"><strong>Navigator</strong><span id="nav-status">Idle</span></header><div class="navigator-toolbar"><button id="nav-back" title="Back" aria-label="Back">◀</button><button id="nav-forward" title="Forward" aria-label="Forward">▶</button><button id="nav-reload" title="Refresh" aria-label="Refresh">↺</button><button id="nav-home" title="Home" aria-label="Home">⌂</button><button id="nav-stop" title="Stop" aria-label="Stop">■</button><input id="nav-url" value="${escapeHtml(initial)}" aria-label="Address bar" autocomplete="off"/><button id="nav-go">Go</button><button id="nav-open-tab" title="Open in new tab" aria-label="Open in new tab">↗</button><button id="nav-bookmark" title="Add bookmark" aria-label="Add bookmark">★</button><button id="nav-history" title="Show history" aria-label="Show history">🕘</button><button id="nav-bookmarks-toggle" title="Show bookmarks" aria-label="Show bookmarks">☰</button></div><div class="navigator-bookmarks" id="nav-bookmarks"></div><article id="nav-page" class="browser-page"><div class="nav-viewport" id="nav-viewport"></div></article><footer class="navigator-statusbar"><span id="nav-route">${escapeHtml(initial)}</span><small id="nav-hint">devskits:// routes + web urls supported</small><strong id="nav-mode">Embedded</strong></footer></div>`;
