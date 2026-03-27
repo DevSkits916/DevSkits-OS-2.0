@@ -58,7 +58,7 @@
       {
         id: "social",
         title: "Social Links",
-        items: ["github", "twitter", "reddit"].map((id) => byId[id]).filter(Boolean)
+        items: ["github", "facebook", "twitter", "reddit"].map((id) => byId[id]).filter(Boolean)
       },
     ];
 

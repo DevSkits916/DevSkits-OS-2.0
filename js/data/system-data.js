@@ -69,7 +69,7 @@
     { id: 'brand', label: 'Brand', value: profile.brand, type: 'text', icon: 'location' },
     { id: 'title', label: 'Title', value: profile.title, type: 'text', icon: 'document' },
     { id: 'github', label: 'GitHub', value: 'https://github.com/DevSkits916', type: 'url', icon: 'github', copyValue: 'github.com/DevSkits916', description: 'Main code and project home.' },
-    { id: 'facebook', label: 'Facebook', value: 'https://www.facebook.com/DevSkits?mibextid=wwXIfr', type: 'url', icon: 'facebook', copyValue: 'facebook.com/DevSkits', description: 'Social updates and public posts.' },
+    { id: 'facebook', label: 'Facebook', value: 'https://facebook.com/DevSkits', type: 'url', icon: 'facebook', copyValue: 'facebook.com/DevSkits', description: 'Social updates and public posts.' },
     { id: 'reddit', label: 'Reddit', value: 'https://www.reddit.com/u/DevSkits/s/RE9W0sZoV1', type: 'url', icon: 'reddit', copyValue: 'reddit.com/u/DevSkits', description: 'Reddit profile and community threads.' },
     { id: 'twitter', label: 'X / Twitter', value: 'https://x.com/DevSkits916', type: 'url', icon: 'x', copyValue: '@DevSkits916', description: 'Short updates and launch posts.' },
     { id: 'email', label: 'Email', value: 'DevSkits@icloud.com', type: 'email', icon: 'email', copyValue: 'DevSkits@icloud.com', description: 'Best direct contact for collabs and questions.' },
@@ -107,16 +107,6 @@
       url: 'devskits://contact',
       description: 'Open the built-in contact card and vCard tools.',
       searchText: 'contact card email phone'
-    },
-    {
-      id: 'donate-app',
-      label: 'Donate Center',
-      icon: 'donate',
-      category: 'Support / Donate',
-      type: 'app',
-      url: 'devskits://donate',
-      description: 'Open the full support window with all donation options.',
-      searchText: 'donate support fundraiser'
     }
   ];
 
@@ -139,7 +129,7 @@
       icon: 'facebook',
       category: 'Social',
       type: 'url',
-      url: 'https://www.facebook.com/DevSkits?mibextid=wwXIfr',
+      url: 'https://facebook.com/DevSkits',
       copyValue: 'facebook.com/DevSkits',
       description: 'Public profile and community posts.',
       primaryProfile: true,
@@ -193,12 +183,6 @@
       description: 'Call or text directly.',
       searchText: 'phone contact mobile'
     },
-    ...supportMethods.map((method) => ({
-      ...method,
-      category: 'Support / Donate',
-      type: 'support',
-      searchText: `${method.label.toLowerCase()} donate support payments`
-    })),
     ...projectLinks
   ];
 
