@@ -160,7 +160,7 @@
     recentApps: JSON.parse(localStorage.getItem("devskits-recent-apps") || "[]"),
     iconPositions: JSON.parse(localStorage.getItem("devskits-icon-positions") || "{}"),
     crt: localStorage.getItem("devskits-crt") !== "off",
-    wallpaper: localStorage.getItem("devskits-wallpaper") || "default"
+    wallpaper: localStorage.getItem("devskits-wallpaper") || "devskits95"
   };
 
   const ui = {

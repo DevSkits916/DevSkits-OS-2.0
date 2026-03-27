@@ -206,10 +206,11 @@
   }
 
   function applyWallpaper(name) {
-    ui.desktop.dataset.wallpaper = name;
-    state.wallpaper = name;
-    localStorage.setItem("devskits-wallpaper", name);
-    W().trackActivity("wallpaper", name);
+    const normalized = name === "devskits95" ? name : "devskits95";
+    ui.desktop.dataset.wallpaper = normalized;
+    state.wallpaper = normalized;
+    localStorage.setItem("devskits-wallpaper", normalized);
+    W().trackActivity("wallpaper", normalized);
   }
 
   function toggleCRT(force) {
