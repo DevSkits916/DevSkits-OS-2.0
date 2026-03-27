@@ -24,8 +24,7 @@
 
   function render(container) {
     const { profile, supportMethods } = window.DevSkitsSystemData;
-    const featured = supportMethods.find((method) => method.featured) || supportMethods[0];
-    const others = supportMethods.filter((method) => method.id !== featured?.id);
+    const featured = supportMethods.find((method) => method.id === 'gofundme') || supportMethods.find((method) => method.featured) || supportMethods[0];
 
     container.innerHTML = `
       <div class="donate-app">
@@ -45,15 +44,6 @@
             </header>
             ${renderMethod(featured, true)}
           </section>` : ''}
-
-        <section class="donate-grid-wrap">
-          <header>
-            <h4>More ways to help</h4>
-          </header>
-          <div class="donate-grid">
-            ${others.map((method) => renderMethod(method)).join('')}
-          </div>
-        </section>
 
         <section class="donate-note-row">
           <article class="project-card donate-note-card">

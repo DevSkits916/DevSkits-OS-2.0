@@ -340,14 +340,19 @@
       if (item.minimized) minimizeWindow(targetId);
     });
     if (!items.length) {
-      launchApp("contact");
       launchApp("terminal");
       launchApp("donate");
+      launchApp("contact");
     }
 
     const hasTerminal = [...state.windows.values()].some((rec) => rec.appId === "terminal");
     if (!hasTerminal) {
       launchApp("terminal");
+    }
+
+    const contactWindowEntry = [...state.windows.entries()].find(([, rec]) => rec.appId === "contact");
+    if (contactWindowEntry) {
+      focusWindow(contactWindowEntry[0]);
     }
   }
 
