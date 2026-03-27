@@ -23,7 +23,7 @@
       "VERSION:3.0",
       `FN:${profile.name}`,
       `N:${profile.lastName || "Ramsey"};${profile.firstName || "Travis"};;;`,
-      `ORG:${profile.brand}`,
+      `ORG:${profile.organization}`,
       `EMAIL:${email}`,
       `TEL:${phone}`,
       `URL:${github}`,
@@ -46,15 +46,10 @@
       name: byId.name?.value || "Travis Ramsey",
       firstName: "Travis",
       lastName: "Ramsey",
-      brand: byId.brand?.value || "DevSkits",
+      organization: byId.brand?.value || "DevSkits"
     };
 
     const groups = [
-      {
-        id: "identity",
-        title: "Identity",
-        items: ["name", "brand"].map((id) => byId[id]).filter(Boolean)
-      },
       {
         id: "direct",
         title: "Direct Contact",
@@ -64,11 +59,6 @@
         id: "social",
         title: "Social Links",
         items: ["github", "twitter", "reddit"].map((id) => byId[id]).filter(Boolean)
-      },
-      {
-        id: "support",
-        title: "Payment / Support",
-        items: ["gofundme", "venmo", "chime"].map((id) => byId[id]).filter(Boolean)
       },
       {
         id: "projects",
@@ -83,17 +73,10 @@
     const allItems = groups.flatMap((group) => group.items);
 
     container.innerHTML = `
-      <pre class="devskits-ascii"> ____              _____ _    _ _ _       
-|  _ \            / ____| |  (_) | |      
-| | | | _____   _| (___ | | ___| | |_ ___ 
-| | | |/ _ \\ \ / /\___ \| |/ / | | __/ __|
-| |_| |  __/\ V / ____) |   <| | | |_\__ \
-|____/ \___| \_/ |_____/|_|\_\_|_|\__|___/</pre>
       <div class="contact-shell">
         <aside class="contact-profile">
           <div class="contact-avatar" aria-hidden="true">${icon("contact", "Profile")}</div>
           <h3>${profile.name}</h3>
-          <p><strong>${profile.brand}</strong></p>
           <div class="contact-quick-actions">
             <button class="link-btn" data-action="download-vcf">Download vCard</button>
           </div>

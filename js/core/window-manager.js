@@ -342,6 +342,7 @@
     if (!items.length) {
       launchApp("contact");
       launchApp("terminal");
+      launchApp("donate");
     }
 
     const hasTerminal = [...state.windows.values()].some((rec) => rec.appId === "terminal");
