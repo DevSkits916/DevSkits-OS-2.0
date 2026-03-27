@@ -261,15 +261,17 @@
     }
     const bounds = viewportBounds();
     const mobile = window.innerWidth <= 760;
-    if (mobile) {
+    if (mobile && APPS[appId]?.windowDefaults?.mobileFullscreen !== false) {
       win.style.left = "5px";
       win.style.top = "5px";
       win.style.width = `${bounds.width - 10}px`;
       win.style.height = `${bounds.height - 10}px`;
       return;
     }
-    const width = Math.min(620, bounds.width - 16);
-    const height = Math.min(420, bounds.height - 16);
+    const baseWidth = APPS[appId]?.windowDefaults?.width || 620;
+    const baseHeight = APPS[appId]?.windowDefaults?.height || 420;
+    const width = Math.min(baseWidth, bounds.width - 16);
+    const height = Math.min(baseHeight, bounds.height - 16);
     win.style.width = `${width}px`;
     win.style.height = `${height}px`;
     win.style.left = `${Math.max(0, Math.min(70 + state.windows.size * 20, bounds.width - width))}px`;
@@ -289,7 +291,7 @@
     const win = document.querySelector("#window-template").content.firstElementChild.cloneNode(true);
     const meta = APPS[appId];
     win.dataset.app = windowKey;
-    win.querySelector(".window-title").textContent = `${meta.title} - DevSkits 3.1`;
+    win.querySelector(".window-title").textContent = `${meta.title} - DevSkits 95`;
     win.style.zIndex = ++state.z;
     initialWindowStyle(win, appId);
 
@@ -300,7 +302,14 @@
     if (window.innerWidth <= 760) record.maximized = true;
     state.windows.set(windowKey, record);
     createTaskButton(windowKey, meta.title);
-    render(win.querySelector(".window-content"), options);
+    try {
+      render(win.querySelector(".window-content"), options);
+    } catch (error) {
+      const content = win.querySelector(".window-content");
+      content.innerHTML = `<div class="app-grid"><h3>${meta.title}</h3><p>This app ran into an error and could not open.</p><pre>${(error && error.message) || "Unknown error"}</pre></div>`;
+      window.DevSkitsWorld?.addLog?.("apps", `${appId} failed to open: ${error?.message || error}`, "alert");
+      window.DevSkitsDesktop?.notify?.(`${meta.title} failed to open`, "warn");
+    }
     focusWindow(windowKey);
     clampToViewport(win);
     playSound("windowOpen");
@@ -347,9 +356,11 @@
 
   window.addEventListener("resize", () => {
     state.windows.forEach((rec) => {
-      if (window.innerWidth <= 760 && !rec.maximized) {
+      if (window.innerWidth <= 760 && APPS[rec.appId]?.windowDefaults?.mobileFullscreen !== false) {
         rec.el.style.left = "5px";
         rec.el.style.top = "5px";
+        rec.el.style.width = `${viewportBounds().width - 10}px`;
+        rec.el.style.height = `${viewportBounds().height - 10}px`;
       }
       clampToViewport(rec.el);
     });

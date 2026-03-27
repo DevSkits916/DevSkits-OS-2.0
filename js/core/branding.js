@@ -25,7 +25,7 @@
   };
 
   const logos = {
-    devskits31: `<svg viewBox="0 0 520 220" role="img" aria-label="DevSkits 3.1 logo" xmlns="http://www.w3.org/2000/svg">
+    devskits95: `<svg viewBox="0 0 520 220" role="img" aria-label="DevSkits 95 logo" xmlns="http://www.w3.org/2000/svg">
       <rect x="0" y="0" width="520" height="220" fill="none"/>
       <g fill="none" stroke="currentColor" stroke-width="4">
         <path d="M54 170c28-56 70-94 123-108" opacity=".35"/>
@@ -34,7 +34,7 @@
       </g>
       <text x="260" y="108" fill="currentColor" text-anchor="middle" font-size="76" font-weight="700" font-family="Georgia, 'Times New Roman', serif" letter-spacing="1.5">DevSkits</text>
       <rect x="200" y="132" width="120" height="58" rx="12" fill="none" stroke="currentColor" stroke-width="4"/>
-      <text x="260" y="174" fill="currentColor" text-anchor="middle" font-size="48" font-weight="700" font-family="'Courier New', monospace">3.1</text>
+      <text x="260" y="174" fill="currentColor" text-anchor="middle" font-size="48" font-weight="700" font-family="'Courier New', monospace">95</text>
       <g transform="translate(42 28)" fill="none" stroke="currentColor" stroke-width="4">
         <path d="M0 46h44l22-10v36H0z" opacity=".7"/>
         <path d="M11 41V16h44v15" opacity=".7"/>

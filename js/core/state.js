@@ -29,10 +29,12 @@
     return {
       id,
       description: "",
-      desktopVisible: true,
-      startMenuVisible: true,
       multiInstance: false,
       category: "System",
+      terminalCommand: id,
+      launcher: { desktop: true, tray: false },
+      startMenu: { section: "programs", visible: true },
+      windowDefaults: { width: 620, height: 420, mobileFullscreen: true },
       ...config,
       launch(options = {}) {
         return window.DevSkitsWindowManager.openApp(id, options);
@@ -41,49 +43,54 @@
   }
 
   const APPS = {
-    terminal: defineApp("terminal", { title: "Terminal", icon: ">_", iconSvg: icon("terminal"), category: "System", desktopVisible: true, description: "Retro shell for files, routes, and app launching." }),
+    terminal: defineApp("terminal", { title: "Terminal", icon: ">_", iconSvg: icon("terminal"), category: "System", launcher: { desktop: true, tray: true }, description: "Retro shell for files, routes, and app launching." }),
     files: defineApp("files", { title: "My Computer", icon: "▣", iconSvg: icon("files"), category: "System", description: "Browse the built-in filesystem and storage map." }),
     settings: defineApp("settings", { title: "Settings", icon: "⚙", iconSvg: icon("settings"), category: "System", description: "Adjust desktop preferences and shell options." }),
-    activity: defineApp("activity", { title: "Activity Log", icon: "ACT", iconSvg: icon("default"), category: "System", desktopVisible: false, startMenuVisible: true, description: "Inspect recent shell, app, and system events." }),
+    activity: defineApp("activity", { title: "Activity Log", icon: "ACT", iconSvg: icon("default"), category: "System", launcher: { desktop: false }, startMenu: { section: "programs", visible: true }, description: "Inspect recent shell, app, and system events." }),
     recycle: defineApp("recycle", { title: "Recycle Bin", icon: "BIN", iconSvg: icon("recycle"), category: "System", description: "Review deleted local items." }),
 
     about: defineApp("about", { title: "System", icon: "i", iconSvg: icon("about"), category: "Identity", description: "Version info and product overview." }),
     contact: defineApp("contact", { title: "Contact", icon: "☎", iconSvg: icon("contact"), category: "Identity", description: "Contact card and export tools." }),
     links: defineApp("links", { title: "Links", icon: "↗", iconSvg: icon("links"), category: "Identity", description: "Launch public profiles and destinations." }),
     donate: defineApp("donate", { title: "Donate", icon: "$", iconSvg: icon("donate"), category: "Identity", description: "Support the DevSkits project." }),
-    loki: defineApp("loki", { title: "Loki", icon: "DOG", iconSvg: icon("loki"), category: "Identity", startMenuVisible: false, description: "Mascot dossier and lore." }),
+    loki: defineApp("loki", { title: "Loki", icon: "DOG", iconSvg: icon("loki"), category: "Identity", startMenu: { visible: false }, description: "Mascot dossier and lore." }),
 
-    projects: defineApp("projects", { title: "Projects", icon: "⌘", iconSvg: icon("projects"), category: "Projects", startMenuVisible: false, description: "Portfolio projects and roadmap board." }),
+    projects: defineApp("projects", { title: "Projects", icon: "⌘", iconSvg: icon("projects"), category: "Projects", startMenu: { visible: false }, description: "Portfolio projects and roadmap board." }),
     notes: defineApp("notes", { title: "Notepad", icon: "TXT", iconSvg: icon("notes"), category: "Projects", description: "Persistent note editor with local storage." }),
     browser: defineApp("browser", { title: "Navigator", icon: "WWW", iconSvg: icon("browser"), category: "Projects", description: "Browse internal devskits:// routes and web URLs." }),
     reminders: defineApp("reminders", { title: "Reminders", icon: "REM", iconSvg: icon("default"), category: "Projects", description: "Track reminders and due dates." }),
     calculator: defineApp("calculator", { title: "Calculator", icon: "⊞", iconSvg: icon("calculator"), category: "Projects", description: "Standalone calculator with memory and history." }),
-    calendar: defineApp("calendar", { title: "Calendar", icon: "▦", iconSvg: icon("default"), category: "Tools", desktopVisible: false, startMenuVisible: true, description: "Month view with per-day notes." }),
-    clock: defineApp("clock", { title: "Clock", icon: "◷", iconSvg: icon("default"), category: "Tools", desktopVisible: false, startMenuVisible: true, description: "Live time, UTC, and uptime panel." }),
+    calendar: defineApp("calendar", { title: "Calendar", icon: "▦", iconSvg: icon("default"), category: "Tools", launcher: { desktop: false }, startMenu: { section: "programs", visible: true }, description: "Month view with per-day notes." }),
+    clock: defineApp("clock", { title: "Clock", icon: "◷", iconSvg: icon("default"), category: "Tools", launcher: { desktop: false }, startMenu: { section: "programs", visible: true }, description: "Live time, UTC, and uptime panel." }),
 
-    run: defineApp("run", { title: "Run", icon: ">", iconSvg: icon("default"), category: "System", desktopVisible: false, startMenuVisible: false }),
+    run: defineApp("run", { title: "Run", icon: ">", iconSvg: icon("default"), category: "System", launcher: { desktop: false }, startMenu: { visible: false } }),
 
-    inbox: defineApp("inbox", { title: "Inbox", icon: "✉", iconSvg: icon("default"), category: "Network", startMenuVisible: false, desktopVisible: false, description: "Internal message viewer." }),
-    updater: defineApp("updater", { title: "Updater", icon: "UPD", iconSvg: icon("default"), category: "System", startMenuVisible: true, desktopVisible: false, description: "Review and install update packages." }),
-    "process-monitor": defineApp("process-monitor", { title: "Process Monitor", icon: "CPU", iconSvg: icon("default"), category: "System", startMenuVisible: true, desktopVisible: false, description: "Inspect services and simulated process state." }),
-    "system-logs": defineApp("system-logs", { title: "System Logs", icon: "LOG", iconSvg: icon("default"), category: "System", startMenuVisible: true, desktopVisible: false, description: "Filter, clear, and export runtime logs." }),
-    profile: defineApp("profile", { title: "Profile", icon: "ID", iconSvg: icon("default"), category: "System", startMenuVisible: true, desktopVisible: false, description: "View boot counts and usage statistics." }),
-    presence: defineApp("presence", { title: "Presence", icon: "NET", iconSvg: icon("default"), category: "Network", startMenuVisible: true, desktopVisible: false, description: "See service presence and route index status." }),
-    buildlog: defineApp("buildlog", { title: "Build Log", icon: "LOG", iconSvg: icon("default"), category: "System", startMenuVisible: false, desktopVisible: false }),
-    mediadeck: defineApp("mediadeck", { title: "Media Deck", icon: "▶", iconSvg: icon("default"), category: "Media", startMenuVisible: false, desktopVisible: false }),
-    packages: defineApp("packages", { title: "Install Center", icon: "PKG", iconSvg: icon("default"), category: "System", startMenuVisible: false, desktopVisible: false }),
-    achievements: defineApp("achievements", { title: "Discoveries", icon: "★", iconSvg: icon("default"), category: "System", startMenuVisible: false, desktopVisible: false }),
-    quoteforge: defineApp("quoteforge", { title: "Quote Forge", icon: "❞", iconSvg: icon("default"), category: "Creator", startMenuVisible: true, desktopVisible: false, description: "Save and reuse short copy snippets." }),
-    asciimaker: defineApp("asciimaker", { title: "ASCII Maker", icon: "#", iconSvg: icon("default"), category: "Creator", startMenuVisible: true, desktopVisible: false, description: "Transform text into simple ASCII spacing art." }),
-    draftpad: defineApp("draftpad", { title: "Draft Pad", icon: "✎", iconSvg: icon("default"), category: "Creator", startMenuVisible: true, desktopVisible: false, description: "Draft quick posts and send them to notes." }),
-    networkmap: defineApp("networkmap", { title: "Network Map", icon: "⌗", iconSvg: icon("default"), category: "Network", startMenuVisible: false, desktopVisible: false }),
-    "loki-game": defineApp("loki-game", { title: "Loki Game", icon: "🐾", iconSvg: icon("lokigame"), category: "Companion", startMenuVisible: true, desktopVisible: true, description: "Standalone Loki mini-game." }),
-    search: defineApp("search", { title: "Search Everywhere", icon: "⌕", iconSvg: icon("default"), category: "System", startMenuVisible: false, desktopVisible: false })
+    inbox: defineApp("inbox", { title: "Inbox", icon: "✉", iconSvg: icon("default"), category: "Network", launcher: { desktop: false }, startMenu: { visible: false }, description: "Internal message viewer." }),
+    updater: defineApp("updater", { title: "Updater", icon: "UPD", iconSvg: icon("default"), category: "System", launcher: { desktop: false }, startMenu: { visible: true }, description: "Review and install update packages." }),
+    "process-monitor": defineApp("process-monitor", { title: "Process Monitor", icon: "CPU", iconSvg: icon("default"), category: "System", launcher: { desktop: false }, startMenu: { visible: true }, description: "Inspect services and simulated process state." }),
+    "system-logs": defineApp("system-logs", { title: "System Logs", icon: "LOG", iconSvg: icon("default"), category: "System", launcher: { desktop: false }, startMenu: { visible: true }, description: "Filter, clear, and export runtime logs." }),
+    profile: defineApp("profile", { title: "Profile", icon: "ID", iconSvg: icon("default"), category: "System", launcher: { desktop: false }, startMenu: { visible: true }, description: "View boot counts and usage statistics." }),
+    presence: defineApp("presence", { title: "Presence", icon: "NET", iconSvg: icon("default"), category: "Network", launcher: { desktop: false }, startMenu: { visible: true }, description: "See service presence and route index status." }),
+    buildlog: defineApp("buildlog", { title: "Build Log", icon: "LOG", iconSvg: icon("default"), category: "System", launcher: { desktop: false }, startMenu: { visible: false } }),
+    mediadeck: defineApp("mediadeck", { title: "Media Deck", icon: "▶", iconSvg: icon("default"), category: "Media", launcher: { desktop: false }, startMenu: { visible: false } }),
+    packages: defineApp("packages", { title: "Install Center", icon: "PKG", iconSvg: icon("default"), category: "System", launcher: { desktop: false }, startMenu: { visible: false } }),
+    achievements: defineApp("achievements", { title: "Discoveries", icon: "★", iconSvg: icon("default"), category: "System", launcher: { desktop: false }, startMenu: { visible: false } }),
+    quoteforge: defineApp("quoteforge", { title: "Quote Forge", icon: "❞", iconSvg: icon("default"), category: "Creator", launcher: { desktop: false }, startMenu: { visible: true }, description: "Save and reuse short copy snippets." }),
+    asciimaker: defineApp("asciimaker", { title: "ASCII Maker", icon: "#", iconSvg: icon("default"), category: "Creator", launcher: { desktop: false }, startMenu: { visible: true }, description: "Transform text into simple ASCII spacing art." }),
+    draftpad: defineApp("draftpad", { title: "Draft Pad", icon: "✎", iconSvg: icon("default"), category: "Creator", launcher: { desktop: false }, startMenu: { visible: true }, description: "Draft quick posts and send them to notes." }),
+    networkmap: defineApp("networkmap", { title: "Network Map", icon: "⌗", iconSvg: icon("default"), category: "Network", launcher: { desktop: false }, startMenu: { visible: false } }),
+    "loki-game": defineApp("loki-game", { title: "Loki Game", icon: "🐾", iconSvg: icon("lokigame"), category: "Companion", launcher: { desktop: true }, startMenu: { visible: true }, description: "Standalone Loki mini-game." }),
+    search: defineApp("search", { title: "Search Everywhere", icon: "⌕", iconSvg: icon("default"), category: "System", launcher: { desktop: false }, startMenu: { visible: false } })
   };
+
+
+  function getLauncherApps() {
+    return Object.values(APPS).filter((app) => app.launcher?.desktop !== false);
+  }
 
   const START_MENU_SECTIONS = [
     { id: "programs", label: "PROGRAMS", items: ["terminal", "files", "notes", "browser", "calculator", "loki-game"] },
-    { id: "devskits", label: "DEVSKITS", items: ["links", "donate", "contact", "about", "reboot", "shutdown"] }
+    { id: "devskits", label: "DEVSKITS 95", items: ["links", "donate", "contact", "about", "reboot", "shutdown"] }
   ];
 
   const RUN_ALIASES = {
@@ -167,5 +174,5 @@
     localStorage.setItem(key, JSON.stringify(value));
   }
 
-  window.DevSkitsState = { APPS, START_MENU_SECTIONS, RUN_ALIASES, state, ui, saveState, ICON_LIBRARY };
+  window.DevSkitsState = { APPS, START_MENU_SECTIONS, RUN_ALIASES, state, ui, saveState, ICON_LIBRARY, getLauncherApps };
 })();

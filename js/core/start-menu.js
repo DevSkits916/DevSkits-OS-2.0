@@ -55,7 +55,7 @@
     const sectionsWrap = document.querySelector("#start-sections");
     const recent = !q && state.recentApps?.length
       ? `<section class="start-group"><h3 class="start-section-label">RECENT</h3><div class="start-group-items">${state.recentApps
-        .filter((id) => APPS[id] && APPS[id].startMenuVisible !== false && window.DevSkitsAppRegistry?.[id])
+        .filter((id) => APPS[id] && APPS[id].startMenu?.visible !== false && window.DevSkitsAppRegistry?.[id])
         .map((id) => renderItem(id)).join("")}</div></section>`
       : "";
     const sectionMarkup = START_MENU_SECTIONS.map((section) => {
@@ -64,7 +64,7 @@
           if (!q) return true;
           if (POWER_ITEMS[id]) return POWER_ITEMS[id].title.toLowerCase().includes(q);
           const app = APPS[id];
-          return app && app.startMenuVisible !== false && window.DevSkitsAppRegistry?.[id] && `${app.title} ${app.category} ${id}`.toLowerCase().includes(q);
+          return app && app.startMenu?.visible !== false && window.DevSkitsAppRegistry?.[id] && `${app.title} ${app.category} ${id}`.toLowerCase().includes(q);
         })
         .map(renderItem)
         .join("");
@@ -74,7 +74,7 @@
 
     const globalMatches = q
       ? Object.entries(APPS)
-        .filter(([id, app]) => app.startMenuVisible !== false
+        .filter(([id, app]) => app.startMenu?.visible !== false
           && window.DevSkitsAppRegistry?.[id]
           && `${id} ${app.title} ${app.category} ${app.description || ""}`.toLowerCase().includes(q))
         .map(([id]) => id)

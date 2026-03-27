@@ -404,7 +404,7 @@
 
   function renderMediaDeck(container) {
     const rows = W.getMediaLibrary();
-    container.innerHTML = `<div class="media-shell"><div class="files-list">${rows.map((r) => `<div class="note-row">${r.title}</div>`).join("") || "<em>Media archive empty</em>"}</div><section class="project-card"><h4>Media Deck</h4><p>No audio/video payload included in static build. This is a placeholder archive panel.</p></section></div>`;
+    container.innerHTML = `<div class="media-shell"><div class="files-list">${rows.map((r) => `<div class="note-row">${r.title}</div>`).join("") || "<em>Media archive empty</em>"}</div><section class="project-card"><h4>Media Deck</h4><p>Media ingestion is not enabled in this static build yet. Use this panel to review indexed media metadata and queue assets for a future sync.</p></section></div>`;
   }
 
   function renderAchievements(container) {

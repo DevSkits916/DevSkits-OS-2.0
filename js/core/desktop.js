@@ -3,6 +3,8 @@
   const W = () => window.DevSkitsWorld;
   const BASE_GRID = { x: 98, y: 100, margin: 8 };
   let selectedIconId = null;
+  let touchContextTimer = null;
+  const DESKTOP_LABELS_KEY = "devskits-desktop-labels-v1";
 
   function currentGrid() {
     if (window.innerWidth <= 760) return { x: 82, y: 92, margin: 6 };
@@ -42,7 +44,7 @@
   }
 
   function applyBranding() {
-    const logo = window.DevSkitsBranding?.logos?.devskits31 || "";
+    const logo = window.DevSkitsBranding?.logos?.devskits95 || "";
     const desktopLogo = document.querySelector("#desktop-brandmark");
     if (desktopLogo) desktopLogo.innerHTML = logo;
 
@@ -58,8 +60,31 @@
     return window.DevSkitsWindowManager.launchApp(entry.shortcut.target);
   }
 
+  function getDesktopLabels() {
+    try { return JSON.parse(localStorage.getItem(DESKTOP_LABELS_KEY) || "{}"); } catch (e) { return {}; }
+  }
+
+  function setDesktopLabel(id, label) {
+    const labels = getDesktopLabels();
+    labels[id] = label;
+    localStorage.setItem(DESKTOP_LABELS_KEY, JSON.stringify(labels));
+  }
+
   function getDesktopEntries() {
-    return [];
+    const labels = getDesktopLabels();
+    const appEntries = Object.values(APPS)
+      .filter((app) => app.launcher?.desktop !== false && window.DevSkitsAppRegistry?.[app.id])
+      .map((app) => ({ id: app.id, app: { ...app, title: labels[app.id] || app.title }, isShortcut: false }));
+    const shortcuts = W().getShortcuts().map((shortcut) => ({
+      id: shortcut.id,
+      app: {
+        title: labels[shortcut.id] || shortcut.label || shortcut.target,
+        iconSvg: APPS[shortcut.target]?.iconSvg || APPS.browser.iconSvg
+      },
+      isShortcut: true,
+      shortcut
+    }));
+    return [...appEntries, ...shortcuts];
   }
 
   function snapToGrid(x, y) {
@@ -174,6 +199,44 @@
     let dragged = false;
     let suppressClick = false;
 
+    function promptRename() {
+      const current = node.querySelector(".icon-label").textContent || entry.app.title;
+      const next = prompt("Rename desktop icon", current);
+      if (!next || !next.trim()) return;
+      setDesktopLabel(entry.id, next.trim());
+      node.querySelector(".icon-label").textContent = next.trim();
+      notify("Desktop item renamed", "ok");
+    }
+
+    function removeShortcut() {
+      if (!entry.isShortcut) return;
+      const next = W().getShortcuts().filter((row) => row.id !== entry.id);
+      W().setShortcuts(next);
+      delete state.iconPositions[entry.id];
+      localStorage.setItem("devskits-icon-positions", JSON.stringify(state.iconPositions));
+      notify("Shortcut removed", "ok");
+      buildDesktopIcons();
+    }
+
+    function openIconMenu(x, y) {
+      const menu = document.createElement("div");
+      menu.className = "context-menu";
+      menu.style.left = `${x}px`;
+      menu.style.top = `${y}px`;
+      menu.innerHTML = `<button data-act="open">Open</button><button data-act="rename">Rename</button>${entry.isShortcut ? '<button data-act="remove">Remove Shortcut</button>' : ''}`;
+      document.body.appendChild(menu);
+      const close = () => menu.remove();
+      menu.addEventListener("click", (event) => {
+        const action = event.target.dataset.act;
+        if (action === "open") launchDesktopEntry(entry);
+        if (action === "rename") promptRename();
+        if (action === "remove") removeShortcut();
+        close();
+      });
+      setTimeout(() => document.addEventListener("click", close, { once: true }), 0);
+    }
+
+
     node.addEventListener("click", () => {
       if (suppressClick) return;
       if (selectedIconId === entry.id || isMobileLike()) {
@@ -196,6 +259,12 @@
       }
     });
 
+    node.addEventListener("contextmenu", (e) => {
+      e.preventDefault();
+      selectIcon(entry.id, true);
+      openIconMenu(e.clientX, e.clientY);
+    });
+
     node.addEventListener("pointerdown", (e) => {
       if (isMobileLike()) return;
       if (e.button !== 0 && e.pointerType !== "touch") return;
@@ -211,10 +280,17 @@
         offsetY: e.clientY - rect.top
       };
       node.setPointerCapture(e.pointerId);
+      if (e.pointerType === "touch") {
+        clearTimeout(touchContextTimer);
+        touchContextTimer = setTimeout(() => {
+          openIconMenu(e.clientX, e.clientY);
+        }, 550);
+      }
     });
 
     node.addEventListener("pointermove", (e) => {
       if (!drag || e.pointerId !== drag.pointerId) return;
+      clearTimeout(touchContextTimer);
       const shift = Math.hypot(e.clientX - drag.originX, e.clientY - drag.originY);
       if (!dragged && shift > 4) {
         dragged = true;
@@ -229,6 +305,7 @@
 
     node.addEventListener("pointerup", (e) => {
       if (!drag || e.pointerId !== drag.pointerId) return;
+      clearTimeout(touchContextTimer);
       node.releasePointerCapture(e.pointerId);
       if (dragged) {
         const snapped = snapToGrid(parseInt(node.style.left, 10), parseInt(node.style.top, 10));
@@ -287,8 +364,9 @@
       const action = e.target.dataset.action;
       if (!action) return;
       if (action === "refresh") buildDesktopIcons();
-      if (action === "new-folder") window.DevSkitsWindowManager.launchApp("files", { startPath: "Desktop" });
-      if (action === "new-text-document") window.dispatchEvent(new CustomEvent("devskits:new-note"));
+      if (action === "new-folder") window.DevSkitsVFS?.create("This PC/Desktop", "folder", "New Folder", "");
+      if (action === "new-text-document") window.DevSkitsVFS?.create("This PC/Desktop", "text", "New Text File.txt", "");
+      if (action === "new-folder" || action === "new-text-document") buildDesktopIcons();
       if (action === "personalize") window.DevSkitsWindowManager.launchApp("settings");
       if (action === "about") window.DevSkitsWindowManager.launchApp("about");
       menu.classList.add("hidden");
@@ -456,6 +534,9 @@
     toggleCRT(state.crt);
     applyBranding();
     const appSettings = W().getAppSettings();
+    if (!W().getShortcuts().length) {
+      W().setShortcuts([{ id: "shortcut-docs", type: "app", target: "files", label: "File Explorer" }, { id: "shortcut-notes", type: "app", target: "notes", label: "Notepad" }]);
+    }
     document.body.dataset.iconDensity = appSettings.iconDensity || "normal";
     document.body.classList.toggle("reduce-motion", localStorage.getItem("devskits-animations") === "off");
     buildDesktopIcons();

@@ -22,7 +22,9 @@
   function loadState() {
     try {
       const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
-      return parsed ? { ...defaultState(), ...parsed, restored: Boolean(parsed.text) } : defaultState();
+      if (parsed) return { ...defaultState(), ...parsed, restored: Boolean(parsed.text) };
+      const fromVfs = window.DevSkitsVFS?.readText?.("This PC/Documents", "devskits-note.txt");
+      return fromVfs ? { ...defaultState(), text: fromVfs, restored: true } : defaultState();
     } catch (error) {
       return defaultState();
     }
@@ -38,6 +40,7 @@
       darkTheme: state.darkTheme,
       monospace: state.monospace
     }));
+    window.DevSkitsVFS?.writeText?.("This PC/Documents", "devskits-note.txt", state.text || "");
   }
 
   function countsForText(text) {
