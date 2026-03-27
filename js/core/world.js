@@ -75,7 +75,7 @@
     getShortcuts: () => getJSON(STORE_KEYS.shortcuts, []), setShortcuts: (rows) => setJSON(STORE_KEYS.shortcuts, rows),
     getMediaLibrary: () => getJSON(STORE_KEYS.media, []), setMediaLibrary: (rows) => setJSON(STORE_KEYS.media, rows),
 
-    getAppSettings: () => getJSON(STORE_KEYS.appSettings, { hiddenContent: true, iconDensity: "normal", notificationsEnabled: true, widgets: { clock: true, activity: true, health: true, updates: true }, eventEngine: true }),
+    getAppSettings: () => getJSON(STORE_KEYS.appSettings, { hiddenContent: true, iconDensity: "normal", mobileDensity: "comfortable", notificationsEnabled: true, widgets: { clock: true, activity: true, health: true, updates: true }, eventEngine: true, theme: localStorage.getItem("devskits-theme") || "default", wallpaper: localStorage.getItem("devskits-wallpaper") || "default", bootAnimation: localStorage.getItem("devskits-fast-boot") === "on" ? "minimal" : "full", soundEnabled: localStorage.getItem("devskits-sound") !== "off", reducedMotion: localStorage.getItem("devskits-animations") === "off", clock24h: true }),
     setAppSettings: (rows) => setJSON(STORE_KEYS.appSettings, rows),
 
     getInbox() {

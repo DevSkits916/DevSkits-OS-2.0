@@ -1,6 +1,6 @@
 (() => {
   const { state, APPS, RUN_ALIASES } = window.DevSkitsState;
-  const FS = window.DevSkitsFS;
+  const VFS = window.DevSkitsVFS;
   const W = () => window.DevSkitsWorld;
 
   const STORAGE_KEYS = {
@@ -46,6 +46,7 @@
     recent: { category: "shell", description: "Show recent activity", usage: "recent" },
     search: { category: "shell", description: "Search indexed items", usage: "search <query>" },
     find: { category: "shell", description: "Alias for search", usage: "find <query>" },
+    alias: { category: "shell", description: "View/set command aliases", usage: "alias [name=value]" },
     notify: { category: "shell", description: "Send notification", usage: "notify <message>" },
     theme: { category: "shell", description: "Cycle desktop theme", usage: "theme" },
     exit: { category: "shell", description: "Shell exit hint", usage: "exit" },
@@ -81,7 +82,8 @@
   }
 
   function createTerminalEngine(print) {
-    let cwd = "C:\\DEVSKITS";
+    let cwd = "This PC";
+    let commandAliases = JSON.parse(localStorage.getItem("devskits-shell-aliases-v1") || "{}");
     ensureBootStamp();
 
     const commands = {
@@ -121,6 +123,7 @@
       notify: (_, ...msg) => (W().pushNotification(msg.join(" ") || "Terminal ping", "info"), { type: "success", text: "Notification sent." }),
       search: (_, ...args) => searchIndex(args.join(" ")),
       find: (_, ...args) => searchIndex(args.join(" ")),
+      alias: (_, arg) => aliasCommand(arg),
       status: () => statusCommand(),
       echo: (_, ...args) => args.join(" "),
       theme: () => ({ type: "success", text: "Theme cycled." }),
@@ -166,37 +169,27 @@
     }
 
     function listDir(arg = ".") {
-      const path = FS.normalize(arg || ".", cwd);
-      const listing = FS.list(path);
+      const path = VFS.resolvePath(arg || cwd);
+      const listing = VFS.list(path);
       if (!listing) return { type: "error", text: `Not a directory: ${path}` };
       if (!listing.length) return { type: "system", text: `<empty> ${path}` };
-      const rows = listing.map((x) => [x.name, x.type.toUpperCase(), x.type === "dir" ? "--" : "file"]);
+      const rows = listing.map((x) => [x.name, x.type.toUpperCase(), x.type === "folder" ? "DIR" : "ITEM"]);
       return { type: "table", headers: ["Name", "Type", "Info"], rows, footnote: `${listing.length} item(s) in ${path}` };
     }
 
-    function changeDir(arg = "C:\\DEVSKITS") {
-      const next = FS.normalize(arg, cwd);
-      const node = FS.getNode(next);
-      if (!node || node.type !== "dir") return { type: "error", text: `Directory not found: ${next}` };
+    function changeDir(arg = "This PC") {
+      const next = VFS.resolvePath(arg || "This PC");
+      const node = VFS.findNode(VFS.loadTree(), next);
+      if (!node || node.type !== "folder") return { type: "error", text: `Directory not found: ${next}` };
       cwd = next;
       return { type: "success", text: `cwd => ${cwd}` };
     }
 
     function catFile(arg = "") {
       if (!arg) return { type: "warn", text: "Usage: cat <file>" };
-      let node = FS.getNode(FS.normalize(arg, cwd));
-      if (!node && !arg.includes("\\")) {
-        const aliases = {
-          "about.txt": "C:\\DEVSKITS\\about.txt",
-          "projects.txt": "C:\\DEVSKITS\\projects.txt",
-          "loki.txt": "C:\\DEVSKITS\\loki.txt",
-          "contact.txt": "C:\\DEVSKITS\\contact.txt",
-          "changelog.txt": "C:\\DEVSKITS\\changelog.txt"
-        };
-        node = FS.getNode(aliases[arg.toLowerCase()]);
-      }
-      if (!node || node.type === "dir") return { type: "error", text: "File not found." };
-      if (node.type === "project") return { type: "system", text: `Project stub: ${node.ref}` };
+      const folder = VFS.findNode(VFS.loadTree(), cwd);
+      const node = (folder?.children || []).find((item) => item.type === "text" && item.name.toLowerCase() === arg.toLowerCase());
+      if (!node) return { type: "error", text: "File not found." };
       return { type: "file", title: arg, text: node.content || "<empty>" };
     }
 
@@ -225,13 +218,11 @@
       const normalizedApp = normalizeAppName(arg);
       if (normalizedApp && window.DevSkitsAppRegistry[normalizedApp]) return runApp(arg);
       if (arg.startsWith("devskits://") || /^https?:\/\//i.test(arg) || /^(github|reddit)$/i.test(arg)) return browserRoute(arg);
-      const node = FS.getNode(FS.normalize(arg, cwd));
+      const folder = VFS.findNode(VFS.loadTree(), cwd);
+      const node = (folder?.children || []).find((item) => item.name.toLowerCase() === arg.toLowerCase());
       if (!node) return { type: "error", text: "Target not found." };
       if (node.type === "app") return runApp(node.app);
-      if (node.type === "project") {
-        window.DevSkitsWindowManager.openApp("projects", { focusProject: node.ref });
-        return { type: "success", text: `Opened project: ${node.ref}` };
-      }
+      if (node.type === "folder") return changeDir(`${cwd}/${node.name}`);
       return { type: "file", title: arg, text: node.content || "<empty>" };
     }
 
@@ -271,6 +262,18 @@
       };
     }
 
+    function aliasCommand(arg = "") {
+      if (!arg) {
+        const rows = Object.entries(commandAliases).map(([name, value]) => [name, value]);
+        return rows.length ? { type: "table", headers: ["Alias", "Value"], rows } : { type: "system", text: "No aliases configured." };
+      }
+      const [name, value] = arg.split("=");
+      if (!value) return { type: "warn", text: "Usage: alias name=command" };
+      commandAliases[name.trim().toLowerCase()] = value.trim();
+      localStorage.setItem("devskits-shell-aliases-v1", JSON.stringify(commandAliases));
+      return { type: "success", text: `Alias saved: ${name.trim()} -> ${value.trim()}` };
+    }
+
     function unknownCommand(name) {
       const keys = Object.keys(commands);
       const near = keys.filter((cmd) => cmd.startsWith(name[0] || "")).slice(0, 4);
@@ -284,10 +287,13 @@
       const trimmed = raw.trim();
       if (!trimmed) return;
       const [name, ...args] = trimmed.split(/\s+/);
-      const normalized = CMD_ALIASES[name.toLowerCase()] || name.toLowerCase();
+      const inputName = name.toLowerCase();
+      const aliased = commandAliases[inputName] ? `${commandAliases[inputName]} ${args.join(" ")}`.trim() : trimmed;
+      const [aliasedName, ...aliasedArgs] = aliased.split(/\s+/);
+      const normalized = CMD_ALIASES[aliasedName.toLowerCase()] || aliasedName.toLowerCase();
       const handler = commands[normalized];
       if (!handler) return unknownCommand(name);
-      const result = handler(trimmed, ...args);
+      const result = handler(aliased, ...aliasedArgs);
       if (normalized === "theme") window.DevSkitsDesktop.cycleTheme();
       if (normalized === "reboot" || normalized === "restart") setTimeout(window.DevSkitsDesktop.rebootSystem, 300);
       W().trackActivity("cmd", trimmed);

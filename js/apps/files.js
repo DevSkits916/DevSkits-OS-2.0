@@ -1,5 +1,5 @@
 (() => {
-  const FS_KEY = "devskits-explorer-fs-v1";
+  const FS_KEY = window.DevSkitsVFS?.key || "devskits-vfs-v1";
   const VIEW_KEY = "devskits-explorer-view-v1";
   const LAST_PATH_KEY = "devskits-explorer-last-path-v1";
   const CLIPBOARD_KEY = "devskits-explorer-clipboard-v1";
@@ -49,7 +49,7 @@
             { id: "desk-readme", name: "readme.txt", type: "text", content: "Welcome to DevSkits File Explorer!", size: 84, modified: now }
           ]},
           { id: "documents", name: "Documents", type: "folder", modified: now, children: [
-            { id: "doc-welcome", name: "welcome.txt", type: "text", content: "Welcome to DevSkits OS 3.1", size: 64, modified: now },
+            { id: "doc-welcome", name: "welcome.txt", type: "text", content: "Welcome to DevSkits OS 95", size: 64, modified: now },
             { id: "doc-roadmap", name: "roadmap.txt", type: "text", content: "Improve, preserve, and extend.", size: 72, modified: now }
           ]},
           { id: "contact-info", name: "Contact Info", type: "folder", modified: now, children: [
@@ -80,18 +80,21 @@
   }
 
   function loadFs() {
+    if (window.DevSkitsVFS?.loadState) return window.DevSkitsVFS.loadState();
     try {
       const parsed = JSON.parse(localStorage.getItem(FS_KEY) || "null");
       if (parsed?.tree?.children) return parsed;
-    } catch (e) {
-      // ignore
-    }
+    } catch (e) {}
     const seeded = seedFs();
     localStorage.setItem(FS_KEY, JSON.stringify(seeded));
     return seeded;
   }
 
   function saveFs(state) {
+    if (window.DevSkitsVFS?.saveState) {
+      window.DevSkitsVFS.saveState(state);
+      return;
+    }
     localStorage.setItem(FS_KEY, JSON.stringify(state));
   }
 

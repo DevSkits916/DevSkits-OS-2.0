@@ -1,112 +1,68 @@
-# DevSkits OS 2.0
+# DevSkits OS 95
 
-DevSkits OS 2.0 is a retro browser desktop that combines a boot sequence, window manager, terminal, faux filesystem, internal browser routes, local persistence, and a growing collection of self-contained apps.
+DevSkits OS 95 is a framework-free retro web desktop (HTML/CSS/JavaScript) with a boot flow, start menu, window manager, app manifest, terminal shell, and persistent local state.
 
-**Live demo:** https://devskits916.github.io/DevSkits-OS-2.0/
+## Architecture
 
-## Current feature set
+### 1) Core shell
+- `index.html` boot + desktop scaffold.
+- `js/core/state.js` central app manifest (id, title, icon, launcher visibility, start menu metadata, aliases, and default window behavior).
+- `js/core/window-manager.js` consistent focus/z-index/minimize/maximize/restore/session behavior.
+- `js/core/desktop.js` desktop icon rendering, drag/grid persistence, context menus, rename support, and notifications.
+- `js/core/start-menu.js` manifest-driven launcher UI and search.
 
-### Core shell
-- BIOS-style boot flow and splash screen.
-- Desktop shell with movable windows, taskbar, notifications, and a start menu.
-- LocalStorage-backed persistence for notes, reminders, quotes, drafts, updates, logs, settings, and usage stats.
-- Faux filesystem plus a Run dialog and Navigator for `devskits://` routes and external URLs.
+### 2) Shared virtual filesystem (VFS)
+- `js/core/vfs.js` is the single source of truth for virtual file storage in `localStorage` (`devskits-vfs-v1`).
+- File Explorer (`js/apps/files.js`) reads/writes that same VFS state.
+- Terminal (`js/core/terminal-engine.js`) supports `ls`, `cd`, `cat`, and `open` over the same VFS paths.
+- Notepad (`js/apps/notes.js`) restores/saves `devskits-note.txt` through VFS (`This PC/Documents`).
 
-### Built-in apps
+### 3) Persistent settings model
+Settings persist in `localStorage` via both direct keys and `devskits-app-settings-v2`:
+- Theme
+- Wallpaper
+- Boot animation mode
+- Sound enabled
+- Icon density
+- Mobile density
+- Clock format (12h/24h)
+- Reduced motion
 
-#### Core / identity
-- Terminal
-- My Computer
-- Settings
-- System
-- Contact
-- Links
-- Donate
-- Loki
+## App manifest model
+All app metadata is registered in `js/core/state.js` via `defineApp(id, config)`.
 
-#### Productivity / tools
-- Notepad
-- Navigator
-- Calculator
-- Calendar
-- Clock
-- Reminders
-- Draft Pad
-- Quote Forge
-- ASCII Maker
-
-#### System utilities
-- Updater
-- Process Monitor
-- Activity Log
-- System Logs
-- Profile
-- Presence
-- Recycle Bin
-- Install Center
-- Discoveries
-- Network Map
-- Search Everywhere
-
-#### Companion
-- Loki Game
+Manifest fields include:
+- `id`
+- `title`
+- `icon` and `iconSvg`
+- `category`
+- `terminalCommand`
+- `launcher` (`desktop`, `tray`)
+- `startMenu` (`visible`, `section`)
+- `windowDefaults` (`width`, `height`, `mobileFullscreen`)
+- `multiInstance`
+- `description`
 
 ## Terminal commands
-The built-in terminal currently supports these commands:
-
 - `help [command]`
 - `clear`, `cls`
-- `ver`
-- `status`
-- `uptime`
-- `hostname`
-- `settings`
-- `reboot`, `restart`
-- `date`
-- `time`
-- `whoami`
-- `about`
-- `contact`
-- `donate`
-- `github`
-- `loki`
-- `apps`
-- `open <target>`
-- `run <app>`
-- `browser <route|url>`
-- `links`
-- `projects`
-- `pwd`
-- `ls [path]`, `dir [path]`
-- `cd <path>`
-- `cat <file>`
-- `echo <text>`
-- `history [clear]`
-- `recent`
-- `search <query>`, `find <query>`
-- `notify <message>`
-- `theme`
-- `exit`
-- `?`
+- `ver`, `status`, `uptime`, `hostname`
+- `settings`, `reboot`, `restart`
+- `date`, `time`, `whoami`, `about`, `contact`, `donate`, `github`, `loki`
+- `apps`, `open <target>`, `run <app>`, `browser <route|url>`, `links`, `projects`
+- `pwd`, `ls [path]`, `dir [path]`, `cd <path>`, `cat <file>`
+- `echo <text>`, `history [clear]`, `recent`, `search <query>`, `find <query>`, `notify <message>`, `alias [name=value]`, `theme`, `exit`, `?`
 
-`run` and `open` accept the canonical app ids plus compatibility aliases such as `calc`, `processmon`, `syslogs`, `planner`, and `lokigame`.
+## Storage keys
+Major keys:
+- `devskits-vfs-v1` (shared virtual filesystem)
+- `devskits-app-settings-v2` (persistent system/app settings)
+- `devskits-session` + `devskits-window-bounds` (window/session state)
+- `devskits-icon-positions` + `devskits-desktop-labels-v1` (desktop icon layout + rename)
+- `devskits-term-history` + `devskits-shell-history-v1` + `devskits-shell-aliases-v1` (terminal persistence)
 
-## Canonical app ids and compatibility aliases
-- `calculator` (`calc`)
-- `calendar` (`calendar-planner`)
-- `reminders` (`planner`)
-- `updater` (`updates`)
-- `process-monitor` (`processmon`, `processmonitor`, `processes`)
-- `system-logs` (`syslogs`, `systemlogs`, `logs`)
-- `profile` (`system-profile`)
-- `presence` (`network-status`)
-- `quoteforge` (`quote-forge`)
-- `asciimaker` (`ascii-maker`)
-- `draftpad` (`draft-pad`)
-- `loki-game` (`lokigame`, `lokigamelegacy`)
-
-## Project goals
-- Keep app implementations self-contained under `js/apps/`.
-- Keep terminal behavior aligned with registered apps and aliases.
-- Keep docs and metadata accurate to the code that actually ships.
-- Preserve the retro desktop feel while making the codebase easier to maintain.
+## Product polish rules
+- No runtime dependencies.
+- Framework-free implementation.
+- Retro visual style preserved while improving consistency and resilience.
+- Incomplete modules must show clearly intentional, polished “not yet enabled” messaging.
