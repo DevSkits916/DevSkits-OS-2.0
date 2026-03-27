@@ -1,19 +1,194 @@
 (() => {
   const { state, APPS, ui, RUN_ALIASES } = window.DevSkitsState;
   const W = () => window.DevSkitsWorld;
-  const BASE_GRID = { x: 98, y: 100, margin: 8 };
+  const ICON_POSITIONS_KEY = "devskits-icon-positions";
+  const ICON_LAYOUT_VERSION_KEY = "devskits-icon-layout-version";
+  const ICON_LAYOUT_VERSION = 2;
   let selectedIconId = null;
   let touchContextTimer = null;
   const DESKTOP_LABELS_KEY = "devskits-desktop-labels-v1";
 
-  function currentGrid() {
-    if (window.innerWidth <= 760) return { x: 82, y: 92, margin: 6 };
-    if (window.innerWidth <= 1024) return { x: 90, y: 96, margin: 7 };
-    return BASE_GRID;
-  }
-
   function isMobileLike() {
     return window.innerWidth <= 760 || window.matchMedia("(pointer: coarse)").matches;
+  }
+
+  function cssNumber(style, property, fallback = 0) {
+    const value = parseFloat(style.getPropertyValue(property));
+    return Number.isFinite(value) ? value : fallback;
+  }
+
+  function readIconMetrics() {
+    const containerStyle = getComputedStyle(ui.iconContainer);
+    const firstIcon = ui.iconContainer.querySelector(".desktop-icon");
+    const measureNode = !firstIcon ? document.querySelector("#desktop-icon-template")?.content?.firstElementChild?.cloneNode(true) : null;
+
+    if (measureNode) {
+      measureNode.classList.add("desktop-icon");
+      measureNode.style.visibility = "hidden";
+      measureNode.style.pointerEvents = "none";
+      measureNode.style.left = "-10000px";
+      measureNode.style.top = "-10000px";
+      const label = measureNode.querySelector(".icon-label");
+      if (label) label.textContent = "Desktop Icon Label";
+      const glyph = measureNode.querySelector(".icon-glyph");
+      if (glyph) glyph.innerHTML = APPS.about?.iconSvg || "";
+      ui.iconContainer.appendChild(measureNode);
+    }
+
+    const sample = firstIcon || measureNode;
+    const sampleRect = sample?.getBoundingClientRect();
+    const slotWidth = Math.max(56, Math.ceil(sampleRect?.width || cssNumber(containerStyle, "--icon-slot-width", 92)));
+    const slotHeight = Math.max(72, Math.ceil(sampleRect?.height || cssNumber(containerStyle, "--icon-slot-height", 108)));
+
+    if (measureNode) measureNode.remove();
+
+    const margin = Math.max(0, cssNumber(containerStyle, "--desktop-icon-margin", 8));
+    const gapX = Math.max(0, cssNumber(containerStyle, "--desktop-icon-gap-x", 10));
+    const gapY = Math.max(0, cssNumber(containerStyle, "--desktop-icon-gap-y", 10));
+
+    const width = Math.max(180, ui.iconContainer.clientWidth);
+    const height = Math.max(120, ui.iconContainer.clientHeight);
+    const maxX = Math.max(margin, width - slotWidth - margin);
+    const maxY = Math.max(margin, height - slotHeight - margin);
+
+    return {
+      width,
+      height,
+      margin,
+      slotWidth,
+      slotHeight,
+      gapX,
+      gapY,
+      stepX: slotWidth + gapX,
+      stepY: slotHeight + gapY,
+      maxX,
+      maxY,
+      mobileLayout: isMobileLike()
+    };
+  }
+
+  function calculateGridSlots(entryCount, metrics) {
+    const usableWidth = Math.max(0, metrics.width - metrics.margin * 2 - metrics.slotWidth);
+    const usableHeight = Math.max(0, metrics.height - metrics.margin * 2 - metrics.slotHeight);
+    const cols = Math.max(1, Math.floor(usableWidth / metrics.stepX) + 1);
+    const rows = Math.max(1, Math.floor(usableHeight / metrics.stepY) + 1);
+    const maxSlots = Math.max(entryCount, cols * rows);
+    return { cols, rows, maxSlots };
+  }
+
+  function fallbackPosition(index, metrics, slots) {
+    const row = index % slots.rows;
+    const col = Math.floor(index / slots.rows);
+    return {
+      x: metrics.margin + col * metrics.stepX,
+      y: metrics.margin + row * metrics.stepY
+    };
+  }
+
+  function clampIconPosition(x, y, metrics = readIconMetrics()) {
+    return {
+      x: Math.min(metrics.maxX, Math.max(metrics.margin, x)),
+      y: Math.min(metrics.maxY, Math.max(metrics.margin, y))
+    };
+  }
+
+  function snapToGrid(x, y, metrics = readIconMetrics()) {
+    const col = Math.round((x - metrics.margin) / metrics.stepX);
+    const row = Math.round((y - metrics.margin) / metrics.stepY);
+    return clampIconPosition(
+      metrics.margin + col * metrics.stepX,
+      metrics.margin + row * metrics.stepY,
+      metrics
+    );
+  }
+
+  function positionKey(position, metrics) {
+    const col = Math.round((position.x - metrics.margin) / metrics.stepX);
+    const row = Math.round((position.y - metrics.margin) / metrics.stepY);
+    return `${col}:${row}`;
+  }
+
+  function persistIconPositions() {
+    localStorage.setItem(ICON_POSITIONS_KEY, JSON.stringify(state.iconPositions));
+    localStorage.setItem(ICON_LAYOUT_VERSION_KEY, String(ICON_LAYOUT_VERSION));
+  }
+
+  function saveIconPosition(id, x, y, metrics = readIconMetrics()) {
+    state.iconPositions[id] = clampIconPosition(x, y, metrics);
+    persistIconPositions();
+  }
+
+  function shouldResetStoredLayout(rawPositions) {
+    if (Number(localStorage.getItem(ICON_LAYOUT_VERSION_KEY)) !== ICON_LAYOUT_VERSION) return true;
+    return !rawPositions || typeof rawPositions !== "object" || Array.isArray(rawPositions);
+  }
+
+  function validateSavedPosition(saved, metrics) {
+    if (!saved || typeof saved !== "object") return null;
+    const x = Number(saved.x);
+    const y = Number(saved.y);
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+    const snapped = snapToGrid(x, y, metrics);
+    return clampIconPosition(snapped.x, snapped.y, metrics);
+  }
+
+  function sanitizeStoredPositions(entries, metrics, slots) {
+    const next = {};
+    const occupied = new Set();
+    let changed = false;
+
+    entries.forEach((entry, index) => {
+      const saved = validateSavedPosition(state.iconPositions[entry.id], metrics);
+      let safe = saved || fallbackPosition(index, metrics, slots);
+      safe = snapToGrid(safe.x, safe.y, metrics);
+      let key = positionKey(safe, metrics);
+
+      if (occupied.has(key)) {
+        changed = true;
+        for (let slot = 0; slot < slots.maxSlots + entries.length; slot += 1) {
+          const fallback = fallbackPosition(slot, metrics, slots);
+          const probe = clampIconPosition(fallback.x, fallback.y, metrics);
+          const snapped = snapToGrid(probe.x, probe.y, metrics);
+          const probeKey = positionKey(snapped, metrics);
+          if (!occupied.has(probeKey)) {
+            safe = snapped;
+            key = probeKey;
+            break;
+          }
+        }
+      }
+
+      if (!saved || saved.x !== safe.x || saved.y !== safe.y) changed = true;
+      occupied.add(key);
+      next[entry.id] = safe;
+    });
+
+    const knownIds = new Set(entries.map((entry) => entry.id));
+    Object.keys(state.iconPositions).forEach((id) => {
+      if (!knownIds.has(id)) changed = true;
+    });
+
+    state.iconPositions = next;
+    if (changed) persistIconPositions();
+    return next;
+  }
+
+  function resolveIconPositions(entries, metrics) {
+    if (shouldResetStoredLayout(state.iconPositions)) {
+      state.iconPositions = {};
+      persistIconPositions();
+    }
+    const slots = calculateGridSlots(entries.length, metrics);
+    return sanitizeStoredPositions(entries, metrics, slots);
+  }
+
+  let relayoutFrame = null;
+  function relayoutDesktopIcons() {
+    if (relayoutFrame) cancelAnimationFrame(relayoutFrame);
+    relayoutFrame = requestAnimationFrame(() => {
+      relayoutFrame = null;
+      buildDesktopIcons();
+    });
   }
 
   function applyTheme(theme) {
@@ -86,68 +261,6 @@
     }));
     return [...appEntries, ...shortcuts];
   }
-
-  function snapToGrid(x, y) {
-    const grid = currentGrid();
-    return {
-      x: Math.round((x - grid.margin) / grid.x) * grid.x + grid.margin,
-      y: Math.round((y - grid.margin) / grid.y) * grid.y + grid.margin
-    };
-  }
-
-  function clampIconPosition(x, y) {
-    const grid = currentGrid();
-    const maxX = Math.max(grid.margin, ui.iconContainer.clientWidth - 88);
-    const maxY = Math.max(grid.margin, ui.iconContainer.clientHeight - 92);
-    return {
-      x: Math.min(maxX, Math.max(grid.margin, x)),
-      y: Math.min(maxY, Math.max(grid.margin, y))
-    };
-  }
-
-  function saveIconPosition(id, x, y) {
-    state.iconPositions[id] = clampIconPosition(x, y);
-    localStorage.setItem("devskits-icon-positions", JSON.stringify(state.iconPositions));
-  }
-
-  function iconSlots(entryCount) {
-    const grid = currentGrid();
-    const width = Math.max(180, ui.iconContainer.clientWidth);
-    const cols = Math.max(1, Math.floor((width - grid.margin * 2) / grid.x));
-    return { cols, grid, count: entryCount };
-  }
-
-  function fallbackPosition(index, cols, grid) {
-    return snapToGrid(
-      grid.margin + (index % cols) * grid.x,
-      grid.margin + Math.floor(index / cols) * grid.y
-    );
-  }
-
-  function resolveIconPositions(entries) {
-    const { cols, grid } = iconSlots(entries.length);
-    const occupied = new Set();
-    return entries.map((entry, index) => {
-      const saved = state.iconPositions[entry.id] || fallbackPosition(index, cols, grid);
-      let safe = clampIconPosition(saved.x, saved.y);
-      const keyFrom = (p) => `${Math.round((p.x - grid.margin) / grid.x)}:${Math.round((p.y - grid.margin) / grid.y)}`;
-      let key = keyFrom(safe);
-      if (occupied.has(key)) {
-        for (let slot = index; slot < index + 200; slot += 1) {
-          const next = fallbackPosition(slot, cols, grid);
-          const k = keyFrom(next);
-          if (!occupied.has(k)) {
-            safe = clampIconPosition(next.x, next.y);
-            key = k;
-            break;
-          }
-        }
-      }
-      occupied.add(key);
-      return safe;
-    });
-  }
-
   function selectIcon(iconId, shouldFocus = false) {
     selectedIconId = iconId;
     ui.iconContainer.querySelectorAll(".desktop-icon").forEach((node) => {
@@ -172,9 +285,11 @@
     clearIconSelection();
 
     const entries = getDesktopEntries();
-    const positions = resolveIconPositions(entries);
+    const metrics = readIconMetrics();
+    const positions = resolveIconPositions(entries, metrics);
+    ui.iconContainer.classList.toggle("mobile-layout", metrics.mobileLayout);
 
-    entries.forEach((entry, index) => {
+    entries.forEach((entry) => {
       const node = tpl.content.firstElementChild.cloneNode(true);
       node.dataset.app = entry.id;
       node.querySelector(".icon-glyph").innerHTML = entry.app.iconSvg || APPS.about.iconSvg;
@@ -184,10 +299,15 @@
       node.setAttribute("aria-selected", "false");
       node.setAttribute("tabindex", "-1");
 
-      const safe = positions[index];
-      node.style.left = `${safe.x}px`;
-      node.style.top = `${safe.y}px`;
-      saveIconPosition(entry.id, safe.x, safe.y);
+      const safe = positions[entry.id];
+      if (metrics.mobileLayout) {
+        node.style.left = "";
+        node.style.top = "";
+      } else {
+        node.style.left = `${safe.x}px`;
+        node.style.top = `${safe.y}px`;
+      }
+      saveIconPosition(entry.id, safe.x, safe.y, metrics);
 
       wireIcon(node, entry);
       ui.iconContainer.appendChild(node);
@@ -213,7 +333,7 @@
       const next = W().getShortcuts().filter((row) => row.id !== entry.id);
       W().setShortcuts(next);
       delete state.iconPositions[entry.id];
-      localStorage.setItem("devskits-icon-positions", JSON.stringify(state.iconPositions));
+      persistIconPositions();
       notify("Shortcut removed", "ok");
       buildDesktopIcons();
     }
@@ -298,7 +418,8 @@
         node.classList.add("dragging");
       }
       if (!dragged) return;
-      const safe = clampIconPosition(e.clientX - drag.offsetX, e.clientY - drag.offsetY);
+      const metrics = readIconMetrics();
+      const safe = clampIconPosition(e.clientX - drag.offsetX, e.clientY - drag.offsetY, metrics);
       node.style.left = `${safe.x}px`;
       node.style.top = `${safe.y}px`;
     });
@@ -308,11 +429,12 @@
       clearTimeout(touchContextTimer);
       node.releasePointerCapture(e.pointerId);
       if (dragged) {
-        const snapped = snapToGrid(parseInt(node.style.left, 10), parseInt(node.style.top, 10));
-        const safe = clampIconPosition(snapped.x, snapped.y);
+        const metrics = readIconMetrics();
+        const snapped = snapToGrid(parseInt(node.style.left, 10), parseInt(node.style.top, 10), metrics);
+        const safe = clampIconPosition(snapped.x, snapped.y, metrics);
         node.style.left = `${safe.x}px`;
         node.style.top = `${safe.y}px`;
-        saveIconPosition(entry.id, safe.x, safe.y);
+        saveIconPosition(entry.id, safe.x, safe.y, metrics);
         suppressClick = true;
         setTimeout(() => { suppressClick = false; }, 140);
       } else if (e.pointerType === "touch") {
@@ -339,7 +461,7 @@
       if (!icons.length) return;
       const currentIndex = icons.findIndex((icon) => icon.dataset.app === selectedIconId);
 
-      const { cols } = iconSlots(icons.length);
+      const { cols } = calculateGridSlots(icons.length, readIconMetrics());
       const keyMap = { ArrowDown: cols, ArrowUp: -cols, ArrowRight: 1, ArrowLeft: -1 };
       if (!(e.key in keyMap)) return;
       e.preventDefault();
@@ -544,12 +666,32 @@
     bindDesktopContextMenu();
     bindRunDialog();
     bindTaskbarTray();
-    window.addEventListener("resize", () => buildDesktopIcons());
+    window.addEventListener("resize", relayoutDesktopIcons);
+    window.addEventListener("orientationchange", relayoutDesktopIcons);
+    const bodyObserver = new MutationObserver((mutations) => {
+      if (mutations.some((entry) => entry.type === "attributes" && (entry.attributeName === "data-icon-density" || entry.attributeName === "data-mobile-density" || entry.attributeName === "data-theme"))) {
+        relayoutDesktopIcons();
+      }
+    });
+    bodyObserver.observe(document.body, { attributes: true });
     W().getSticky().forEach((s) => createSticky(s));
     updateClock();
     setInterval(updateClock, 1000);
     startBootSequence();
   }
 
-  window.DevSkitsDesktop = { initDesktop, cycleTheme, applyTheme, applyWallpaper, toggleCRT, notify, rebootSystem, buildDesktopIcons, createSticky, openRunDialog, runCommand };
+  window.DevSkitsDesktop = {
+    initDesktop,
+    cycleTheme,
+    applyTheme,
+    applyWallpaper,
+    toggleCRT,
+    notify,
+    rebootSystem,
+    buildDesktopIcons,
+    relayoutDesktopIcons,
+    createSticky,
+    openRunDialog,
+    runCommand
+  };
 })();

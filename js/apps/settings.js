@@ -69,6 +69,7 @@
       next.iconDensity = e.target.value;
       persist(next);
       document.body.dataset.iconDensity = e.target.value;
+      window.DevSkitsDesktop.relayoutDesktopIcons();
     });
 
     container.querySelector("#mobile-density").addEventListener("change", (e) => {
@@ -76,6 +77,7 @@
       next.mobileDensity = e.target.value;
       persist(next);
       document.body.dataset.mobileDensity = e.target.value;
+      window.DevSkitsDesktop.relayoutDesktopIcons();
     });
 
     container.querySelector("#fast-boot-toggle").addEventListener("change", (e) => {
