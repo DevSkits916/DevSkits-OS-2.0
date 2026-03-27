@@ -60,14 +60,6 @@
         title: "Social Links",
         items: ["github", "twitter", "reddit"].map((id) => byId[id]).filter(Boolean)
       },
-      {
-        id: "projects",
-        title: "Projects / Developer",
-        items: [
-          { id: "projects-app", label: "Projects App", value: "devskits://projects", type: "app", icon: "projects" },
-          { id: "links-app", label: "Links App", value: "devskits://links", type: "app", icon: "links" }
-        ]
-      }
     ];
 
     const allItems = groups.flatMap((group) => group.items);
