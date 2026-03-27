@@ -11,10 +11,7 @@
     <div class="app-grid">
       <label>Wallpaper
         <select id="wallpaper-select">
-          <option value="default">Default</option>
-          <option value="grid">Grid</option>
-          <option value="noise">Noise</option>
-          <option value="fade">Fade</option>
+          <option value="devskits95">DevSkits 95 (Embedded)</option>
         </select>
       </label>
       <label>Icon Density
