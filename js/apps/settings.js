@@ -11,7 +11,7 @@
     <div class="app-grid">
       <label>Wallpaper
         <select id="wallpaper-select">
-          <option value="devskits95">DevSkits 95 (Embedded)</option>
+          <option value="devskits95">DevSkits 95 (Embedded image, no binary file)</option>
         </select>
       </label>
       <label>Icon Density
