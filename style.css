@@ -167,6 +167,10 @@ body[data-icon-density="compact"] {
 body[data-icon-density="compact"] .desktop-icon { gap: .2rem; }
 body[data-icon-density="compact"] .desktop-icon .icon-glyph { width: 30px; height: 28px; }
 body[data-icon-density="compact"] .icon-label { font-size: 10px; }
+body[data-mobile-density="compact"] .window-content { padding: .42rem; }
+body[data-mobile-density="compact"] .link-btn,
+body[data-mobile-density="compact"] .task-btn,
+body[data-mobile-density="compact"] .start-item { padding: .18rem .34rem; }
 
 .window-layer { position: absolute; inset: 0 0 var(--taskbar-h) 0; z-index: 4; }
 .window {
@@ -349,6 +353,7 @@ body.reduce-motion .window { transition: none; }
   }
   .window-titlebar { min-height: 30px; }
   .window-controls button { width: 28px; height: 24px; }
+  .task-btn, .link-btn, .start-btn, .tray-icon { min-height: 28px; }
   .icon-label { font-size: 11px; }
   .inbox-shell, .media-shell, .inbox-main { grid-template-columns: 1fr; }
   .desktop-widgets { position: static; width: auto; margin: .35rem; }

@@ -89,8 +89,10 @@
   }
 
   const START_MENU_SECTIONS = [
-    { id: "programs", label: "PROGRAMS", items: ["terminal", "files", "notes", "browser", "calculator", "loki-game"] },
-    { id: "devskits", label: "DEVSKITS 95", items: ["links", "donate", "contact", "about", "reboot", "shutdown"] }
+    { id: "programs", label: "PROGRAMS", items: ["terminal", "files", "notes", "browser", "calculator", "calendar", "clock", "run"] },
+    { id: "system", label: "SYSTEM TOOLS", items: ["settings", "updater", "process-monitor", "system-logs", "activity", "profile", "presence"] },
+    { id: "creator", label: "CREATOR", items: ["quoteforge", "asciimaker", "draftpad", "reminders", "loki-game"] },
+    { id: "devskits", label: "DEVSKITS OS 95", items: ["projects", "links", "contact", "donate", "about", "reboot", "shutdown"] }
   ];
 
   const RUN_ALIASES = {

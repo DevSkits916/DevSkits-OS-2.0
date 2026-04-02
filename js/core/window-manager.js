@@ -121,6 +121,10 @@
       const task = ui.taskButtons.querySelector(`[data-app="${appId}"]`);
       task?.classList.remove("active");
       task?.classList.add("minimized");
+      const visible = [...state.windows.entries()]
+        .filter(([id, row]) => id !== appId && !row.minimized && !row.el.classList.contains("hidden"))
+        .sort((a, b) => (parseInt(b[1].el.style.zIndex || "0", 10) - parseInt(a[1].el.style.zIndex || "0", 10)));
+      if (visible[0]) focusWindow(visible[0][0]);
     }, 140);
     persistSession();
   }
@@ -350,10 +354,10 @@
       launchApp("terminal");
     }
 
-    const contactWindowEntry = [...state.windows.entries()].find(([, rec]) => rec.appId === "contact");
-    if (contactWindowEntry) {
-      focusWindow(contactWindowEntry[0]);
-    }
+    const topWindow = [...state.windows.entries()]
+      .filter(([, rec]) => !rec.minimized && !rec.el.classList.contains("hidden"))
+      .sort((a, b) => (parseInt(b[1].el.style.zIndex || "0", 10) - parseInt(a[1].el.style.zIndex || "0", 10)))[0];
+    if (topWindow) focusWindow(topWindow[0]);
   }
 
   function showDesktop() {

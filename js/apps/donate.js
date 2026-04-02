@@ -48,7 +48,7 @@
         <section class="donate-note-row">
           <article class="project-card donate-note-card">
             <strong>Why support matters</strong>
-            <p>DevSkits OS is built to feel like a personal machine, not just a landing page. Support helps keep that world expanding with cleaner apps, better polish, and more experiments.</p>
+            <p>DevSkits OS 95 is built to feel like a personal machine, not just a landing page. Support helps keep that world expanding with cleaner apps, better polish, and more experiments.</p>
           </article>
           <article class="project-card donate-note-card">
             <strong>Thank you</strong>

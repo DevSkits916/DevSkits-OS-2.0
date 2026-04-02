@@ -9,8 +9,8 @@
             PROJECTS: {
               type: "dir",
               children: {
-                "projects.txt": { type: "file", content: "Projects:\n- DevSkits OS\n- Landing Pages\n- Terminal Projects\n- Automation / Userscripts\n- Loki Creative" },
-                "devskits-os.project": { type: "project", ref: "DevSkits OS" }
+                "projects.txt": { type: "file", content: "Projects:\n- DevSkits OS 95\n- Landing Pages\n- Terminal Projects\n- Automation / Userscripts\n- Loki Creative" },
+                "devskits-os.project": { type: "project", ref: "DevSkits OS 95" }
               }
             },
             CONTACT: { type: "dir", children: { "contact.txt": { type: "file", content: "Email: DevSkits@icloud.com\nGitHub: https://github.com/DevSkits916" } } },
@@ -18,11 +18,11 @@
             DOCS: {
               type: "dir",
               children: {
-                "about.txt": { type: "file", content: "DevSkits OS is a retro browser shell + portfolio." },
+                "about.txt": { type: "file", content: "DevSkits OS 95 is a retro browser shell + portfolio." },
                 "changelog.txt": { type: "file", content: "3.2.0: Shell polish, new boot, improved core apps." }
               }
             },
-            "about.txt": { type: "file", content: "DevSkits OS identity hub." },
+            "about.txt": { type: "file", content: "DevSkits OS 95 identity hub." },
             "projects.txt": { type: "file", content: "Open Projects app for full details." },
             "loki.txt": { type: "file", content: "Loki says hi." },
             "contact.txt": { type: "file", content: "Open Contact app for complete profile." },

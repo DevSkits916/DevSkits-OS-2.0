@@ -22,7 +22,7 @@
     date: { category: "identity", description: "Show date", usage: "date" },
     time: { category: "identity", description: "Show time", usage: "time" },
     whoami: { category: "identity", description: "Show active profile", usage: "whoami" },
-    about: { category: "identity", description: "About DevSkits OS", usage: "about" },
+    about: { category: "identity", description: "About DevSkits OS 95", usage: "about" },
     contact: { category: "identity", description: "Open Contact app", usage: "contact" },
     donate: { category: "identity", description: "Open Donate app", usage: "donate" },
     github: { category: "identity", description: "Show GitHub destination", usage: "github" },
@@ -91,7 +91,7 @@
       clear: () => ({ clear: true }),
       cls: () => ({ clear: true }),
 
-      about: () => ({ type: "system", text: "DevSkits Shell // retro monochrome command environment." }),
+      about: () => ({ type: "system", text: "DevSkits OS 95 Shell // retro monochrome command environment." }),
       contact: () => runApp("contact"),
       donate: () => runApp("donate"),
       links: () => runApp("links"),

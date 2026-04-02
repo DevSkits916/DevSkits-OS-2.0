@@ -1,5 +1,5 @@
 (() => {
-  const STORE_KEY = "devskits-shell-history-v1";
+  const STORE_KEY = "devskits-term-history";
 
   function escapeHtml(value = "") {
     return String(value)

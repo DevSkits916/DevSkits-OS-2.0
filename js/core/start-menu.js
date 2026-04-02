@@ -86,7 +86,19 @@
       ? `<section class="start-group"><h3 class="start-section-label">SEARCH RESULTS</h3><div class="start-group-items">${extraMatches.map((id) => renderItem(id)).join("")}</div></section>`
       : "";
 
-    sectionsWrap.innerHTML = `${sectionMarkup}${searchExtras}` || '<div class="start-empty">No matching apps.</div>';
+    const sectionIds = new Set(START_MENU_SECTIONS.flatMap((section) => section.items));
+    const catalogExtras = !q
+      ? Object.entries(APPS)
+        .filter(([id, app]) => app.startMenu?.visible !== false
+          && window.DevSkitsAppRegistry?.[id]
+          && !sectionIds.has(id))
+        .map(([id]) => id)
+      : [];
+    const catalogMarkup = catalogExtras.length
+      ? `<section class="start-group"><h3 class="start-section-label">ALL PROGRAMS</h3><div class="start-group-items">${catalogExtras.map((id) => renderItem(id)).join("")}</div></section>`
+      : "";
+
+    sectionsWrap.innerHTML = `${sectionMarkup}${searchExtras}${catalogMarkup}` || '<div class="start-empty">No matching apps.</div>';
 
     if (recent) {
       sectionsWrap.innerHTML = `${recent}${sectionsWrap.innerHTML}`;
