@@ -1,0 +1,1816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Windows 3.1 — Perplexity Tribute Edition</title>
+<style>
+/* ============================================================
+   WINDOWS 3.1 TRIBUTE — SINGLE FILE, NO EXTERNAL ASSETS
+   Authentic teal desktop, beveled gray chrome, navy title bars,
+   monospace font, pixel-perfect Win3.1 aesthetic.
+   ============================================================ */
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  --teal: #008080;
+  --navy: #000080;
+  --silver: #c0c0c0;
+  --white: #ffffff;
+  --black: #000000;
+  --dk-gray: #808080;
+  --lt-gray: #dfdfdf;
+  --btn-hi: #ffffff;
+  --btn-lo: #808080;
+  --btn-face: #c0c0c0;
+  --title-active-bg: #000080;
+  --title-inactive-bg: #808080;
+  --title-active-fg: #ffffff;
+  --title-inactive-fg: #c0c0c0;
+  --win-border-outer-tl: #000000;
+  --win-border-outer-br: #000000;
+  --win-border-inner-tl: #dfdfdf;
+  --win-border-inner-br: #808080;
+}
+
+html, body {
+  width:100%; height:100%;
+  overflow:hidden;
+  font-family: 'Fixedsys', 'Courier New', Consolas, 'Lucida Console', monospace;
+  font-size: 11px;
+  background: var(--teal);
+  cursor: default;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-text-size-adjust: 100%;
+  touch-action: manipulation;
+}
+
+/* ============================================================
+   MOBILE FALLBACK
+   ============================================================ */
+#mobile-fallback {
+  display:none;
+  position:fixed; inset:0;
+  background:var(--navy);
+  color:var(--white);
+  font-family:'Fixedsys','Courier New',Consolas,monospace;
+  font-size:16px;
+  z-index:99999;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:40px;
+  line-height:1.8;
+}
+#mobile-fallback .err-icon { font-size:48px; margin-bottom:20px; }
+
+/* ============================================================
+   BOOT SPLASH
+   ============================================================ */
+#boot-splash {
+  position:fixed; inset:0;
+  background:var(--black);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  z-index:90000;
+  color:var(--white);
+  font-family:inherit;
+}
+.boot-logo { font-size:26px; font-weight:bold; letter-spacing:3px; margin-bottom:2px; }
+.boot-ver { font-size:13px; color:var(--silver); margin-bottom:28px; }
+.boot-bar-outer {
+  width:280px; height:20px;
+  border:2px solid var(--dk-gray);
+  background:var(--black);
+  padding:2px;
+}
+.boot-bar-inner { height:100%; width:0%; background:var(--navy); transition:width 0.08s linear; }
+.boot-msg { margin-top:10px; font-size:10px; color:var(--dk-gray); }
+
+/* ============================================================
+   BSOD
+   ============================================================ */
+#bsod {
+  position:fixed; inset:0;
+  background:var(--navy);
+  display:none;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  z-index:95000;
+  color:var(--white);
+  font-family:inherit;
+  font-size:13px;
+  text-align:center;
+  line-height:1.9;
+  padding:40px;
+}
+.bsod-hdr { background:var(--silver); color:var(--navy); padding:1px 18px; font-weight:bold; margin-bottom:16px; }
+.bsod-cd { margin-top:16px; color:var(--silver); }
+
+/* ============================================================
+   DESKTOP
+   ============================================================ */
+#desktop { position:fixed; inset:0; background:var(--teal); display:none; }
+#desktop.wp-teal { background:var(--teal); }
+#desktop.wp-weave {
+  background-color:var(--teal);
+  background-image:
+    linear-gradient(45deg, rgba(0,0,0,.12) 25%, transparent 25%, transparent 75%, rgba(0,0,0,.12) 75%),
+    linear-gradient(45deg, rgba(0,0,0,.12) 25%, transparent 25%, transparent 75%, rgba(0,0,0,.12) 75%);
+  background-size:4px 4px; background-position:0 0, 2px 2px;
+}
+#desktop.wp-tartan {
+  background-color:#006060;
+  background-image:
+    repeating-linear-gradient(0deg,transparent,transparent 8px,rgba(0,128,128,.4) 8px,rgba(0,128,128,.4) 10px),
+    repeating-linear-gradient(90deg,transparent,transparent 8px,rgba(0,128,128,.4) 8px,rgba(0,128,128,.4) 10px);
+}
+#desktop.wp-bricks {
+  background-color:#708090;
+  background-image:
+    linear-gradient(335deg,#7a7a7a 23px,transparent 23px),
+    linear-gradient(155deg,#7a7a7a 23px,transparent 23px),
+    linear-gradient(335deg,#8a8a8a 23px,transparent 23px),
+    linear-gradient(155deg,#8a8a8a 23px,transparent 23px);
+  background-size:58px 58px;
+  background-position:0 2px, 4px 35px, 29px 31px, 33px 6px;
+}
+#desktop.wp-castle {
+  background-color:#2f4f4f;
+  background-image:
+    repeating-linear-gradient(90deg,#3a5a5a 0px,#3a5a5a 10px,transparent 10px,transparent 20px),
+    repeating-linear-gradient(0deg,transparent 0px,transparent 18px,#2a4a4a 18px,#2a4a4a 20px);
+}
+
+/* ============================================================
+   ICON GRID — single-click to open
+   ============================================================ */
+#icon-grid {
+  position:absolute;
+  top:30px; left:12px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  z-index:1;
+}
+.desktop-icon {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  width:68px;
+  cursor:pointer;
+  padding:3px 2px;
+  border:1px solid transparent;
+}
+.desktop-icon:active { border:1px dotted var(--white); }
+.desktop-icon.selected .icon-label {
+  background:var(--navy);
+  color:var(--white);
+  text-shadow:none;
+}
+.desktop-icon .icon-gfx {
+  width:32px; height:32px;
+  display:flex; align-items:center; justify-content:center;
+  margin-bottom:2px;
+}
+.icon-label {
+  font-size:11px;
+  text-align:center;
+  padding:1px 2px;
+  color:var(--white);
+  text-shadow:1px 1px 0 var(--black);
+  max-width:68px;
+  line-height:1.2;
+}
+.icon-svg { width:32px; height:32px; }
+
+/* ============================================================
+   PROGRAM MANAGER MENU BAR
+   ============================================================ */
+#menu-bar {
+  position:absolute;
+  top:0; left:0; right:0;
+  height:20px;
+  background:var(--silver);
+  border-bottom:1px solid var(--dk-gray);
+  display:flex;
+  align-items:center;
+  z-index:5000;
+  padding:0 2px;
+}
+.menu-item {
+  padding:1px 8px;
+  font-size:11px;
+  cursor:pointer;
+  position:relative;
+  height:100%;
+  display:flex;
+  align-items:center;
+}
+.menu-item:hover, .menu-item.open {
+  background:var(--navy);
+  color:var(--white);
+}
+.menu-title { font-weight:bold; }
+.dropdown-menu {
+  display:none;
+  position:absolute;
+  top:100%; left:0;
+  min-width:180px;
+  background:var(--silver);
+  border:2px outset var(--silver);
+  box-shadow:2px 2px 0 var(--black);
+  z-index:5001;
+  padding:2px 0;
+}
+.dropdown-menu.show { display:block; }
+.dropdown-item {
+  padding:2px 18px;
+  cursor:pointer;
+  font-size:11px;
+  white-space:nowrap;
+}
+.dropdown-item:hover { background:var(--navy); color:var(--white); }
+.dropdown-sep { height:1px; background:var(--dk-gray); margin:2px 4px; border-bottom:1px solid var(--white); }
+.dropdown-item.disabled { color:var(--dk-gray); pointer-events:none; }
+.dropdown-item .shortcut { float:right; margin-left:24px; }
+
+/* ============================================================
+   TASKBAR + CLOCK
+   ============================================================ */
+#taskbar {
+  position:absolute;
+  bottom:0; left:0; right:0;
+  height:24px;
+  background:var(--silver);
+  border-top:2px outset var(--silver);
+  display:flex;
+  align-items:center;
+  z-index:5000;
+  padding:0 3px;
+}
+#taskbar-items { flex:1; display:flex; gap:2px; overflow:hidden; margin-right:3px; }
+.taskbar-btn {
+  height:18px;
+  padding:0 6px;
+  background:var(--silver);
+  border:2px outset var(--silver);
+  font-family:inherit;
+  font-size:10px;
+  cursor:pointer;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  max-width:140px;
+  display:flex; align-items:center; gap:3px;
+}
+.taskbar-btn.active { border:2px inset var(--silver); background:#b0b0b0; }
+.taskbar-btn:hover { background:#d0d0d0; }
+#clock {
+  padding:1px 6px;
+  border:1px inset var(--silver);
+  font-size:10px;
+  min-width:54px;
+  text-align:center;
+  background:var(--silver);
+}
+
+/* ============================================================
+   WINDOW — authentic Win3.1 beveled chrome
+   ============================================================ */
+.win31-window {
+  position:absolute;
+  display:flex;
+  flex-direction:column;
+  min-width:180px;
+  min-height:100px;
+  /* Outer bevel: black outside, then white highlight top-left, gray shadow bottom-right */
+  border:1px solid var(--black);
+  outline:1px solid var(--black);
+  outline-offset:-1px;
+  background:var(--silver);
+}
+/* Double-bevel effect with pseudo */
+.win31-window::before {
+  content:'';
+  position:absolute;
+  inset:0;
+  border:2px solid;
+  border-color:var(--white) var(--dk-gray) var(--dk-gray) var(--white);
+  pointer-events:none;
+  z-index:1;
+}
+.win31-window.maximized {
+  top:20px !important; left:0 !important;
+  width:100% !important; height:calc(100% - 44px) !important;
+  border:none; outline:none;
+}
+.win31-window.maximized::before { display:none; }
+
+/* --- Title Bar --- */
+.title-bar {
+  height:18px;
+  background:var(--title-active-bg);
+  display:flex;
+  align-items:center;
+  padding:0 2px;
+  cursor:move;
+  flex-shrink:0;
+  margin:2px 2px 0 2px;
+  position:relative;
+  z-index:2;
+}
+.win31-window.inactive .title-bar { background:var(--title-inactive-bg); }
+.title-bar-text {
+  flex:1;
+  color:var(--title-active-fg);
+  font-size:11px;
+  font-weight:bold;
+  padding:0 4px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.win31-window.inactive .title-bar-text { color:var(--title-inactive-fg); }
+
+/* --- Title Buttons: Win3.1 style (small beveled squares) --- */
+.title-btn {
+  width:16px; height:14px;
+  background:var(--silver);
+  border:1px solid;
+  border-color:var(--white) var(--dk-gray) var(--dk-gray) var(--white);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  font-size:8px;
+  font-weight:bold;
+  font-family:inherit;
+  color:var(--black);
+  line-height:1;
+  margin:0 1px;
+  position:relative;
+  z-index:3;
+}
+.title-btn:active {
+  border-color:var(--dk-gray) var(--white) var(--white) var(--dk-gray);
+}
+/* Win3.1 uses a small triangle-down for minimize, triangle-up for maximize */
+.title-btn.minimize::after { content:'▼'; font-size:6px; margin-top:1px; }
+.title-btn.maximize::after { content:'▲'; font-size:6px; margin-top:-1px; }
+.title-btn.restore::after { content:'◆'; font-size:6px; }
+/* Close is not standard Win3.1 but we include it — small X */
+.title-btn.close { margin-left:0; }
+.title-btn.close::after { content:'✕'; font-size:7px; }
+
+/* --- Window menu bar (for apps like Notepad) --- */
+.win-menubar {
+  height:18px;
+  background:var(--silver);
+  border-bottom:1px solid var(--dk-gray);
+  display:flex;
+  align-items:center;
+  padding:0 2px;
+  flex-shrink:0;
+  margin:0 2px;
+  position:relative;
+  z-index:2;
+}
+.win-menubar .wmenu-item {
+  padding:1px 6px;
+  font-size:11px;
+  cursor:pointer;
+}
+.win-menubar .wmenu-item:hover { background:var(--navy); color:var(--white); }
+
+/* --- Window Content Area — sunken inset --- */
+.win-content {
+  flex:1;
+  overflow:auto;
+  background:var(--white);
+  margin:2px 3px 3px 3px;
+  /* Sunken 3D border */
+  border:2px solid;
+  border-color:var(--dk-gray) var(--white) var(--white) var(--dk-gray);
+  position:relative;
+  z-index:2;
+}
+
+/* --- Resize grip (diagonal lines in corner) --- */
+.resize-handle {
+  position:absolute;
+  bottom:0; right:0;
+  width:12px; height:12px;
+  cursor:nwse-resize;
+  z-index:4;
+}
+
+/* ============================================================
+   CONTEXT MENU
+   ============================================================ */
+#context-menu {
+  display:none;
+  position:absolute;
+  min-width:150px;
+  background:var(--silver);
+  border:2px outset var(--silver);
+  box-shadow:2px 2px 0 var(--black);
+  z-index:60000;
+  padding:2px 0;
+}
+#context-menu.show { display:block; }
+.ctx-item {
+  padding:2px 16px;
+  cursor:pointer;
+  font-size:11px;
+  white-space:nowrap;
+}
+.ctx-item:hover { background:var(--navy); color:var(--white); }
+.ctx-sep { height:1px; background:var(--dk-gray); margin:2px 4px; border-bottom:1px solid var(--white); }
+.ctx-sub { position:relative; }
+.ctx-sub::after { content:'►'; position:absolute; right:6px; top:2px; font-size:7px; }
+.ctx-submenu {
+  display:none;
+  position:absolute;
+  left:100%; top:-2px;
+  min-width:120px;
+  background:var(--silver);
+  border:2px outset var(--silver);
+  box-shadow:2px 2px 0 var(--black);
+  padding:2px 0;
+}
+.ctx-sub:hover .ctx-submenu { display:block; }
+
+/* ============================================================
+   MODAL DIALOGS
+   ============================================================ */
+.modal-overlay {
+  position:fixed; inset:0;
+  background:transparent;
+  z-index:70000;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.modal-dialog {
+  background:var(--silver);
+  border:1px solid var(--black);
+  min-width:300px;
+  display:flex;
+  flex-direction:column;
+}
+.modal-dialog::before {
+  content:'';
+  position:absolute;
+  inset:0;
+  border:2px solid;
+  border-color:var(--white) var(--dk-gray) var(--dk-gray) var(--white);
+  pointer-events:none;
+}
+.modal-dialog .title-bar { cursor:default; margin:2px 2px 0 2px; }
+.modal-body {
+  padding:14px 16px;
+  display:flex;
+  gap:10px;
+  align-items:flex-start;
+}
+.modal-icon { font-size:24px; flex-shrink:0; }
+.modal-text { font-size:11px; line-height:1.5; }
+.modal-buttons {
+  display:flex;
+  justify-content:center;
+  gap:6px;
+  padding:6px 16px 12px;
+}
+
+/* ============================================================
+   WIN31 BUTTON (beveled, authentic)
+   ============================================================ */
+.win31-btn {
+  min-width:72px;
+  height:22px;
+  background:var(--silver);
+  border:2px solid;
+  border-color:var(--white) var(--dk-gray) var(--dk-gray) var(--white);
+  font-family:inherit;
+  font-size:11px;
+  cursor:pointer;
+  padding:0 10px;
+  color:var(--black);
+  outline:none;
+}
+.win31-btn:active {
+  border-color:var(--dk-gray) var(--white) var(--white) var(--dk-gray);
+}
+.win31-btn.primary {
+  outline:1px solid var(--black);
+  outline-offset:1px;
+}
+
+
+/* ============================================================
+   TOUCH + PHONE MODE
+   ============================================================ */
+body.mobile-mode {
+  overflow:hidden;
+}
+
+body.mobile-mode #mobile-fallback {
+  display:none !important;
+}
+
+body.mobile-mode #desktop {
+  display:block;
+}
+
+@media (max-width: 900px), (pointer: coarse) {
+  html, body {
+    font-size: 13px;
+  }
+
+  #menu-bar {
+    height: 30px;
+    padding: 0 4px;
+  }
+
+  .menu-item {
+    padding: 1px 8px;
+    font-size: 13px;
+  }
+
+  .dropdown-menu,
+  #context-menu,
+  .ctx-submenu {
+    min-width: 180px;
+  }
+
+  .dropdown-item,
+  .ctx-item {
+    padding-top: 6px;
+    padding-bottom: 6px;
+    font-size: 13px;
+  }
+
+  #icon-grid {
+    top: 38px;
+    left: 8px;
+    right: 8px;
+    width: calc(100% - 16px);
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-content: flex-start;
+  }
+
+  .desktop-icon {
+    width: 84px;
+    min-height: 78px;
+    padding: 4px 2px;
+  }
+
+  .desktop-icon .icon-gfx,
+  .icon-svg {
+    width: 40px;
+    height: 40px;
+  }
+
+  .icon-label {
+    max-width: 84px;
+    font-size: 12px;
+    line-height: 1.2;
+  }
+
+  #taskbar {
+    height: 32px;
+    padding: 0 4px;
+  }
+
+  .taskbar-btn {
+    height: 24px;
+    max-width: 120px;
+    font-size: 11px;
+  }
+
+  #clock {
+    min-width: 70px;
+    font-size: 11px;
+    padding: 3px 6px;
+  }
+
+  .win31-window {
+    min-width: 0;
+    min-height: 0;
+  }
+
+  .title-bar {
+    height: 26px;
+    margin: 2px 2px 0 2px;
+    padding: 0 2px;
+  }
+
+  .title-bar-text {
+    font-size: 12px;
+  }
+
+  .title-btn {
+    width: 22px;
+    height: 20px;
+  }
+
+  .win-menubar {
+    height: 24px;
+  }
+
+  .win-menubar .wmenu-item {
+    padding: 2px 6px;
+    font-size: 12px;
+  }
+
+  .win-content {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+
+  .resize-handle {
+    width: 22px;
+    height: 22px;
+  }
+
+  .win31-btn {
+    height: 28px;
+    min-width: 84px;
+    font-size: 12px;
+  }
+
+  .plx-row input[type="text"] {
+    height: 28px;
+    font-size: 12px;
+  }
+
+  .perplexity-content {
+    padding: 14px 10px;
+  }
+
+  .modal-dialog {
+    width: min(92vw, 360px);
+    min-width: 0;
+  }
+
+  .modal-body {
+    padding: 12px 12px;
+  }
+
+  .dos-term {
+    font-size: 13px;
+  }
+
+  .win31-window.maximized {
+    top: 30px !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: calc(100% - 62px) !important;
+  }
+}
+
+/* Hourglass */
+.hourglass, .hourglass * { cursor:wait !important; }
+
+/* ============================================================
+   APP: PERPLEXITY AI
+   ============================================================ */
+.perplexity-content {
+  display:flex;
+  flex-direction:column;
+  height:100%;
+  background:var(--white);
+  padding:20px 16px;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+}
+.plx-logo { font-size:16px; font-weight:bold; color:var(--navy); }
+.plx-tag { font-size:10px; color:var(--dk-gray); margin-bottom:10px; }
+.plx-row { display:flex; gap:3px; width:100%; max-width:300px; }
+.plx-row input[type="text"] {
+  flex:1; height:22px;
+  border:2px solid;
+  border-color:var(--dk-gray) var(--white) var(--white) var(--dk-gray);
+  font-family:inherit; font-size:11px;
+  padding:0 4px; outline:none;
+  background:var(--white);
+}
+.plx-footer { font-size:9px; color:var(--dk-gray); margin-top:10px; }
+
+/* ============================================================
+   APP: NOTEPAD
+   ============================================================ */
+.notepad-textarea {
+  width:100%; height:100%;
+  border:none; resize:none;
+  font-family:'Fixedsys','Courier New',Consolas,monospace;
+  font-size:12px;
+  padding:2px 3px;
+  outline:none;
+  background:var(--white);
+  color:var(--black);
+  line-height:1.35;
+}
+
+/* ============================================================
+   APP: MINESWEEPER
+   ============================================================ */
+.mines-wrap {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  background:var(--silver);
+  padding:6px;
+  height:100%;
+  min-height:0;
+}
+.mines-hdr {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  width:184px;
+  border:2px solid;
+  border-color:var(--dk-gray) var(--white) var(--white) var(--dk-gray);
+  padding:4px 6px;
+  margin-bottom:6px;
+  background:var(--silver);
+}
+.mines-lcd {
+  font-size:18px;
+  font-weight:bold;
+  font-family:'Courier New',Consolas,monospace;
+  color:#ff0000;
+  background:var(--black);
+  padding:1px 3px;
+  min-width:38px;
+  text-align:right;
+  border:1px solid;
+  border-color:var(--dk-gray) var(--white) var(--white) var(--dk-gray);
+  letter-spacing:1px;
+}
+.mines-face {
+  width:26px; height:26px;
+  background:var(--silver);
+  border:2px solid;
+  border-color:var(--white) var(--dk-gray) var(--dk-gray) var(--white);
+  font-size:14px;
+  text-align:center;
+  line-height:22px;
+  cursor:pointer;
+}
+.mines-face:active {
+  border-color:var(--dk-gray) var(--white) var(--white) var(--dk-gray);
+}
+.mines-grid {
+  display:grid;
+  grid-template-columns:repeat(9, 18px);
+  grid-template-rows:repeat(9, 18px);
+  border:3px solid;
+  border-color:var(--dk-gray) var(--white) var(--white) var(--dk-gray);
+}
+.mcell {
+  width:18px; height:18px;
+  background:var(--silver);
+  border:2px solid;
+  border-color:var(--white) var(--dk-gray) var(--dk-gray) var(--white);
+  font-size:10px;
+  font-weight:bold;
+  font-family:'Courier New',Consolas,monospace;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  line-height:1;
+}
+.mcell.revealed {
+  border:1px solid var(--dk-gray);
+  background:#c0c0c0;
+  cursor:default;
+}
+.mcell.flagged::after { content:'🚩'; font-size:10px; }
+.mcell.boom { background:#ff0000; border:1px solid var(--dk-gray); }
+.mcell .n1{color:#0000ff} .mcell .n2{color:#008000} .mcell .n3{color:#ff0000}
+.mcell .n4{color:#000080} .mcell .n5{color:#800000} .mcell .n6{color:#008080}
+.mcell .n7{color:#000000} .mcell .n8{color:#808080}
+
+/* ============================================================
+   APP: DOS PROMPT
+   ============================================================ */
+.dos-term {
+  width:100%; height:100%;
+  background:var(--black);
+  color:#33ff33;
+  font-family:'Fixedsys','Courier New',Consolas,monospace;
+  font-size:12px;
+  padding:4px 6px;
+  overflow-y:auto;
+  display:flex;
+  flex-direction:column;
+}
+.dos-out { white-space:pre-wrap; word-wrap:break-word; line-height:1.35; }
+.dos-in-line { display:flex; align-items:center; }
+.dos-prompt-txt { white-space:pre; flex-shrink:0; }
+.dos-in {
+  background:transparent; border:none;
+  color:#33ff33;
+  font-family:inherit; font-size:inherit;
+  outline:none; flex:1;
+  caret-color:#33ff33;
+}
+</style>
+</head>
+<body>
+
+<!-- MOBILE FALLBACK -->
+<div id="mobile-fallback">
+  <div class="err-icon">⚠️</div>
+  <div><b>Windows 3.1</b></div>
+  <div style="margin-top:10px">
+    This program requires a mouse<br>and a desktop display to run.<br><br>
+    Please use a computer with a<br>mouse or pointing device.<br><br>
+    <span style="color:#c0c0c0">Minimum resolution: 800×500</span>
+  </div>
+</div>
+
+<!-- BOOT SPLASH -->
+<div id="boot-splash">
+  <div class="boot-logo">Microsoft Windows</div>
+  <div class="boot-ver">Perplexity Tribute Edition v3.1</div>
+  <div class="boot-bar-outer"><div class="boot-bar-inner" id="boot-bar"></div></div>
+  <div class="boot-msg" id="boot-msg">Loading system files...</div>
+</div>
+
+<!-- BSOD -->
+<div id="bsod">
+  <div class="bsod-hdr">Windows</div>
+  <div>
+    A fatal exception 0E has occurred at 0028:C0034B03<br>
+    in VxD VMCPD(01) + 00001A57.<br><br>
+    The current application will be terminated.<br><br>
+    *  Press any key to terminate the current application.<br>
+    *  Press CTRL+ALT+DEL again to restart your computer.<br>
+       You will lose any unsaved information in all applications.
+  </div>
+  <div class="bsod-cd" id="bsod-cd">Auto-recovering in 5...</div>
+</div>
+
+<!-- DESKTOP -->
+<div id="desktop" class="wp-teal">
+
+  <!-- Program Manager Menu Bar -->
+  <div id="menu-bar">
+    <div class="menu-item menu-title" data-menu="file">
+      <span style="text-decoration:underline">F</span>ile
+      <div class="dropdown-menu" id="dd-file">
+        <div class="dropdown-item" onclick="W.modal('info','New...','This feature is not available\nin the tribute edition.')">New...</div>
+        <div class="dropdown-item" onclick="W.modal('info','Open...','This feature is not available\nin the tribute edition.')">Open...</div>
+        <div class="dropdown-sep"></div>
+        <div class="dropdown-item disabled">Move... <span class="shortcut">F7</span></div>
+        <div class="dropdown-item disabled">Copy... <span class="shortcut">F8</span></div>
+        <div class="dropdown-item disabled">Delete <span class="shortcut">Del</span></div>
+        <div class="dropdown-sep"></div>
+        <div class="dropdown-item" onclick="W.modal('info','Run...','C:\\PERPLEXITY\\ASK.EXE not found.')">Run...</div>
+        <div class="dropdown-sep"></div>
+        <div class="dropdown-item" onclick="W.showBSOD()">Exit Windows... <span class="shortcut">Alt+F4</span></div>
+      </div>
+    </div>
+    <div class="menu-item" data-menu="options">
+      <span style="text-decoration:underline">O</span>ptions
+      <div class="dropdown-menu" id="dd-options">
+        <div class="dropdown-item" onclick="W.modal('info','Auto Arrange','Icons will auto-arrange.\n(They already do.)')">Auto Arrange</div>
+        <div class="dropdown-item" onclick="W.modal('info','Minimize on Use','Program Manager will minimize on use.\n(Not really.)')">Minimize on Use</div>
+        <div class="dropdown-sep"></div>
+        <div class="dropdown-item" onclick="W.modal('info','Save Settings','Settings saved!\n(Not really — there is no persistent storage.)')">Save Settings on Exit</div>
+      </div>
+    </div>
+    <div class="menu-item" data-menu="window">
+      <span style="text-decoration:underline">W</span>indow
+      <div class="dropdown-menu" id="dd-window">
+        <div class="dropdown-item" onclick="W.cascade()">Cascade <span class="shortcut">Shift+F5</span></div>
+        <div class="dropdown-item" onclick="W.tile()">Tile <span class="shortcut">Shift+F4</span></div>
+        <div class="dropdown-sep"></div>
+        <div class="dropdown-item" onclick="W.closeMenus()">Arrange Icons</div>
+      </div>
+    </div>
+    <div class="menu-item" data-menu="help">
+      <span style="text-decoration:underline">H</span>elp
+      <div class="dropdown-menu" id="dd-help">
+        <div class="dropdown-item" onclick="W.modal('info','Contents','Help is not available.\nTry asking Perplexity AI instead!')">Contents</div>
+        <div class="dropdown-item" onclick="W.modal('info','Search for Help on...','Did you mean: perplexity.ai?')">Search for Help on...</div>
+        <div class="dropdown-sep"></div>
+        <div class="dropdown-item" onclick="W.aboutDialog()">About Program Manager...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Desktop Icons — SINGLE CLICK to open -->
+  <div id="icon-grid">
+    <div class="desktop-icon" data-app="perplexity">
+      <div class="icon-gfx">
+        <svg class="icon-svg" viewBox="0 0 32 32">
+          <rect x="3" y="1" width="26" height="30" rx="2" fill="#000080" stroke="#000" stroke-width="1"/>
+          <rect x="5" y="3" width="22" height="22" fill="#fff"/>
+          <text x="16" y="19" text-anchor="middle" font-size="15" font-weight="bold" fill="#000080" font-family="sans-serif">P</text>
+          <rect x="8" y="27" width="16" height="2" rx="1" fill="#c0c0c0"/>
+        </svg>
+      </div>
+      <div class="icon-label">Perplexity AI</div>
+    </div>
+    <div class="desktop-icon" data-app="notepad">
+      <div class="icon-gfx">
+        <svg class="icon-svg" viewBox="0 0 32 32">
+          <rect x="4" y="2" width="21" height="28" fill="#fff" stroke="#000" stroke-width="1"/>
+          <polyline points="19,2 25,8 25,30" fill="none" stroke="#000" stroke-width="1"/>
+          <polygon points="19,2 19,8 25,8" fill="#c0c0c0" stroke="#000" stroke-width=".5"/>
+          <line x1="8" y1="12" x2="21" y2="12" stroke="#00a" stroke-width="1"/>
+          <line x1="8" y1="15" x2="19" y2="15" stroke="#00a" stroke-width="1"/>
+          <line x1="8" y1="18" x2="17" y2="18" stroke="#00a" stroke-width="1"/>
+          <line x1="8" y1="21" x2="15" y2="21" stroke="#00a" stroke-width="1"/>
+          <line x1="8" y1="24" x2="13" y2="24" stroke="#00a" stroke-width="1"/>
+        </svg>
+      </div>
+      <div class="icon-label">Notepad</div>
+    </div>
+    <div class="desktop-icon" data-app="minesweeper">
+      <div class="icon-gfx">
+        <svg class="icon-svg" viewBox="0 0 32 32">
+          <rect x="2" y="2" width="28" height="28" fill="#c0c0c0" stroke="#808080" stroke-width="1"/>
+          <circle cx="16" cy="16" r="7" fill="#000"/>
+          <line x1="16" y1="5" x2="16" y2="9" stroke="#000" stroke-width="2"/>
+          <line x1="16" y1="23" x2="16" y2="27" stroke="#000" stroke-width="2"/>
+          <line x1="5" y1="16" x2="9" y2="16" stroke="#000" stroke-width="2"/>
+          <line x1="23" y1="16" x2="27" y2="16" stroke="#000" stroke-width="2"/>
+          <line x1="8.5" y1="8.5" x2="11" y2="11" stroke="#000" stroke-width="1.5"/>
+          <line x1="21" y1="21" x2="23.5" y2="23.5" stroke="#000" stroke-width="1.5"/>
+          <circle cx="16" cy="16" r="2.5" fill="#ff0000"/>
+        </svg>
+      </div>
+      <div class="icon-label">Mine Field</div>
+    </div>
+    <div class="desktop-icon" data-app="dos">
+      <div class="icon-gfx">
+        <svg class="icon-svg" viewBox="0 0 32 32">
+          <rect x="2" y="2" width="28" height="28" rx="1" fill="#000" stroke="#808080" stroke-width="1"/>
+          <text x="5" y="14" font-size="9" fill="#33ff33" font-family="monospace">C:\&gt;</text>
+          <rect x="21" y="8" width="5" height="2" fill="#33ff33"><animate attributeName="opacity" values="1;0;1" dur="1s" repeatCount="indefinite"/></rect>
+          <text x="5" y="24" font-size="7" fill="#33ff33" font-family="monospace">MS-DOS</text>
+        </svg>
+      </div>
+      <div class="icon-label">DOS Prompt</div>
+    </div>
+  </div>
+
+  <!-- Taskbar -->
+  <div id="taskbar">
+    <div id="taskbar-items"></div>
+    <div id="clock"></div>
+  </div>
+</div>
+
+<!-- Context Menu -->
+<div id="context-menu">
+  <div class="ctx-item" onclick="W.closeMenus()">Arrange Icons</div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-sub ctx-item">
+    Wallpaper
+    <div class="ctx-submenu">
+      <div class="ctx-item" onclick="W.setWP('wp-teal')">Teal (Default)</div>
+      <div class="ctx-item" onclick="W.setWP('wp-weave')">Weave</div>
+      <div class="ctx-item" onclick="W.setWP('wp-tartan')">Tartan</div>
+      <div class="ctx-item" onclick="W.setWP('wp-bricks')">Bricks</div>
+      <div class="ctx-item" onclick="W.setWP('wp-castle')">Castle</div>
+    </div>
+  </div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-item" onclick="W.aboutDialog()">About...</div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-item" onclick="W.modal('error','Error','An error has occurred.\n\nJust kidding. Everything is fine.')">Cause Error</div>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+// === Mobile / touch mode ===
+function isMobile(){
+  return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)
+    || (window.innerWidth < 900 || window.innerHeight < 560)
+    || ('ontouchstart' in window && window.innerWidth < 1200);
+}
+const MOBILE_MODE = isMobile();
+if(MOBILE_MODE){
+  document.body.classList.add('mobile-mode');
+  const fallback = document.getElementById('mobile-fallback');
+  if(fallback) fallback.style.display = 'none';
+}
+
+// === Audio ===
+let ctx=null;
+function initA(){if(!ctx)ctx=new(window.AudioContext||window.webkitAudioContext)()}
+function beep(f,d,t){
+  if(!ctx)return;
+  try{
+    const o=ctx.createOscillator(),g=ctx.createGain();
+    o.type=t||'sine'; o.frequency.value=f||440;
+    g.gain.setValueAtTime(.10,ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+(d||.12));
+    o.connect(g).connect(ctx.destination);
+    o.start(); o.stop(ctx.currentTime+(d||.12));
+  }catch(e){}
+}
+function chord(ff,d){ff.forEach(f=>beep(f,d||.3,'sine'))}
+function sfxErr(){beep(200,.12,'square')}
+function sfxClick(){beep(800,.04,'sine')}
+function sfxOpen(){beep(600,.06,'sine');setTimeout(()=>beep(900,.06,'sine'),70)}
+function sfxClose(){beep(500,.05,'sine');setTimeout(()=>beep(300,.07,'sine'),50)}
+document.addEventListener('click',()=>initA(),{once:true});
+
+// === Boot ===
+const bootMsgs=['Loading system files...','Initializing GDI.EXE...','Loading USER.EXE...',
+  'Starting KRNL386.EXE...','Loading Program Manager...','Initializing Perplexity modules...','Loading desktop...'];
+let bStep=0;
+function animBoot(){
+  if(bStep>=bootMsgs.length){
+    document.getElementById('boot-splash').style.display='none';
+    document.getElementById('desktop').style.display='block';
+    startClock();
+    chord([523,659,784],.35);
+    return;
+  }
+  document.getElementById('boot-bar').style.width=(((bStep+1)/bootMsgs.length)*100)+'%';
+  document.getElementById('boot-msg').textContent=bootMsgs[bStep];
+  bStep++;
+  setTimeout(animBoot,350+Math.random()*250);
+}
+setTimeout(animBoot,500);
+
+// === Clock ===
+function updateClock(){
+  const n=new Date();
+  let h=n.getHours(),m=n.getMinutes();
+  const ap=h>=12?'PM':'AM'; h=h%12||12;
+  document.getElementById('clock').textContent=h+':'+(m<10?'0':'')+m+' '+ap;
+}
+function startClock(){updateClock();setInterval(updateClock,10000)}
+window.addEventListener('resize', clampWindows);
+
+// === Window Manager ===
+const wins={};
+let winOrder=[], topZ=100, activeWin=null, drag=null, rsz=null;
+
+function clampWindows(){
+  Object.values(wins).forEach(w=>{
+    const el=w.el;
+    const maxW=Math.max(180, window.innerWidth - (MOBILE_MODE ? 12 : 10));
+    const maxH=Math.max(100, window.innerHeight - (MOBILE_MODE ? 58 : 10));
+    let width=Math.min(el.offsetWidth||parseInt(el.style.width,10)||maxW, maxW);
+    let height=Math.min(el.offsetHeight||parseInt(el.style.height,10)||maxH, maxH);
+    let left=parseInt(el.style.left,10); if(Number.isNaN(left)) left=0;
+    let top=parseInt(el.style.top,10); if(Number.isNaN(top)) top=MOBILE_MODE ? 32 : 0;
+
+    if(!w.max){
+      el.style.width=width+'px';
+      el.style.height=height+'px';
+      if(MOBILE_MODE){
+        left=Math.min(Math.max(6, left), Math.max(6, window.innerWidth - width - 6));
+        top=Math.min(Math.max(34, top), Math.max(22, window.innerHeight - height - 34));
+      }else{
+        left=Math.min(Math.max(0, left), Math.max(0, window.innerWidth - width));
+        top=Math.min(Math.max(20, top), Math.max(20, window.innerHeight - height - 24));
+      }
+      el.style.left=left+'px';
+      el.style.top=top+'px';
+    }
+  });
+}
+
+function makeWin(id,title,w,h,html,opts){
+  opts=opts||{};
+  if(wins[id]){focus(id);if(wins[id].min)restore(id);return wins[id]}
+
+  const el=document.createElement('div');
+  el.className='win31-window';
+  el.id='win-'+id;
+  const maxW = Math.max(180, window.innerWidth - (MOBILE_MODE ? 12 : 40));
+  const maxH = Math.max(100, window.innerHeight - (MOBILE_MODE ? 58 : 80));
+  const finalW = Math.min(w, maxW);
+  const finalH = Math.min(h, maxH);
+  el.style.width=finalW+'px'; el.style.height=finalH+'px';
+  // Offset position by count of open windows
+  const ct=Object.keys(wins).length;
+  const lx = MOBILE_MODE
+    ? 6
+    : Math.max(80,Math.min((window.innerWidth-finalW)/2+ct*22,window.innerWidth-120));
+  const ly = MOBILE_MODE
+    ? Math.min(44 + (ct * 14), Math.max(24, window.innerHeight - finalH - 42))
+    : Math.max(30,Math.min((window.innerHeight-finalH)/2+ct*22,window.innerHeight-80));
+  el.style.left=lx+'px'; el.style.top=ly+'px';
+
+  const mb=opts.menubar||'';
+  el.innerHTML=
+    '<div class="title-bar" data-wid="'+id+'">'+
+      '<div class="title-btn minimize" data-act="min" data-wid="'+id+'"></div>'+
+      '<div class="title-bar-text">'+title+'</div>'+
+      '<div class="title-btn maximize" data-act="max" data-wid="'+id+'"></div>'+
+      '<div class="title-btn close" data-act="close" data-wid="'+id+'"></div>'+
+    '</div>'+mb+
+    '<div class="win-content">'+html+'</div>'+
+    '<div class="resize-handle" data-wid="'+id+'"></div>';
+
+  document.getElementById('desktop').appendChild(el);
+
+  const wd={id,title,el,min:false,max:false,restore:null,icon:opts.icon||'📄'};
+  wins[id]=wd; winOrder.push(id);
+  focus(id);
+  addTB(id,title,opts.icon);
+  sfxOpen();
+  if(opts.onReady)opts.onReady(el);
+  return wd;
+}
+
+function focus(id){
+  if(!wins[id])return;
+  topZ++; wins[id].el.style.zIndex=topZ;
+  Object.values(wins).forEach(w=>w.el.classList.toggle('inactive',w.id!==id));
+  activeWin=id;
+  document.querySelectorAll('.taskbar-btn').forEach(b=>b.classList.toggle('active',b.dataset.wid===id));
+}
+
+function closeWin(id){
+  if(!wins[id])return;
+  sfxClose();
+  wins[id].el.remove();
+  delete wins[id];
+  winOrder=winOrder.filter(x=>x!==id);
+  rmTB(id);
+  if(activeWin===id){
+    activeWin=winOrder.length?winOrder[winOrder.length-1]:null;
+    if(activeWin)focus(activeWin);
+  }
+}
+
+function minimize(id){
+  if(!wins[id])return;
+  wins[id].el.style.display='none';
+  wins[id].min=true;
+  sfxClick();
+  const vis=winOrder.filter(x=>wins[x]&&!wins[x].min);
+  if(vis.length)focus(vis[vis.length-1]);
+}
+
+function restore(id){
+  if(!wins[id])return;
+  wins[id].el.style.display='flex';
+  wins[id].min=false;
+  if(wins[id].max){
+    wins[id].el.classList.remove('maximized');
+    if(wins[id].restore){
+      const r=wins[id].restore;
+      Object.assign(wins[id].el.style,{left:r.l,top:r.t,width:r.w,height:r.h});
+    }
+    wins[id].max=false;
+    const btn=wins[id].el.querySelector('[data-act="max"],[data-act="restore"]');
+    if(btn){btn.className='title-btn maximize';btn.dataset.act='max';}
+  }
+  focus(id);
+}
+
+function maximize(id){
+  if(!wins[id])return;
+  const el=wins[id].el;
+  if(wins[id].max){restore(id);return}
+  wins[id].restore={l:el.style.left,t:el.style.top,w:el.style.width,h:el.style.height};
+  el.classList.add('maximized');
+  wins[id].max=true;
+  const btn=el.querySelector('[data-act="max"]');
+  if(btn){btn.className='title-btn restore';btn.dataset.act='restore';}
+  focus(id);
+}
+
+// Taskbar
+function addTB(id,title,icon){
+  const c=document.getElementById('taskbar-items');
+  const b=document.createElement('div');
+  b.className='taskbar-btn active'; b.dataset.wid=id;
+  b.textContent=(icon||'📄')+' '+title;
+  b.onclick=()=>{
+    if(wins[id].min)restore(id);
+    else if(activeWin===id)minimize(id);
+    else focus(id);
+    sfxClick();
+  };
+  c.appendChild(b);
+}
+function rmTB(id){
+  const b=document.querySelector('.taskbar-btn[data-wid="'+id+'"]');
+  if(b)b.remove();
+}
+
+// Drag + Resize
+function getPoint(e){
+  if(e.touches && e.touches.length) return e.touches[0];
+  if(e.changedTouches && e.changedTouches.length) return e.changedTouches[0];
+  return e;
+}
+function startPointer(e){
+  const pt=getPoint(e);
+  const tb=e.target.closest('.title-bar');
+  if(tb&&!e.target.closest('.title-btn')){
+    const id=tb.dataset.wid;
+    if(wins[id]&&!wins[id].max){
+      const r=wins[id].el.getBoundingClientRect();
+      drag={id,sx:pt.clientX,sy:pt.clientY,ox:r.left,oy:r.top};
+      focus(id);
+      if(e.cancelable)e.preventDefault();
+    }
+    return;
+  }
+  const rh=e.target.closest('.resize-handle');
+  if(rh){
+    const id=rh.dataset.wid;
+    if(wins[id]&&!wins[id].max){
+      rsz={id,sx:pt.clientX,sy:pt.clientY,ow:wins[id].el.offsetWidth,oh:wins[id].el.offsetHeight};
+      focus(id);
+      if(e.cancelable)e.preventDefault();
+    }
+    return;
+  }
+  const we=e.target.closest('.win31-window');
+  if(we){const id=we.id.replace('win-','');if(wins[id])focus(id)}
+}
+function movePointer(e){
+  const pt=getPoint(e);
+  if(drag){
+    const dx=pt.clientX-drag.sx,dy=pt.clientY-drag.sy;
+    const el=wins[drag.id].el;
+    let nx=drag.ox+dx, ny=drag.oy+dy;
+    if(MOBILE_MODE){
+      nx=Math.min(Math.max(6,nx), Math.max(6, window.innerWidth-el.offsetWidth-6));
+      ny=Math.min(Math.max(34,ny), Math.max(22, window.innerHeight-el.offsetHeight-34));
+    }
+    el.style.left=nx+'px';
+    el.style.top=ny+'px';
+    if(e.cancelable)e.preventDefault();
+  }
+  if(rsz){
+    const el=wins[rsz.id].el;
+    const maxW=Math.max(180, window.innerWidth - (MOBILE_MODE ? 12 : 10));
+    const maxH=Math.max(100, window.innerHeight - (MOBILE_MODE ? 58 : 10));
+    const nw=Math.min(maxW, Math.max(180,rsz.ow+(pt.clientX-rsz.sx)));
+    const nh=Math.min(maxH, Math.max(100,rsz.oh+(pt.clientY-rsz.sy)));
+    el.style.width=nw+'px';
+    el.style.height=nh+'px';
+    if(e.cancelable)e.preventDefault();
+  }
+}
+function endPointer(){drag=null;rsz=null}
+
+document.addEventListener('mousedown', startPointer);
+document.addEventListener('mousemove', movePointer);
+document.addEventListener('mouseup', endPointer);
+document.addEventListener('touchstart', startPointer, {passive:false});
+document.addEventListener('touchmove', movePointer, {passive:false});
+document.addEventListener('touchend', endPointer, {passive:true});
+document.addEventListener('touchcancel', endPointer, {passive:true});
+
+// Title bar buttons
+document.addEventListener('click',function(e){
+  const b=e.target.closest('.title-btn');
+  if(!b)return;
+  sfxClick();
+  const id=b.dataset.wid,act=b.dataset.act;
+  if(act==='close')closeWin(id);
+  else if(act==='min')minimize(id);
+  else if(act==='max')maximize(id);
+  else if(act==='restore')restore(id);
+});
+
+// Dbl-click title bar
+document.addEventListener('dblclick',function(e){
+  const tb=e.target.closest('.title-bar');
+  if(tb&&!e.target.closest('.title-btn')){
+    const id=tb.dataset.wid;
+    if(wins[id]){wins[id].max?restore(id):maximize(id)}
+  }
+});
+
+// === Menus ===
+let openDD=null;
+document.querySelectorAll('#menu-bar>.menu-item').forEach(mi=>{
+  mi.addEventListener('click',function(e){
+    e.stopPropagation();sfxClick();
+    const dd=this.querySelector('.dropdown-menu');
+    if(!dd)return;
+    if(openDD===dd){closeMenus();return}
+    closeMenus();
+    dd.classList.add('show');this.classList.add('open');openDD=dd;
+  });
+  mi.addEventListener('mouseenter',function(){
+    if(!openDD)return;
+    closeMenus();
+    const dd=this.querySelector('.dropdown-menu');
+    if(dd){dd.classList.add('show');this.classList.add('open');openDD=dd}
+  });
+});
+
+function closeMenus(){
+  document.querySelectorAll('.dropdown-menu').forEach(m=>m.classList.remove('show'));
+  document.querySelectorAll('#menu-bar>.menu-item').forEach(i=>i.classList.remove('open'));
+  openDD=null;
+}
+document.addEventListener('click',function(e){
+  if(!e.target.closest('#menu-bar'))closeMenus();
+  if(!e.target.closest('#context-menu'))document.getElementById('context-menu').classList.remove('show');
+});
+
+// === Context Menu ===
+document.getElementById('desktop').addEventListener('contextmenu',function(e){
+  if(e.target.closest('.win31-window')||e.target.closest('.desktop-icon')||
+     e.target.closest('#menu-bar')||e.target.closest('#taskbar'))return;
+  e.preventDefault();
+  const m=document.getElementById('context-menu');
+  m.style.left=Math.min(e.clientX,window.innerWidth-170)+'px';
+  m.style.top=Math.min(e.clientY,window.innerHeight-180)+'px';
+  m.classList.add('show');
+  sfxClick();
+});
+
+// === Icon clicks — SINGLE CLICK to open ===
+let iconClickTimer=null, lastIconClicked=null;
+document.querySelectorAll('.desktop-icon').forEach(ic=>{
+  ic.addEventListener('click',function(e){
+    e.stopPropagation();
+    sfxClick();
+    // Select
+    document.querySelectorAll('.desktop-icon').forEach(i=>i.classList.remove('selected'));
+    this.classList.add('selected');
+    // Single click opens after brief delay (to feel like a real click, not instant)
+    const app=this.dataset.app;
+    initA();
+    // Small 150ms delay to show selection before opening
+    clearTimeout(iconClickTimer);
+    iconClickTimer=setTimeout(()=>openApp(app),150);
+  });
+});
+document.getElementById('desktop').addEventListener('click',function(e){
+  if(e.target===this||e.target.id==='desktop')
+    document.querySelectorAll('.desktop-icon').forEach(i=>i.classList.remove('selected'));
+});
+
+// === Wallpaper ===
+function setWP(c){
+  document.getElementById('desktop').className=c;
+  document.getElementById('context-menu').classList.remove('show');
+  sfxClick();
+}
+
+// === Window arrangement ===
+function cascade(){
+  closeMenus();
+  let x=80,y=40;
+  winOrder.forEach(id=>{
+    if(wins[id]&&!wins[id].min){
+      if(wins[id].max)restore(id);
+      wins[id].el.style.left=x+'px';wins[id].el.style.top=y+'px';
+      x+=24;y+=24;focus(id);
+    }
+  });
+}
+function tile(){
+  closeMenus();
+  const vis=winOrder.filter(id=>wins[id]&&!wins[id].min);
+  if(!vis.length)return;
+  const cols=Math.ceil(Math.sqrt(vis.length));
+  const rows=Math.ceil(vis.length/cols);
+  const cw=Math.floor(window.innerWidth/cols);
+  const ch=Math.floor((window.innerHeight-44)/rows);
+  vis.forEach((id,i)=>{
+    if(wins[id].max)restore(id);
+    const el=wins[id].el;
+    el.style.left=(i%cols)*cw+'px';
+    el.style.top=(20+Math.floor(i/cols)*ch)+'px';
+    el.style.width=cw+'px'; el.style.height=ch+'px';
+  });
+}
+
+// === Modals ===
+function modal(type,title,msg){
+  closeMenus();
+  const icon=type==='error'?'⚠️':'ℹ️';
+  if(type==='error')sfxErr(); else sfxClick();
+  const ov=document.createElement('div');
+  ov.className='modal-overlay';
+  ov.innerHTML=
+    '<div class="modal-dialog" style="position:relative">'+
+      '<div class="title-bar"><div class="title-bar-text">'+title+'</div></div>'+
+      '<div class="modal-body">'+
+        '<div class="modal-icon">'+icon+'</div>'+
+        '<div class="modal-text">'+msg.replace(/\n/g,'<br>')+'</div>'+
+      '</div>'+
+      '<div class="modal-buttons">'+
+        '<button class="win31-btn primary" onclick="this.closest(\'.modal-overlay\').remove()">OK</button>'+
+      '</div>'+
+    '</div>';
+  document.body.appendChild(ov);
+}
+
+function aboutDialog(){
+  closeMenus();
+  document.getElementById('context-menu').classList.remove('show');
+  sfxClick();
+  const ov=document.createElement('div');
+  ov.className='modal-overlay';
+  ov.innerHTML=
+    '<div class="modal-dialog" style="position:relative;min-width:340px">'+
+      '<div class="title-bar"><div class="title-bar-text">About Program Manager</div></div>'+
+      '<div style="padding:16px 20px;text-align:center">'+
+        '<div style="font-size:16px;font-weight:bold;color:#000080;margin-bottom:2px">Microsoft Windows</div>'+
+        '<div style="font-size:12px;font-weight:bold;margin-bottom:6px">Perplexity Tribute Edition v3.1</div>'+
+        '<div style="border-top:1px solid #808080;border-bottom:1px solid #fff;margin:8px 0"></div>'+
+        '<div style="font-size:10px;color:#808080;line-height:1.6">'+
+          'Copyright &copy; 2026 — A nostalgic tribute.<br>'+
+          'This is not a real Windows product.<br>'+
+          'Built with love, HTML, CSS, and JS.<br>'+
+          'No actual files were harmed.<br><br>'+
+          '<b>Free Memory:</b> 640 KB (ought to be enough)<br>'+
+          '<b>Math Co-processor:</b> Perplexity AI'+
+        '</div>'+
+      '</div>'+
+      '<div class="modal-buttons">'+
+        '<button class="win31-btn primary" onclick="this.closest(\'.modal-overlay\').remove()">OK</button>'+
+      '</div>'+
+    '</div>';
+  document.body.appendChild(ov);
+}
+
+// === BSOD ===
+let bsodTmr=null;
+function showBSOD(){
+  closeMenus();sfxErr();
+  setTimeout(()=>beep(150,.3,'sawtooth'),150);
+  const bsod=document.getElementById('bsod');
+  bsod.style.display='flex';
+  let c=5;const cd=document.getElementById('bsod-cd');
+  cd.textContent='Auto-recovering in '+c+'...';
+  bsodTmr=setInterval(()=>{
+    c--;
+    if(c<=0){clearInterval(bsodTmr);bsod.style.display='none';chord([523,659,784],.3)}
+    else cd.textContent='Auto-recovering in '+c+'...';
+  },1000);
+}
+document.addEventListener('keydown',function(e){
+  if(e.ctrlKey&&e.altKey&&e.key==='Delete'){e.preventDefault();showBSOD()}
+  if(document.getElementById('bsod').style.display==='flex'&&!e.ctrlKey&&!e.altKey){
+    clearInterval(bsodTmr);document.getElementById('bsod').style.display='none';chord([523,659,784],.3);
+  }
+});
+
+// ============================================================
+// APP: PERPLEXITY AI
+// ============================================================
+function openPerplexity(){
+  makeWin('perplexity','Perplexity AI',400,230,
+    '<div class="perplexity-content">'+
+      '<div class="plx-logo">Perplexity AI</div>'+
+      '<div class="plx-tag">Ask anything. Get answers.</div>'+
+      '<div class="plx-row">'+
+        '<input type="text" id="plx-q" placeholder="Ask anything..." />'+
+        '<button class="win31-btn" id="plx-go">Ask</button>'+
+      '</div>'+
+      '<div class="plx-footer">Powered by curiosity and large language models.</div>'+
+    '</div>',
+  {icon:'🔍',onReady:function(el){
+    const inp=el.querySelector('#plx-q'),btn=el.querySelector('#plx-go');
+    function go(){
+      const q=inp.value.trim();
+      if(!q){modal('error','Perplexity AI','Please enter a question.');return}
+      sfxClick();
+      document.body.classList.add('hourglass');
+      setTimeout(()=>{document.body.classList.remove('hourglass');
+        window.open('https://perplexity.ai/search?q='+encodeURIComponent(q),'_blank');
+      },1200);
+    }
+    btn.addEventListener('click',go);
+    inp.addEventListener('keydown',e=>{if(e.key==='Enter')go()});
+    setTimeout(()=>inp.focus(),80);
+  }});
+}
+
+// ============================================================
+// APP: NOTEPAD
+// ============================================================
+function openNotepad(){
+  const mb=
+    '<div class="win-menubar">'+
+      '<div class="wmenu-item" id="np-file" style="position:relative">'+
+        '<span style="text-decoration:underline">F</span>ile'+
+        '<div class="dropdown-menu" id="np-dd">'+
+          '<div class="dropdown-item" onclick="W.npNew()">New</div>'+
+          '<div class="dropdown-sep"></div>'+
+          '<div class="dropdown-item" onclick="W.npSave()">Save As... <span class="shortcut">Ctrl+S</span></div>'+
+        '</div>'+
+      '</div>'+
+      '<div class="wmenu-item" onclick="W.modal(\'info\',\'Edit\',\'Undo, Cut, Copy, Paste — use keyboard shortcuts.\')">'+
+        '<span style="text-decoration:underline">E</span>dit</div>'+
+      '<div class="wmenu-item" onclick="W.modal(\'info\',\'Help\',\'Just type. It is Notepad.\')">'+
+        '<span style="text-decoration:underline">H</span>elp</div>'+
+    '</div>';
+  makeWin('notepad','Notepad - Untitled',460,320,
+    '<textarea class="notepad-textarea" id="np-text" spellcheck="false">Welcome to Notepad!\r\nPerplexity Tribute Edition v3.1\r\n\r\nType anything here...</textarea>',
+  {icon:'📝',menubar:mb,onReady:function(el){
+    const fm=el.querySelector('#np-file'),dd=el.querySelector('#np-dd');
+    let npOpen=false;
+    fm.addEventListener('click',e=>{
+      e.stopPropagation();sfxClick();
+      npOpen=!npOpen;dd.classList.toggle('show',npOpen);
+    });
+    document.addEventListener('click',()=>{dd.classList.remove('show');npOpen=false});
+    el.querySelector('#np-text').addEventListener('keydown',e=>{
+      if(e.ctrlKey&&e.key==='s'){e.preventDefault();npSave()}
+    });
+  }});
+}
+function npNew(){
+  const t=document.getElementById('np-text');
+  if(t){t.value='';sfxClick()}
+  if(wins.notepad)wins.notepad.el.querySelector('.title-bar-text').textContent='Notepad - Untitled';
+}
+function npSave(){
+  const t=document.getElementById('np-text');
+  if(!t)return;sfxClick();
+  const b=new Blob([t.value],{type:'text/plain'});
+  const u=URL.createObjectURL(b);
+  const a=document.createElement('a');a.href=u;a.download='UNTITLED.TXT';a.click();
+  URL.revokeObjectURL(u);
+  modal('info','Notepad','File saved as UNTITLED.TXT');
+}
+
+// ============================================================
+// APP: MINESWEEPER
+// ============================================================
+let MG=null;
+function openMinesweeper(){
+  const mw=makeWin('minesweeper','Mine Field',228,320,
+    '<div class="mines-wrap" id="mines-app">'+
+      '<div class="mines-hdr">'+
+        '<div class="mines-lcd" id="m-cnt">010</div>'+
+        '<div class="mines-face" id="m-face" onclick="W.mReset()">🙂</div>'+
+        '<div class="mines-lcd" id="m-tmr">000</div>'+
+      '</div>'+
+      '<div class="mines-grid" id="m-grid"></div>'+
+    '</div>',
+  {icon:'💣',onReady:function(el){
+    // Minesweeper uses silver bg, not white
+    el.querySelector('.win-content').style.background='var(--silver)';
+    el.querySelector('.win-content').style.overflow='hidden';
+    mInit();
+  }});
+}
+function mInit(){
+  const R=9,C=9,M=10;
+  MG={R,C,M,board:[],rev:[],flag:[],mines:[],over:false,won:false,go:false,t:0,ti:null,fc:0};
+  MG.board=Array.from({length:R},()=>Array(C).fill(0));
+  MG.rev=Array.from({length:R},()=>Array(C).fill(false));
+  MG.flag=Array.from({length:R},()=>Array(C).fill(false));
+  let p=0;
+  while(p<M){
+    const r=Math.floor(Math.random()*R),c=Math.floor(Math.random()*C);
+    if(MG.board[r][c]!==-1){MG.board[r][c]=-1;MG.mines.push([r,c]);p++}
+  }
+  for(let r=0;r<R;r++)for(let c=0;c<C;c++){
+    if(MG.board[r][c]===-1)continue;
+    let n=0;
+    for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){
+      const nr=r+dr,nc=c+dc;
+      if(nr>=0&&nr<R&&nc>=0&&nc<C&&MG.board[nr][nc]===-1)n++;
+    }
+    MG.board[r][c]=n;
+  }
+  mRender();mUpCnt();
+  const te=document.getElementById('m-tmr');if(te)te.textContent='000';
+  const fe=document.getElementById('m-face');if(fe)fe.textContent='🙂';
+  if(MG.ti)clearInterval(MG.ti);
+}
+function mRender(){
+  const g=document.getElementById('m-grid');if(!g)return;g.innerHTML='';
+  for(let r=0;r<MG.R;r++)for(let c=0;c<MG.C;c++){
+    const d=document.createElement('div');d.className='mcell';
+    if(MG.rev[r][c]){
+      d.classList.add('revealed');
+      if(MG.board[r][c]===-1){d.classList.add('boom');d.textContent='💣'}
+      else if(MG.board[r][c]>0){
+        const s=document.createElement('span');s.className='n'+MG.board[r][c];
+        s.textContent=MG.board[r][c];d.appendChild(s);
+      }
+    }else if(MG.flag[r][c])d.classList.add('flagged');
+    d.addEventListener('click',()=>mClick(r,c));
+    d.addEventListener('contextmenu',e=>{e.preventDefault();e.stopPropagation();mRClick(r,c)});
+    d.addEventListener('mousedown',()=>{if(!MG.over){const f=document.getElementById('m-face');if(f)f.textContent='😮'}});
+    d.addEventListener('mouseup',()=>{if(!MG.over){const f=document.getElementById('m-face');if(f)f.textContent='🙂'}});
+    g.appendChild(d);
+  }
+}
+function mClick(r,c){
+  if(MG.over||MG.flag[r][c]||MG.rev[r][c])return;
+  if(!MG.go){
+    MG.go=true;MG.t=0;
+    MG.ti=setInterval(()=>{MG.t++;const e=document.getElementById('m-tmr');if(e)e.textContent=String(MG.t).padStart(3,'0')},1000);
+  }
+  if(MG.board[r][c]===-1){
+    MG.over=true;MG.rev[r][c]=true;
+    MG.mines.forEach(([mr,mc])=>{MG.rev[mr][mc]=true});
+    clearInterval(MG.ti);
+    const f=document.getElementById('m-face');if(f)f.textContent='😵';
+    sfxErr();mRender();return;
+  }
+  mFlood(r,c);sfxClick();mRender();mCheckWin();
+}
+function mFlood(r,c){
+  if(r<0||r>=MG.R||c<0||c>=MG.C||MG.rev[r][c]||MG.flag[r][c])return;
+  MG.rev[r][c]=true;
+  if(MG.board[r][c]===0)for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++)mFlood(r+dr,c+dc);
+}
+function mRClick(r,c){
+  if(MG.over||MG.rev[r][c])return;
+  MG.flag[r][c]=!MG.flag[r][c];
+  MG.fc+=MG.flag[r][c]?1:-1;
+  sfxClick();mUpCnt();mRender();
+}
+function mUpCnt(){const e=document.getElementById('m-cnt');if(e&&MG)e.textContent=String(MG.M-MG.fc).padStart(3,'0')}
+function mCheckWin(){
+  let u=0;
+  for(let r=0;r<MG.R;r++)for(let c=0;c<MG.C;c++)if(!MG.rev[r][c])u++;
+  if(u===MG.M){
+    MG.over=true;MG.won=true;clearInterval(MG.ti);
+    const f=document.getElementById('m-face');if(f)f.textContent='😎';
+    chord([523,659,784],.5);
+    modal('info','Mine Field','Congratulations! You won!\nTime: '+MG.t+' seconds.');
+  }
+}
+function mReset(){if(MG&&MG.ti)clearInterval(MG.ti);sfxClick();mInit()}
+
+// ============================================================
+// APP: DOS PROMPT
+// ============================================================
+function openDOS(){
+  makeWin('dos','MS-DOS Prompt',500,300,
+    '<div class="dos-term" id="dos-t">'+
+      '<div class="dos-out" id="dos-o">Microsoft(R) MS-DOS(R) Version 6.22\n(C) Copyright Microsoft Corp 1981-1994.\nPerplexity Tribute Edition\n\n</div>'+
+      '<div class="dos-in-line">'+
+        '<span class="dos-prompt-txt">C:\\&gt; </span>'+
+        '<input class="dos-in" id="dos-i" type="text" autocomplete="off" spellcheck="false" />'+
+      '</div>'+
+    '</div>',
+  {icon:'💾',onReady:function(el){
+    const inp=el.querySelector('#dos-i'),out=el.querySelector('#dos-o'),term=el.querySelector('#dos-t');
+    const hist=[];let hi=-1;
+    inp.addEventListener('keydown',function(e){
+      if(e.key==='Enter'){
+        const cmd=inp.value;hist.unshift(cmd);hi=-1;
+        out.textContent+='C:\\> '+cmd+'\n';
+        const r=dosExec(cmd.trim());
+        if(r!==null)out.textContent+=r+'\n';
+        out.textContent+='\n';inp.value='';
+        term.scrollTop=term.scrollHeight;
+      }
+      if(e.key==='ArrowUp'){e.preventDefault();if(hi<hist.length-1){hi++;inp.value=hist[hi]}}
+      if(e.key==='ArrowDown'){e.preventDefault();if(hi>0){hi--;inp.value=hist[hi]}else{hi=-1;inp.value=''}}
+    });
+    term.addEventListener('click',()=>inp.focus());
+    setTimeout(()=>inp.focus(),80);
+  }});
+}
+
+function dosExec(cmd){
+  const lo=cmd.toLowerCase(),p=lo.split(/\s+/),c=p[0];
+  if(!c)return null;
+  switch(c){
+    case'help':return(
+      'Available commands:\n  HELP     Display this help text\n  DIR      List directory contents\n  CLS      Clear screen\n'+
+      '  VER      Display version\n  ECHO     Display a message\n  DATE     Display current date\n  TIME     Display current time\n'+
+      '  TYPE     Display file contents\n  EXIT     Close DOS Prompt');
+    case'dir':return(
+      ' Volume in drive C is PERPLEXITY\n Volume Serial Number is 3141-5926\n Directory of C:\\\n\n'+
+      'WINDOWS    <DIR>     04-01-26  12:00p\nDOS        <DIR>     04-01-26  12:00p\n'+
+      'AUTOEXEC BAT    256  04-01-26  12:00p\nCONFIG   SYS    128  04-01-26  12:00p\n'+
+      'PERPLXTY EXE  31337  04-01-26  12:00p\nREADME   TXT   1024  04-01-26  12:00p\n'+
+      '        4 file(s)      32,745 bytes\n        2 dir(s)     640,000 bytes free');
+    case'cls':const o=document.getElementById('dos-o');if(o)o.textContent='';return null;
+    case'ver':return'MS-DOS Version 6.22\nPerplexity Tribute Edition v3.1';
+    case'echo':return cmd.substring(5);
+    case'date':return'Current date is '+new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+    case'time':return'Current time is '+new Date().toLocaleTimeString('en-US');
+    case'type':
+      if(p[1]==='readme.txt')return'=== README.TXT ===\nWelcome to Perplexity Tribute Edition of Windows 3.1.\nThis is a fully HTML/CSS/JS simulation.\nNo actual DOS or Windows is running.\nTry the "perplexity" command for a surprise!';
+      return'File not found - '+(p[1]||'(none)');
+    case'exit':closeWin('dos');return null;
+    case'perplexity':
+      chord([262,330,392,523],.5);
+      return'╔══════════════════════════════════════╗\n'+
+        '║                                      ║\n'+
+        '║   ██████  ██████  ██████  ██    ██    ║\n'+
+        '║   ██  ██  ██      ██  ██  ██    ██    ║\n'+
+        '║   ██████  ████    ██████  ████  ██    ║\n'+
+        '║   ██      ██      ██  ██  ██    ██    ║\n'+
+        '║   ██      ██████  ██  ██  ██    ██    ║\n'+
+        '║                                      ║\n'+
+        '║   Ask anything. Get answers.          ║\n'+
+        '║   perplexity.ai                       ║\n'+
+        '║                                      ║\n'+
+        '╚══════════════════════════════════════╝';
+    default:sfxErr();return"Bad command or file name - '"+c+"'";
+  }
+}
+
+// === App launcher ===
+function openApp(app){
+  initA();
+  switch(app){
+    case'perplexity':openPerplexity();break;
+    case'notepad':openNotepad();break;
+    case'minesweeper':openMinesweeper();break;
+    case'dos':openDOS();break;
+  }
+}
+
+// === Public API for inline handlers ===
+window.W={
+  modal,aboutDialog,showBSOD,setWP:setWP,cascade,tile,closeMenus:closeMenus,
+  npNew:npNew,npSave:npSave,mReset:mReset
+};
+
+})();
+</script>
+<script data-pplx-inline-edit>
+(function(){
+  if(window===window.top)return;
+  function inlineAll(orig,clone){
+    if(orig.nodeType!==1)return;
+    try{
+      var cs=getComputedStyle(orig);
+      var t='';
+      for(var i=0;i<cs.length;i++){t+=cs[i]+':'+cs.getPropertyValue(cs[i])+';';}
+      clone.style.cssText=t;
+    }catch(e){}
+    var oc=orig.children,cc=clone.children;
+    for(var j=0;j<oc.length&&j<cc.length;j++){inlineAll(oc[j],cc[j]);}
+  }
+  function stripExternal(clone){
+    var imgs=clone.querySelectorAll('img');
+    for(var i=0;i<imgs.length;i++){
+      var s=imgs[i].getAttribute('src');
+      if(s&&!s.startsWith('data:'))imgs[i].removeAttribute('src');
+    }
+    var all=clone.querySelectorAll('*');
+    for(var i=0;i<all.length;i++){
+      var st=all[i].style.cssText;
+      if(st&&st.indexOf('url(')>=0){
+        all[i].style.cssText=st.replace(/url\(["']?(?!data:)[^)"']*["']?\)/gi,'none');
+      }
+    }
+  }
+  window.addEventListener('message',function(e){
+    if(!e.data||e.data.type!=='INLINE_EDIT_CAPTURE_REQUEST')return;
+    var scrollX=window.scrollX||window.pageXOffset||0;
+    var scrollY=window.scrollY||window.pageYOffset||0;
+    var w=window.innerWidth,h=window.innerHeight;
+    try{
+      var clone=document.documentElement.cloneNode(true);
+      var rm=clone.querySelectorAll('script,link[rel="stylesheet"],style');
+      for(var i=0;i<rm.length;i++){rm[i].remove();}
+      inlineAll(document.documentElement,clone);
+      stripExternal(clone);
+      var html=new XMLSerializer().serializeToString(clone);
+      var svg='<svg xmlns="http://www.w3.org/2000/svg" width="'+w+'" height="'+h+'">'
+        +'<foreignObject width="100%" height="100%">'
+        +'<div xmlns="http://www.w3.org/1999/xhtml" style="width:'+w+'px;height:'+h+'px;overflow:hidden">'
+        +'<div style="transform:translate(-'+scrollX+'px,-'+scrollY+'px);transform-origin:top left">'
+        +html+'</div></div></foreignObject></svg>';
+      var svgUrl='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
+      var img=new Image();
+      img.onload=function(){
+        var c=document.createElement('canvas');c.width=w;c.height=h;
+        c.getContext('2d').drawImage(img,0,0);
+        window.parent.postMessage({type:'INLINE_EDIT_SCREENSHOT_RESULT',dataUrl:c.toDataURL('image/png'),scrollX:scrollX,scrollY:scrollY},'*');
+      };
+      img.onerror=function(){
+        window.parent.postMessage({type:'INLINE_EDIT_SCREENSHOT_RESULT',dataUrl:null,scrollX:scrollX,scrollY:scrollY},'*');
+      };
+      img.src=svgUrl;
+    }catch(err){
+      window.parent.postMessage({type:'INLINE_EDIT_SCREENSHOT_RESULT',dataUrl:null,scrollX:scrollX,scrollY:scrollY},'*');
+    }
+  });
+})();
+</script></body>
+</html>
