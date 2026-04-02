@@ -563,7 +563,9 @@
       return runCommand(cmd.replace(/^open\s+/i, ""));
     }
 
-    const target = RUN_ALIASES[normalized] || (window.DevSkitsAppRegistry?.[normalized] ? normalized : "");
+    const target = RUN_ALIASES[normalized]
+      || (window.DevSkitsAppRegistry?.[normalized] ? normalized : "")
+      || (window.DevSkitsState.APPS?.[normalized] ? normalized : "");
     if (target && window.DevSkitsAppRegistry?.[target]) {
       return window.DevSkitsWindowManager.launchApp(target);
     }
@@ -661,6 +663,7 @@
       W().setShortcuts([{ id: "shortcut-docs", type: "app", target: "files", label: "File Explorer" }, { id: "shortcut-notes", type: "app", target: "notes", label: "Notepad" }]);
     }
     document.body.dataset.iconDensity = appSettings.iconDensity || "normal";
+    document.body.dataset.mobileDensity = appSettings.mobileDensity || "comfortable";
     document.body.classList.toggle("reduce-motion", localStorage.getItem("devskits-animations") === "off");
     buildDesktopIcons();
     bindDesktopInteractions();

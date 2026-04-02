@@ -80,7 +80,7 @@
 
     getInbox() {
       return getJSON(STORE_KEYS.inbox, [
-        { id: uid("msg"), folder: "Inbox", threadId: "th-welcome", from: "system@devskits.os", to: "operator@local", subject: "Welcome to DevSkits OS", body: "Boot successful. Living services are online.", createdAt: Date.now() - 86400000, read: false },
+        { id: uid("msg"), folder: "Inbox", threadId: "th-welcome", from: "system@devskits.os", to: "operator@local", subject: "Welcome to DevSkits OS 95", body: "Boot successful. Living services are online.", createdAt: Date.now() - 86400000, read: false },
         { id: uid("msg"), folder: "System", threadId: "th-updates", from: "updater@devskits.os", to: "operator@local", subject: "Updater ready", body: "Phase 5 update channels initialized.", createdAt: Date.now() - 40000000, read: false },
         { id: uid("msg"), folder: "Alerts", threadId: "th-loki", from: "loki.guard@daemon", to: "operator@local", subject: "Patrol report", body: "Archive watcher flagged hidden route traffic.", createdAt: Date.now() - 20000000, read: false }
       ]);

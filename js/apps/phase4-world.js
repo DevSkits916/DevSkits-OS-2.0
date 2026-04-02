@@ -56,10 +56,10 @@
       reddit: "https://reddit.com"
     };
     if (shortcuts[value.toLowerCase()]) return shortcuts[value.toLowerCase()];
-    if (value.startsWith("devskits://")) return value;
+    if (value.startsWith("devskits://")) return `devskits://${value.slice("devskits://".length).replace(/^\/+/, "").toLowerCase()}`;
     const externalUrl = normalizeExternalUrl(value);
     if (externalUrl) return externalUrl;
-    if (/^[\w-]+$/i.test(value)) return `devskits://${value.replace(/^\/+/, "")}`;
+    if (/^[\w/-]+$/i.test(value)) return `devskits://${value.replace(/^\/+/, "").toLowerCase()}`;
     return null;
   }
 
@@ -91,7 +91,7 @@
     const initial = normalizeRoute(options.route || DEFAULT_LAUNCH_ROUTE) || DEFAULT_LAUNCH_ROUTE;
     const savedBookmarks = JSON.parse(localStorage.getItem(NAV_STORE.bookmarks) || "null") || DEFAULT_BOOKMARKS;
 
-    container.innerHTML = `<div class="navigator-shell modernized"><header class="navigator-titlebar"><strong>Navigator</strong><span id="nav-status">Idle</span></header><div class="navigator-toolbar"><button id="nav-back" title="Back" aria-label="Back">◀</button><button id="nav-forward" title="Forward" aria-label="Forward">▶</button><button id="nav-reload" title="Refresh" aria-label="Refresh">↺</button><button id="nav-home" title="Home" aria-label="Home">⌂</button><button id="nav-stop" title="Stop" aria-label="Stop">■</button><input id="nav-url" value="${escapeHtml(initial)}" aria-label="Address bar" autocomplete="off"/><button id="nav-go">Go</button><button id="nav-open-tab" title="Open in new tab" aria-label="Open in new tab">↗</button><button id="nav-bookmark" title="Add bookmark" aria-label="Add bookmark">★</button><button id="nav-history" title="Show history" aria-label="Show history">🕘</button><button id="nav-bookmarks-toggle" title="Show bookmarks" aria-label="Show bookmarks">☰</button></div><div class="navigator-bookmarks" id="nav-bookmarks"></div><article id="nav-page" class="browser-page"><div class="nav-viewport" id="nav-viewport"></div></article><footer class="navigator-statusbar"><span id="nav-route">${escapeHtml(initial)}</span><small id="nav-hint">devskits:// routes + web urls supported</small><strong id="nav-mode">Embedded</strong></footer></div>`;
+    container.innerHTML = `<div class="navigator-shell"><header class="navigator-titlebar"><strong>Navigator</strong><span id="nav-status">Idle</span></header><div class="navigator-toolbar"><button id="nav-back" title="Back" aria-label="Back">◀</button><button id="nav-forward" title="Forward" aria-label="Forward">▶</button><button id="nav-reload" title="Refresh" aria-label="Refresh">↺</button><button id="nav-home" title="Home" aria-label="Home">⌂</button><button id="nav-stop" title="Stop" aria-label="Stop">■</button><input id="nav-url" value="${escapeHtml(initial)}" aria-label="Address bar" autocomplete="off"/><button id="nav-go">Go</button><button id="nav-open-tab" title="Open in new tab" aria-label="Open in new tab">↗</button><button id="nav-bookmark" title="Add bookmark" aria-label="Add bookmark">★</button><button id="nav-history" title="Show history" aria-label="Show history">🕘</button><button id="nav-bookmarks-toggle" title="Show bookmarks" aria-label="Show bookmarks">☰</button></div><div class="navigator-bookmarks" id="nav-bookmarks"></div><article id="nav-page" class="browser-page"><div class="nav-viewport" id="nav-viewport"></div></article><footer class="navigator-statusbar"><span id="nav-route">${escapeHtml(initial)}</span><small id="nav-hint">devskits:// routes + web urls supported</small><strong id="nav-mode">Embedded</strong></footer></div>`;
 
     const viewport = container.querySelector("#nav-viewport");
     const url = container.querySelector("#nav-url");
@@ -123,8 +123,9 @@
 
     function recordHistory(route) {
       const rows = JSON.parse(localStorage.getItem(NAV_STORE.history) || "[]");
-      rows.unshift({ route, at: Date.now() });
-      localStorage.setItem(NAV_STORE.history, JSON.stringify(rows.slice(0, 100)));
+      const deduped = rows.filter((row) => row.route !== route);
+      deduped.unshift({ route, at: Date.now() });
+      localStorage.setItem(NAV_STORE.history, JSON.stringify(deduped.slice(0, 100)));
     }
 
     function drawHistoryPanel() {
@@ -145,7 +146,7 @@
 
     function renderEmbedFailure(route) {
       setMode("external");
-      showView(`<div class="retro-web nav-error nav-fallback"><h3>Site could not be embedded</h3><p>This website does not allow itself to be shown inside an iframe, or it failed to load here.</p><p><code>${escapeHtml(route)}</code></p><div class="badges"><button class="link-btn" data-open-tab="${escapeHtml(route)}">Open in New Tab</button></div></div>`);
+      showView(`<div class="retro-web nav-error nav-fallback"><h3>Site could not be embedded</h3><p>This website blocked iframe embedding or did not load correctly in this window.</p><p><code>${escapeHtml(route)}</code></p><div class="badges"><button class="link-btn" data-open-tab="${escapeHtml(route)}">Open in New Tab</button><button class="link-btn" data-copy-url="${escapeHtml(route)}">Copy URL</button><button class="link-btn" data-route="devskits://home">Return Home</button></div></div>`);
       setStatus(`Blocked or failed: ${route}`, false);
     }
 
@@ -244,7 +245,7 @@
       localStorage.setItem(NAV_STORE.last, route);
       if (push) {
         history = history.slice(0, pointer + 1);
-        history.push(route);
+        if (history[history.length - 1] !== route) history.push(route);
         pointer = history.length - 1;
       }
       setNavState();

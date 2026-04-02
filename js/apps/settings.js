@@ -1,10 +1,10 @@
 (() => {
   function render(container) {
     const appSettings = window.DevSkitsWorld.getAppSettings();
-    const fastBoot = localStorage.getItem("devskits-fast-boot") === "on";
-    const animations = localStorage.getItem("devskits-animations") !== "off";
+    const bootAnimationEnabled = (appSettings.bootAnimation || "full") !== "minimal";
+    const reducedMotion = appSettings.reducedMotion === true || localStorage.getItem("devskits-animations") === "off";
     const clock24h = appSettings.clock24h !== false;
-    const soundsOn = localStorage.getItem("devskits-sound") !== "off";
+    const soundsOn = appSettings.soundEnabled !== false && localStorage.getItem("devskits-sound") !== "off";
 
     container.innerHTML = `
     <h3>Settings / Control Panel</h3>
@@ -26,8 +26,8 @@
           <option value="compact">Compact</option>
         </select>
       </label>
-      <label><input type="checkbox" id="fast-boot-toggle" ${fastBoot ? "checked" : ""}/> Boot animation enabled</label>
-      <label><input type="checkbox" id="animations-toggle" ${animations ? "checked" : ""}/> Reduced motion off</label>
+      <label><input type="checkbox" id="fast-boot-toggle" ${bootAnimationEnabled ? "checked" : ""}/> Boot animation enabled</label>
+      <label><input type="checkbox" id="animations-toggle" ${!reducedMotion ? "checked" : ""}/> Reduced motion off</label>
       <label><input type="checkbox" id="clock-toggle" ${clock24h ? "checked" : ""}/> 24h clock format</label>
       <label><input type="checkbox" id="sound-toggle" ${soundsOn ? "checked" : ""}/> System sounds enabled</label>
       <button class="link-btn" id="cycle-theme">Cycle Theme</button>
@@ -106,7 +106,9 @@
     });
 
     container.querySelector("#reset-layout").addEventListener("click", () => {
+      if (!confirm("Reset desktop icon positions and custom labels?")) return;
       localStorage.removeItem("devskits-icon-positions");
+      localStorage.removeItem("devskits-icon-layout-version");
       localStorage.removeItem("devskits-desktop-labels-v1");
       state.iconPositions = {};
       window.DevSkitsDesktop.buildDesktopIcons();
@@ -114,6 +116,7 @@
     });
 
     container.querySelector("#reset-all").addEventListener("click", () => {
+      if (!confirm("This will clear DevSkits OS 95 local data and reload. Continue?")) return;
       Object.keys(localStorage).filter((k) => k.startsWith("devskits-")).forEach((k) => localStorage.removeItem(k));
       location.reload();
     });

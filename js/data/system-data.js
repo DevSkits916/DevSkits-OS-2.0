@@ -4,10 +4,10 @@
     firstName: 'Travis',
     lastName: 'Ramsey',
     brand: 'DevSkits',
-    title: 'Retro web builder / DevSkits OS creator',
+    title: 'Retro web builder / DevSkits OS 95 creator',
     headline: 'Personal links, contact info, and support options for the DevSkits universe.',
     location: 'California, USA',
-    summary: 'Builder of DevSkits OS, browser experiments, and retro-styled portfolio projects.'
+    summary: 'Builder of DevSkits OS 95, browser experiments, and retro-styled portfolio projects.'
   };
 
   const supportMethods = [
@@ -15,7 +15,7 @@
       id: 'gofundme',
       label: 'GoFundMe',
       icon: 'gofundme',
-      description: 'Featured fundraiser for helping DevSkits OS keep growing.',
+      description: 'Featured fundraiser for helping DevSkits OS 95 keep growing.',
       url: 'https://gofund.me/6bbc0274e',
       value: 'https://gofund.me/6bbc0274e',
       copyValue: 'https://gofund.me/6bbc0274e',
@@ -95,7 +95,7 @@
       category: 'Projects',
       type: 'app',
       url: 'devskits://projects',
-      description: 'Open the internal project browser inside DevSkits OS.',
+      description: 'Open the internal project browser inside DevSkits OS 95.',
       searchText: 'internal projects launcher app'
     },
     {
